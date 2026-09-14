@@ -1,9 +1,16 @@
-# Autonomous Engineering System — Canonical Architecture v0.2
+# Autonomous Engineering System — Canonical Architecture v0.3
 
 **Status:** Draft Canonical Architecture  
 **Purpose:** Reusable autonomous software-engineering system
 
-This document is the canonical architecture reference for AI Factory. More specific files under `autonomy/` define role and registry contracts; where they conflict, surface the conflict and preserve provenance rather than silently choosing one.
+This document defines what AI Factory must accomplish. It intentionally separates **architectural contracts** from **physical implementations**.
+
+Implementation selection is governed by:
+
+- `docs/architecture/OPEN_SOURCE_ADOPTION_STRATEGY.md`
+- `docs/implementation/ADOPTION_SPIKE.md`
+
+Mature open-source infrastructure should be adopted or extended when it satisfies these contracts. AI Factory should build custom infrastructure only where a meaningful capability gap remains.
 
 ## 1. Purpose
 
@@ -11,15 +18,15 @@ AI Factory is intended to behave like a small engineering organization, not a si
 
 The system combines:
 
-- durable task state;
+- durable task/execution state;
 - specialist logical agents;
-- replaceable model/provider execution;
-- canonical model-agnostic skills;
+- replaceable model/provider/runtime execution;
+- portable model-agnostic skills;
 - least-privilege MCP/tool capabilities;
-- MemPalace historical/experiential memory;
-- OpenSearch knowledge projection and multi-search retrieval;
-- code-graph structural discovery;
-- isolated implementation worktrees;
+- experiential/historical memory;
+- OpenSearch organizational knowledge projection and multi-search retrieval;
+- structural code discovery;
+- isolated implementation workspaces;
 - deterministic validation;
 - independent review and QA/UX;
 - telemetry and evals;
@@ -39,24 +46,62 @@ reusable tool / MCP capability
 deterministic automation
 ```
 
-## 2. Architectural planes
+## 2. Reuse-first architecture
+
+Before building a major subsystem, evaluate whether maintained OSS already supplies it.
+
+Current primary candidates include:
+
+```text
+Paperclip                    → control plane / agents / tasks / budgets / workspaces
+Agent Skills                 → portable skill format
+Official OpenSearch MCP      → agent-facing knowledge retrieval
+ToolHive                     → MCP runtime/security/registry candidate
+SWE-ReX                      → coding execution/sandbox candidate
+Existing code-graph provider → structural discovery
+LiteLLM                      → API-model gateway candidate
+MemPalace / OS Agentic Memory→ memory bake-off
+DBOS                         → durable workflow fallback if needed
+OpenAI Symphony              → orchestration reference/invariants
+Promptfoo                    → later eval harness candidate
+```
+
+These are implementation candidates, not architectural authorities.
+
+Prefer:
+
+```text
+configure
+→ plugin/extension
+→ thin adapter
+→ upstream contribution
+→ maintained patch set
+→ fork only as last resort
+```
+
+No adopted dependency may create an ambiguous source of truth.
+
+## 3. Architectural planes
 
 ### Control Plane
 
-Ordinary software owns the durable mechanics:
+The selected deterministic control system owns:
 
-- task ledger and state machine;
+- authoritative task/run state;
 - scheduling and dependencies;
+- task checkout/locking;
 - retry/escalation counters;
-- token/cost budgets;
-- permission enforcement;
-- model/provider availability;
-- operation journal and idempotency;
-- worktree lifecycle;
-- merge/integration coordination;
+- budgets/cost controls;
+- permissions/governance;
+- run/workspace lifecycle;
+- side-effect/idempotency evidence;
 - resumability and cancellation.
 
-No LLM session is allowed to own unique durable state.
+No LLM session owns unique durable state.
+
+**Paperclip is the primary adoption candidate for this plane.** If it satisfies the contract, do not build a second equivalent AI Factory task engine.
+
+DBOS is a fallback/underlay candidate only if the selected control plane cannot meet hard durability/recovery requirements without competing workflow authorities.
 
 ### Execution Plane
 
@@ -64,7 +109,7 @@ A runtime agent instance is composed dynamically:
 
 ```text
 logical role
-+ selected model
++ selected model/runtime
 + required/dynamic skills
 + allowed capabilities
 + project overlay
@@ -74,16 +119,18 @@ logical role
 = runnable agent
 ```
 
-Agent identity remains stable while the execution model may change because of cost, quota, context needs, provider availability, task difficulty, or escalation.
+Agent identity remains stable while the execution model/harness may change because of cost, quota, context needs, provider availability, task difficulty, or escalation.
+
+Execution environments should be delegated to an existing runtime such as SWE-ReX when practical rather than embedded into agent logic.
 
 ### Knowledge Plane
 
-Different stores answer different questions:
+Different systems answer different questions:
 
 ```text
 Git / canonical docs → What is true now?
-Task store           → What is happening now?
-MemPalace            → What have we learned before?
+Control plane        → What is happening now?
+Memory provider      → What have we learned before?
 OpenSearch           → What relevant organizational knowledge exists?
 Code graph           → How is the code structurally connected?
 Logs / traces        → What happened during execution?
@@ -118,15 +165,15 @@ Capture enough evidence to improve the process itself:
 - retrieved context;
 - reviewer and QA findings;
 - capability gaps;
-- model/provider performance by task class;
+- model/provider/runtime performance by task class;
 - human intervention;
 - final accepted outcome.
 
 The Process Optimizer should normally run on failures, expensive/retried tasks, capability-gap reports, high-risk work, periodic samples, and aggregated history—not on every trivial task.
 
-## 3. Governance across all planes
+## 4. Governance across all planes
 
-Most layers share the same generic risks: staleness, bloat, unclear authority, excessive autonomy, feedback-loop amplification, conflicting instructions, abstraction drift, and uncontrolled self-modification.
+Most layers share the same generic risks: staleness, bloat, unclear authority, excessive autonomy, feedback-loop amplification, conflicting instructions, abstraction drift, dependency sprawl, and uncontrolled self-modification.
 
 Persistent objects should conceptually follow:
 
@@ -147,11 +194,13 @@ Where useful, maturity states are:
 OBSERVED → EXPERIMENTAL → VALIDATED → CANONICAL → DEPRECATED
 ```
 
-Important claims must preserve provenance. Multiple records derived from one original assumption do not count as independent evidence.
+Important claims preserve provenance. Multiple records derived from one original assumption do not count as independent evidence.
 
-## 4. Logical expert system
+External dependencies follow the same lifecycle: candidate → spike → validated → adopted → monitored → replaced/deprecated when necessary.
 
-Core V1 roles:
+## 5. Logical expert system
+
+Core logical roles:
 
 - **Orchestrator:** classify, decompose, route, control scope, retry/escalate/stop.
 - **Researcher:** resolve materially important unknown/external facts with provenance.
@@ -160,33 +209,33 @@ Core V1 roles:
 - **Reviewer:** independently challenge implementation without inheriting implementer assumptions.
 - **QA/UX:** validate behavior, regressions, responsive/UI/UX/accessibility and recurring defect patterns.
 
+These roles are AI Factory concepts even if an adopted control plane stores/configures the agents.
+
 Do not build a permanent Planner role unless real usage proves it necessary. Planning is normally Orchestrator work; architectural planning belongs with Architect.
 
 Specialization should usually be achieved by attaching skills rather than multiplying agent identities.
 
-## 5. Skills
+## 6. Skills
 
 Skills describe **how** work is performed. They are canonical, composable, versioned, selectively loaded, and model-agnostic.
 
-Examples:
+AI Factory should align with the external Agent Skills standard rather than inventing an incompatible format.
 
-- repository discovery;
-- Java/Spring implementation;
-- OpenSearch migration;
-- database migration;
-- browser testing;
-- responsive UI audit;
-- accessibility audit;
-- code review;
-- Git worktree operation;
-- Terraform/AWS validation;
-- documentation update.
+Typical package:
 
-Skills should support lightweight manifests/quick procedures and deeper references loaded only when needed. This prevents the skill system itself becoming a giant context dump.
+```text
+skills/<skill-id>/
+  SKILL.md
+  scripts/        # optional
+  references/     # optional
+  assets/         # optional
+```
 
-Runtime adapters translate generic skill intent into Codex/Claude/OpenCode/Gemini or future harness mechanics. Do not maintain separate intellectual versions of the same skill for each provider unless unavoidable.
+AI Factory-specific metadata for compatible roles, required capabilities, lifecycle, risk, and evals should extend the format without destroying portability.
 
-## 6. Capabilities and MCP/tool providers
+Runtime adapters translate canonical skill content into Codex/Claude/OpenCode/Gemini/Paperclip or future harness mechanics.
+
+## 7. Capabilities and MCP/tool providers
 
 Where semantics are stable, agents request logical capabilities such as:
 
@@ -195,36 +244,49 @@ repo.read
 repo.write
 browser.navigate
 memory.search
+knowledge.search
+knowledge.msearch
 code.graph.search
 artifact.write
 cloud.logs.read
 ```
 
-The runtime resolves an approved provider. Specialized provider semantics remain explicit when they are not genuinely interchangeable.
+AI Factory owns capability semantics and role/skill permission rules.
 
-Capabilities are governed by least privilege. A reviewer may read a repository but should not normally write/merge it. QA may navigate a browser but should not receive production deployment permissions. Permission enforcement belongs outside the prompt.
+Selected infrastructure may enforce/host them:
 
-## 7. Durable task continuity
+```text
+knowledge.*      → official OpenSearch MCP
+MCP lifecycle    → ToolHive candidate
+code.graph.*     → one selected existing graph provider
+execution shell  → SWE-ReX candidate
+```
+
+Capabilities follow least privilege. Permission enforcement belongs outside prompts.
+
+Do not build custom MCP servers/process management if the official/provider implementation plus a thin adapter satisfies the contract.
+
+## 8. Durable task continuity
 
 Logging alone is not continuity.
 
-A task record must contain enough state for a new model/session to continue correctly:
+The selected control plane must contain enough state for a new model/session to continue correctly:
 
 ```text
 objective
 current state
-completed/pending stages
-next action
+completed/pending work
+assignment / next action
 dependencies
-worktree/branch/commit
+workspace/branch/revision/session refs
 artifacts
 review/QA findings
 retry/escalation state
-budgets
-external operation journal
+budgets/costs
+side-effect evidence
 ```
 
-Baseline workflow:
+AI Factory's logical workflow is approximately:
 
 ```text
 QUEUED
@@ -239,40 +301,55 @@ QUEUED
 → DONE
 ```
 
-Exceptional states include `BLOCKED`, `WAITING_QUOTA`, `WAITING_DEPENDENCY`, `RETRY`, `ESCALATE`, `REVIEW_FAILED`, `QA_FAILED`, and `CANCELLED`.
+An adopted control plane may use different status names. Map semantics rather than creating a second workflow simply to preserve labels.
 
-Retry budgets must be bounded. Repeating essentially the same strategy is not meaningful progress. Escalate model/strategy only according to policy, then block for human input when limits are reached.
+Retry budgets are bounded. Repeating essentially the same strategy is not meaningful progress.
 
-## 8. Worktree isolation and integration
+## 9. Workspaces and integration
 
-Autonomous code-changing tasks should normally receive dedicated Git worktrees/branches. Read-only research or architecture work does not need one automatically.
+Autonomous code-changing tasks should normally receive isolated task-bound branches/worktrees/workspaces.
 
-Parallel tasks may still conflict semantically. The future control plane should detect affected-component/file overlap, manage dependencies/merge ordering, and rerun relevant validation after integration.
+Prefer an adopted control plane/runtime's native workspace mechanism when it meets the requirements.
 
-Passing tests in an isolated worktree is not proof that the merged state is valid.
+Read-only research or architecture work does not require an isolated worktree by default.
 
-## 9. MemPalace
+Parallel tasks may still conflict semantically. The control plane/integration layer should detect dependencies/overlap and rerun relevant validation after integration.
 
-MemPalace is the experiential/episodic memory layer. It is useful for:
+Passing tests in an isolated workspace is not proof that merged state is valid.
 
-- incidents and root causes;
+## 10. Memory architecture
+
+Memory is experiential/historical knowledge, never canonical truth or workflow state.
+
+The provider is intentionally pending an explicit bake-off:
+
+```text
+A. MemPalace primary experiential memory + OpenSearch projection
+B. OpenSearch Agentic Memory primary memory
+C. MemPalace specialist/episodic memory + OpenSearch shared/system memory
+```
+
+Required memory behavior includes:
+
+- incidents/root causes;
 - rejected approaches and why;
 - non-obvious repository behavior;
 - recurring QA defect patterns;
 - architecture reasoning;
-- specialist diaries and lessons.
+- specialist diaries/lessons;
+- provenance, supersession, retention, and scoping.
 
-It must not store every command, opened file, or transient task step. Task state belongs in the task store; raw execution detail belongs in logs/artifacts.
+Do not store every command, opened file, or transient task step as memory.
 
-Memory can be stale or wrong. Important implementation decisions must verify current Git/canonical documents. Stable repeated lessons should be promoted toward canonical skills, policies, tools, tests, or deterministic checks.
+Stable repeated lessons should be promoted toward canonical skills, policies, tools, tests, or deterministic checks.
 
-## 10. OpenSearch knowledge fabric
+## 11. OpenSearch knowledge fabric
 
-OpenSearch should be introduced early, in a separate knowledge/control cluster from any product-search cluster.
+OpenSearch 3.x is introduced early in a separate knowledge/control cluster from any product-search cluster.
 
 It is the rebuildable projection that makes organizational knowledge jointly discoverable at scale.
 
-Likely logical domains include:
+Logical domains include:
 
 ```text
 system_docs
@@ -285,27 +362,54 @@ system_capabilities
 system_code_metadata
 ```
 
+Use versioned physical indexes behind stable aliases.
+
 Use metadata for provenance, project, type, scope, status, version, recency, authority, supersession, source task, and original-source pointer.
 
-The Context Resolver should use filtered/hybrid retrieval and multi-search to compose bounded context by perspective, for example:
+The Context Resolver uses filtered/hybrid retrieval and multi-search to compose bounded context by perspective, for example:
 
 ```text
 3 current canonical docs
 2 relevant memories/incidents
-1 applicable skill
+1–3 applicable skills
 recent related task/review history
 relevant code-symbol pointers
 ```
 
-This is preferable to one vague semantic request for “all relevant context.”
+Prefer the official OpenSearch MCP server for agent-facing search/multi-search rather than a custom MCP implementation.
 
-OpenSearch may discover a MemPalace memory or code symbol and return a pointer; the agent/runtime can load the original source only when required.
+Projection/index writes normally come from deterministic adapters/workers or approved platform events, not arbitrary agents.
 
 OpenSearch is never authority. If the cluster disappears, it must be rebuildable from durable sources.
 
-## 11. Code graph
+## 12. Context Resolver
 
-Use one primary structural-code provider in V1. Do not operate CodeGraph and Graphify simultaneously unless empirical evidence shows distinct value.
+The Context Resolver is differentiated AI Factory functionality even if much of its retrieval machinery is provided by OpenSearch MCP.
+
+Input includes:
+
+```text
+task
+project
+desired agent role
+workflow stage
+permission scope
+```
+
+It composes bounded context from multiple retrieval perspectives, preserves provenance/authority metadata, and loads original sources only when required.
+
+It should avoid both extremes:
+
+```text
+not enough context → rediscovery/mistakes
+all available context → token waste/drift/noise
+```
+
+Retrieval itself should eventually be evaluated against task outcomes.
+
+## 13. Code graph
+
+Use one primary existing structural-code provider in V1.
 
 Separation:
 
@@ -315,13 +419,35 @@ Code graph → traverse callers/dependencies/relationships
 Git        → verify current implementation
 ```
 
-## 12. Structured handoffs
+Do not operate multiple overlapping graph systems without empirical evidence of distinct value.
 
-Agents should exchange bounded task packets rather than giant transcripts.
+## 14. Model/runtime routing
 
-A handoff should include objective, relevant decision refs, affected components, constraints, acceptance criteria, artifact refs, current evidence, and explicit unknowns. The receiver retrieves additional context only when needed.
+Models are replaceable execution engines.
 
-## 13. Self-healing
+Separate:
+
+```text
+raw/API model calls
+from
+coding-agent/CLI harness runtimes
+```
+
+LiteLLM is a candidate gateway for API-model concerns such as provider normalization, fallback/retry, and cost accounting.
+
+Codex/Claude Code/OpenCode/CommandCode-style agents remain explicit harness adapters because they own more than a completion API.
+
+Start with explicit routing policy. Learned routing comes only after enough accepted-task telemetry exists.
+
+## 15. Structured handoffs
+
+Agents exchange bounded task packets rather than giant transcripts.
+
+A handoff should include objective, relevant decision refs, affected components, constraints, acceptance criteria, artifact refs, current evidence, and explicit unknowns.
+
+The receiver retrieves additional context only when needed.
+
+## 16. Self-healing
 
 Self-healing answers:
 
@@ -351,21 +477,23 @@ mistake
 → deterministic prevention
 ```
 
-## 14. Self-improvement
+## 17. Self-improvement and reuse discovery
 
-Self-improvement asks whether the **process** was unnecessarily expensive, slow, brittle, or custom.
+Self-improvement asks whether the process was unnecessarily expensive, slow, brittle, or custom.
 
 The Process Optimizer may identify:
 
 - an existing skill that should have been used;
 - an MCP/tool that replaces manual work;
-- a mature OSS/library instead of bespoke implementation;
+- a maintained OSS/library/repository instead of bespoke implementation;
 - inefficient context selection;
 - poor model routing;
 - missing deterministic validation;
 - a repeated operation worth automating.
 
-Agents may emit explicit `CAPABILITY_GAP` findings when manual work suggests missing reusable infrastructure.
+Agents may emit explicit `CAPABILITY_GAP` findings.
+
+Open-source discovery is therefore not only a bootstrap activity; it is a permanent self-improvement mechanism.
 
 Self-improvement does not directly mutate canonical infrastructure. Initial lifecycle:
 
@@ -380,13 +508,11 @@ OBSERVE
 → ADOPT
 ```
 
-## 15. Evaluation and observability
+## 18. Evaluation and observability
 
 Self-improvement without evaluation becomes self-randomization.
 
-Maintain task/eval suites for representative classes such as repository discovery, Java/Spring bugs, OpenSearch changes, UI regressions, and Terraform changes.
-
-Measure:
+Maintain representative task/eval suites and measure:
 
 - accepted/correct result;
 - deterministic validation;
@@ -397,74 +523,82 @@ Measure:
 - retries/escalations;
 - human intervention.
 
-Retrieval itself should have relevance/query sets and later use downstream task success as evidence.
+OpenSearch/native telemetry is the initial system of record for cross-run analysis.
 
-## 16. Security and side effects
+Promptfoo is a later candidate for regression/eval suites. Phoenix/Langfuse are deferred until real telemetry gaps justify another observability platform.
 
-Agents consume untrusted repositories, web pages, issues, docs, MCP output, and user content. Treat external text as data, not authority.
+## 19. Security and side effects
+
+Agents consume untrusted repositories, web pages, issues, docs, MCP output, memory, and user content. Treat external text as data, not authority.
 
 Privileged capabilities and secrets are runtime/security boundaries, never prompt conventions.
 
-External side effects must be journaled and idempotent. A crashed/restarted agent must not unknowingly create duplicate issues, deployments, messages, or external writes.
+Evaluate ToolHive before building custom MCP server isolation/policy machinery.
 
-## 17. Complexity controls
+External side effects must be journaled/idempotent by the authoritative control plane or its approved extension. A restarted agent must not unknowingly create duplicate issues, deployments, messages, or writes.
+
+## 20. Complexity controls
 
 Avoid premature complexity:
 
 - no dozens of permanent agent roles;
 - no process reviewer on every trivial task;
 - no multiple overlapping graph providers by default;
-- no universal provider abstractions without multiple real implementations;
+- no multiple authoritative workflow engines;
+- no universal provider abstractions without real implementations;
 - no learned model router before telemetry;
 - no autonomous installation of privileged MCPs;
 - no automatic self-modification in V1;
-- no memory/logging of everything.
+- no memory/logging of everything;
+- no custom subsystem before a reasonable reuse evaluation.
 
 Every permanent component should improve quality, reliability, cost, latency, token use, human intervention, security, or maintainability enough to justify its operational complexity.
 
-## 18. V1
+## 21. Current implementation phase
 
-V1 must prove one real vertical slice:
+The current phase is **Phase 0.5 — open-source adoption spike**.
+
+Required first:
+
+1. evaluate Paperclip as control-plane foundation;
+2. evaluate Agent Skills compatibility;
+3. validate official OpenSearch MCP against our retrieval contract;
+4. evaluate ToolHive for MCP runtime/security;
+5. evaluate SWE-ReX for execution runtime;
+6. select one code-graph provider;
+7. evaluate LiteLLM boundary for API models;
+8. run MemPalace vs OpenSearch Agentic Memory bake-off;
+9. mine Symphony invariants;
+10. document adoption/rejection and exact authority boundaries.
+
+Only then finalize the physical V1 implementation.
+
+## 22. V1 target
+
+Regardless of selected dependencies, V1 must prove:
 
 ```text
 task
-→ durable state
-→ agent selection
-→ skill/capability resolution
-→ bounded context retrieval
+→ authoritative durable state
+→ logical agent selection
+→ portable skill/capability resolution
+→ bounded OpenSearch context retrieval
 → isolated execution
 → deterministic validation
 → independent review
 → persisted outcome
 → OpenSearch projection
-→ resumability
+→ interruption/resumption
+→ useful prior-history retrieval by a later task
 ```
 
-Recommended build order:
-
-1. task store + state machine;
-2. core logical agent registry;
-3. skill registry;
-4. capability/MCP registry and permission model;
-5. provider/model adapter boundary;
-6. Git worktree lifecycle;
-7. event/telemetry schema;
-8. MemPalace integration boundary;
-9. OpenSearch 3.x knowledge projection;
-10. Context Resolver;
-11. reviewer pipeline;
-12. QA/UX pipeline;
-13. eval framework;
-14. triggered Process Optimizer;
-15. controlled self-improvement experiments only after the base loop is reliable.
-
-## 19. Success hypotheses
+## 23. Success hypotheses
 
 ### Same model, better system
 
 For the same model and task class, maturity should produce equal/better correctness with fewer retries, less rediscovery, smaller useful context, fewer defects, lower total inference, and less human intervention.
 
-This is expected to improve strong models too: even a frontier model should perform better when it does not repeatedly rediscover history, structure, tools, and conventions.
+This should improve strong models too: even a frontier model performs better when it does not repeatedly rediscover history, structure, tools, and conventions.
 
 ### Same quality, cheaper model
 
@@ -478,6 +612,6 @@ Cost per accepted correct task
 
 not token price or cost per individual model call.
 
-## 20. Final principle
+## 24. Final principle
 
-> **Do not optimize for an AI system that remembers everything. Optimize for a system that needs to reason about fewer things over time because experience is progressively converted into stable, indexed, reusable, and eventually deterministic capability.**
+> **Do not optimize for an AI system that remembers everything or builds everything itself. Optimize for a system that needs to reason about fewer things over time because experience and mature external capability are progressively converted into stable, indexed, reusable, and eventually deterministic execution.**
