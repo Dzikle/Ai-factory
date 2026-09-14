@@ -4,58 +4,79 @@ Skills are canonical, reusable, model-agnostic procedures describing **how a cla
 
 They are separate from agent identity, project context, memory, and model/provider implementation.
 
+## Canonical packaging direction
+
+AI Factory should align with the external **Agent Skills** standard (`agentskills/agentskills`) instead of inventing an incompatible skill format.
+
+Preferred package:
+
+```text
+skills/<skill-id>/
+  SKILL.md
+  scripts/        # optional
+  references/     # optional
+  assets/         # optional
+```
+
+AI Factory may add a small compatible sidecar/extension for system-specific metadata such as:
+
+```yaml
+ai_factory:
+  version: 0.1.0
+  status: experimental
+  compatible_agents:
+    - architect
+    - developer
+    - reviewer
+  requires_capabilities:
+    - repo.read
+  optional_capabilities:
+    - code.graph.search
+  risk: read_only
+  eval_suites:
+    - repository-discovery-01
+```
+
+Do not replace the portable skill format merely to encode metadata that can live alongside it.
+
 ## Principles
 
 - Load only skills relevant to the current task.
 - Prefer composable skills over giant role manuals.
 - Keep provider-specific mechanics in runtime adapters where possible.
-- Version skills and evaluate material changes.
+- Preserve portability across Codex/Claude/OpenCode/Gemini and future harnesses.
+- Version/evaluate material skill changes.
 - Promote recurring lessons into skills only after the lesson is stable enough to generalize.
 - Mature repeated skill reasoning toward tools/tests/deterministic enforcement.
+- Reuse maintained external skills where appropriate instead of recreating equivalent procedures.
 
-## Suggested skill package
+## Progressive loading
 
-```text
-skills/<skill-id>/
-  SKILL.md
-  manifest.yaml
-```
-
-Example manifest:
-
-```yaml
-id: repository-discovery
-version: 0.1.0
-status: experimental
-compatible_agents:
-  - architect
-  - developer
-  - reviewer
-requires_capabilities:
-  - repo.read
-optional_capabilities:
-  - code.graph.search
-risk: read_only
-```
-
-## Loading levels
-
-Avoid context bloat by supporting layered material:
+Avoid context bloat by loading only what is required:
 
 ```text
-manifest / summary
-→ quick procedure
-→ full reference only when needed
+skill metadata / short description
+→ SKILL.md procedure
+→ references/scripts/assets only when needed
 ```
 
-## Early candidate skills
+The exact runtime mechanics may differ by harness, but the canonical skill content should remain portable.
 
-Do not create all of these immediately; add when implementation needs them:
+## Early spike skills
 
-- repository-discovery
-- git-worktree
+The adoption spike should implement at least two representative portable skills:
+
+- `repository-discovery`
+- `code-review`
+
+Use them from at least two different agent/model runtimes to prove the canonical skill is transferable.
+
+## Later candidate skills
+
+Create these only as real tasks justify them:
+
+- git-worktree / workspace operation
 - implementation
-- code-review
 - deterministic-testing
 - documentation-update
 - browser-testing
@@ -65,3 +86,13 @@ Do not create all of these immediately; add when implementation needs them:
 - OpenSearch
 - database-migration
 - Terraform/AWS
+
+## Promotion path
+
+```text
+incident / lesson
+→ repeated pattern
+→ canonical skill update
+→ reusable tool/check
+→ deterministic enforcement where practical
+```
