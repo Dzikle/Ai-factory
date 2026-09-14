@@ -1,110 +1,143 @@
-# AI Factory — Implementation Kickoff Contract
+# AI Factory — V1 Implementation Kickoff Contract
+
+**Status:** Blocked on completion of `docs/implementation/ADOPTION_SPIKE.md`.
 
 You are implementing the system defined by:
 
 - `docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md`
+- `docs/architecture/OPEN_SOURCE_ADOPTION_STRATEGY.md`
 - `docs/architecture/STATE_AND_STORAGE.md`
 - `docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md`
 - `docs/architecture/MCP_AND_CAPABILITY_MODEL.md`
 - the canonical rules under `autonomy/`
+- the adopted/rejected dependency decisions produced by the adoption spike.
 
-Treat those documents as architectural source of truth unless repository reality proves a detail must be adapted. If adaptation is required, document the conflict and proposed decision instead of silently deviating.
+Do **not** assume the control plane, skills runtime, MCP runtime, sandbox, memory layer, or provider gateway must be built from scratch.
 
-## Canonical V1 infrastructure decisions
+## Prerequisite
 
-The following are already decided and should not be reopened without evidence:
+Before substantial V1 implementation, the adoption spike must answer:
 
-- **PostgreSQL** is the durable control/task execution database and execution source of truth.
-- **OpenSearch 3.x** is introduced early as a separate rebuildable organizational knowledge/search projection, independent from any product-search cluster.
-- **OpenSearch MCP** is the primary agent-facing retrieval interface for the knowledge fabric, including filtered search and multi-search/context composition.
-- **MemPalace** is the experiential/episodic memory layer, not canonical truth or task state.
-- **One code-graph provider** is used in V1 for structural code discovery; do not operate overlapping graph systems without measured value.
-- **Git/canonical Markdown/YAML** remains current system/project truth.
-- **Artifact storage** owns large task outputs; PostgreSQL stores references.
-- **Logs/traces** are operational evidence; they do not replace durable task state.
+```text
+Which existing projects are adopted?
+Which are rejected?
+What does each adopted component own?
+What custom AI Factory components remain necessary?
+Where is every source of truth?
+```
 
-## Objective
+If those answers do not exist, continue the adoption spike rather than writing bespoke infrastructure.
 
-Build the smallest durable V1 that proves:
+## Fixed architectural requirements
+
+These are requirements regardless of which OSS components implement them:
+
+- exactly one authoritative durable control/task state owner;
+- disposable LLM/model sessions;
+- logical expert identity separated from model/provider runtime;
+- portable model-agnostic skills;
+- least-privilege capabilities enforced outside prompts;
+- Git/canonical docs as current system/project truth;
+- OpenSearch 3.x as a separate rebuildable organizational knowledge fabric;
+- official OpenSearch MCP preferred for agent retrieval;
+- bounded Context Resolver / multi-search retrieval;
+- one primary code-graph provider in V1;
+- large artifacts stored outside the control DB;
+- deterministic validation before subjective LLM review where possible;
+- independent Reviewer and QA roles;
+- telemetry sufficient to measure cost per accepted correct task;
+- bounded retries and idempotent external side effects;
+- no autonomous self-modification in V1.
+
+## Implementation ownership after the spike
+
+The final adoption matrix determines the physical implementation.
+
+Example if Paperclip passes:
+
+```text
+Paperclip
+  → authoritative operational control plane / tasks / agent runs / budgets / workspaces
+
+AI Factory extensions
+  → Context Resolver
+  → OpenSearch knowledge projection
+  → expert workflow policies
+  → capability mapping / selected plugins
+  → reviewer/QA integration
+  → memory integration chosen by bake-off
+  → telemetry/eval/self-improvement logic
+```
+
+In this case, do **not** build a second custom PostgreSQL task engine simply because an earlier design document described logical task entities.
+
+If Paperclip is rejected, implement the smallest control plane that satisfies the same contract, reusing DBOS or other components only where the adoption decisions justify them.
+
+## Target V1 vertical slice
+
+The selected stack must prove:
 
 ```text
 task
-→ PostgreSQL durable state
+→ authoritative durable state
 → agent selection
-→ skill/capability resolution
+→ portable skill/capability resolution
 → OpenSearch MCP bounded context retrieval
-→ isolated execution
+→ isolated execution/workspace
 → deterministic validation
 → independent review
 → persisted outcome/artifacts
 → OpenSearch projection
-→ resumability
+→ interruption/recovery/resumability
 ```
 
-Do **not** implement the complete imagined end-state platform in one pass.
+## Custom pieces we expect may remain
 
-## First work package
+Even with strong reuse, AI Factory will likely still need differentiated code for:
 
-Inspect the repository and produce an implementation plan for:
+1. **Context Resolver** — compose bounded provenance-aware context from OpenSearch multi-search and original-source verification;
+2. **OpenSearch projection adapters/workers** — project tasks, runs, docs, memory metadata, capabilities, code metadata, reviews, and telemetry from chosen durable sources;
+3. **AI Factory expert/workflow policy** — Orchestrator/Architect/Developer/Reviewer/QA semantics and stage rules;
+4. **project overlays** — reusable framework + repository-specific policy/context;
+5. **capability mapping** — map logical AI Factory capabilities to selected MCP/runtime providers;
+6. **memory adapter** — based on the selected memory architecture;
+7. **quality/eval integration** — deterministic checks, independent review, task outcomes, and later process optimization;
+8. **telemetry normalization** — enough common data to compare models/providers/task classes across runtimes.
 
-1. canonical repository/module structure;
-2. PostgreSQL durable Task model, operation journal, events/outbox, artifacts references and state machine;
-3. logical agent registry for Orchestrator, Researcher, Architect, Developer, Reviewer, QA/UX;
-4. canonical skill registry with lazy/selective loading;
-5. capability registry, permission model, and OpenSearch MCP integration boundary;
-6. provider/model adapter boundary;
-7. Git worktree lifecycle for coding tasks;
-8. event/telemetry schema from day one;
-9. OpenSearch 3.x versioned index + alias design and projection workers;
-10. Context Resolver using bounded filtered/hybrid multi-search;
-11. clear integration boundaries for MemPalace and one code-graph provider.
+Do not assume even these require large bespoke services; prefer plugins/adapters where the selected base supports them.
 
-## Constraints
-
-- LLM sessions are disposable; durable state lives outside the model.
-- Do not use an agent where deterministic code is sufficient.
-- PostgreSQL is execution truth; OpenSearch does not own task state.
-- OpenSearch is a rebuildable projection, never canonical truth.
-- OpenSearch indexing failure must not prevent PostgreSQL state commits; prefer outbox/replayable projection.
-- MemPalace is experiential memory, never canonical truth.
-- Git/canonical docs represent current project truth.
-- Permissions must be enforced outside prompts.
-- Agent-facing OpenSearch access should default to read/query; projection writes belong to deterministic services/workers.
-- Retries are bounded.
-- External side effects must be idempotent/journaled.
-- Skills are model-agnostic.
-- Tool/MCP access follows least privilege.
-- Specialize primarily through skills, not dozens of agent types.
-- Use explicit routing policy before learned routing.
-- Do not implement autonomous self-modification in V1.
-- Instrument the system so cost per accepted correct task can be measured.
-
-## Design bias
-
-When deciding whether to add another agent, service, abstraction, MCP wrapper, provider, memory class, or datastore, prefer the simpler design until real usage demonstrates the need.
-
-The system should become more sophisticated because of measured friction, not because future complexity is imaginable.
-
-## Deliverables before substantial implementation
+## Required implementation plan after adoption
 
 Produce and commit:
 
-1. current-repository assessment;
-2. proposed module/package structure;
-3. PostgreSQL Task/control schema and state-machine definition;
-4. outbox/projection and operation-journal design;
-5. agent/skill/capability manifest formats;
-6. OpenSearch index mappings, versioned aliases, projection boundaries, and rebuild procedure;
-7. OpenSearch MCP + Context Resolver retrieval contract, including multi-search composition;
-8. runtime sequence diagram for one code-changing task;
-9. V1 milestone breakdown;
-10. risks, unknowns, and architecture decisions requiring approval;
-11. explicit list of deferred post-V1 features.
-
-After the plan is internally consistent, begin the first vertical slice.
+1. final selected component diagram;
+2. exact source-of-truth ownership table;
+3. custom components/packages that remain to build;
+4. extension/plugin/adapter points for adopted projects;
+5. data-flow and failure/recovery sequence diagrams;
+6. OpenSearch index mappings/versioned aliases/rebuild path;
+7. Context Resolver retrieval contract;
+8. skill/capability manifest contract compatible with Agent Skills;
+9. runtime sequence for a code-changing task;
+10. telemetry/eval schema;
+11. V1 milestone breakdown;
+12. explicit deferred post-V1 work.
 
 ## V1 completion test
 
-A real coding task must be able to start, persist authoritative execution state in PostgreSQL, lose its active model/session, and later continue correctly using selectively retrieved context from the OpenSearch knowledge fabric through the approved capability/MCP layer, then complete deterministic validation and independent review.
+A real coding task must be able to:
+
+1. enter the selected authoritative control plane;
+2. obtain a logical expert role and selected model/runtime;
+3. load portable skills and least-privilege capabilities;
+4. retrieve bounded knowledge through OpenSearch MCP/Context Resolver;
+5. execute in an isolated task workspace;
+6. survive intentional interruption of the active model/process;
+7. resume from durable state without the original chat session;
+8. complete deterministic validation;
+9. receive an independent review;
+10. persist outcome, telemetry, and artifact references;
+11. project useful history into OpenSearch;
+12. allow a later similar task to retrieve that prior experience.
 
 If that cannot be demonstrated, V1 is not complete.
