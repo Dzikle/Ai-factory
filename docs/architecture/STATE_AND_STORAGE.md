@@ -1,111 +1,107 @@
 # AI Factory — State and Storage Architecture
 
-**Status:** Canonical V1 decision
+**Status:** Canonical logical architecture; physical control-plane owner pending adoption spike
 
-This document makes the persistence boundaries explicit. Each store has one primary responsibility. Do not collapse them for convenience.
+This document defines responsibility and authority boundaries. It does **not** require AI Factory to build every datastore or workflow engine itself.
+
+The most important rule is:
+
+> Exactly one system owns authoritative operational task/execution state.
+
+If Paperclip is adopted as the control plane, its durable database/state model may satisfy this role. Do not build a second authoritative AI Factory task database beside it.
 
 ## 1. Storage roles
 
-| Store | Primary responsibility | Authority |
+| Logical store / owner | Primary responsibility | Authority |
 | --- | --- | --- |
-| PostgreSQL | durable control/task execution state | execution truth |
+| Selected control plane (PostgreSQL-backed preferred) | durable task/run/execution state | execution truth |
 | Git + canonical Markdown/YAML | current system/project definitions | canonical configuration / project truth |
-| MemPalace | experiential and episodic memory | historical knowledge, not truth |
+| Selected memory architecture | experiential and episodic memory | historical knowledge, not truth |
 | OpenSearch 3.x | rebuildable search projection across organizational knowledge | projection only |
 | Artifact store | large task outputs, reports, screenshots, traces, patches | artifact source |
 | Code graph provider | structural code relationships | derived structural index |
 | Logs/traces | detailed execution evidence | operational evidence |
 
-## 2. PostgreSQL control database
+## 2. Control-plane persistence
 
-V1 should use PostgreSQL as the durable control-plane database.
+The control plane must persist enough durable state to reconstruct what the system is doing without relying on an active LLM session.
 
-The database must be able to reconstruct what the system is doing without relying on an active LLM session.
-
-Minimum V1 entities:
+Required logical information includes:
 
 ```text
-task
+task / issue
   id
-  project_id
+  project
   objective
   classification
   state
   priority
-  created_at
-  updated_at
-  next_action
-  retry_budget
-  token_budget
-  cost_budget
+  next action / assignment
+  retry/budget information
+  timestamps
 
-stage
-  task_id
-  stage_type
-  state
-  attempt
-  started_at
-  completed_at
-  agent_role
-  model_provider
-  model_id
-
-agent_run
-  id
-  task_id
-  stage_id
-  agent_role
-  model_provider
-  model_id
+run / execution attempt
+  task
+  logical agent role
+  model/provider/runtime
   status
-  input_context_ref
-  output_artifact_ref
-  token_usage
-  estimated_cost
-  started_at
-  completed_at
+  workspace/session reference
+  token/cost/latency telemetry
+  started/completed timestamps
 
-operation_journal
-  id
-  task_id
-  operation_type
-  idempotency_key
+workspace
+  task/project binding
+  repository
+  branch/worktree/runtime reference
+  base/current revision
+
+operation journal / side-effect evidence
+  operation type
+  idempotency key
   status
-  external_id
-  started_at
-  completed_at
+  external id
 
-artifact_ref
-  id
-  task_id
+artifact reference
+  task/run
   type
-  uri
-  checksum
-  metadata
+  URI/checksum/metadata
 
-review_finding
-  id
-  task_id
-  stage_id
-  severity
-  category
-  status
-  description
+review / QA finding
+  severity/category/status
   provenance
 
-event
-  id
-  task_id
-  event_type
-  payload
-  created_at
+event / activity
+  actor
+  task/run
+  type
+  timestamp
+  payload/ref
 ```
 
-Exact schemas and migrations are implementation work, but the responsibility split is canonical.
+These are architectural data requirements, not a mandate to recreate the schema if the selected control plane already stores equivalent information.
 
-## 3. State machine
+### Paperclip candidate
 
-Baseline task flow:
+The adoption spike must determine whether Paperclip's tasks/issues, agent runs, workspaces, budgets/costs, activities, approvals, and execution state satisfy these requirements directly or through small extensions.
+
+If yes:
+
+```text
+Paperclip durable state
+    = execution truth
+```
+
+AI Factory may still project normalized copies into OpenSearch for search/analytics, but those copies are not authoritative.
+
+### Custom/DBOS fallback
+
+If no candidate control plane can satisfy the continuity contract, implement or compose the smallest PostgreSQL-backed control layer necessary. DBOS may be evaluated as a durable workflow mechanism in that scenario.
+
+Do not operate multiple workflow engines as competing authorities.
+
+## 3. State-machine contract
+
+Regardless of physical implementation, AI Factory requires equivalent workflow semantics:
 
 ```text
 QUEUED
@@ -120,7 +116,7 @@ QUEUED
 → DONE
 ```
 
-Exceptional states:
+Exceptional semantics include:
 
 ```text
 BLOCKED
@@ -133,42 +129,48 @@ QA_FAILED
 CANCELLED
 ```
 
-A new process/model must be able to read PostgreSQL and determine the correct next action.
+The selected control plane may use different internal status names. Provide a mapping rather than duplicating the workflow merely to preserve naming.
 
-## 4. PostgreSQL is not the search fabric
+A fresh process/model invocation must be able to determine the correct next action from durable state.
 
-Do not turn the control DB into the cross-organizational retrieval engine.
+## 4. Control state is not the knowledge/search fabric
 
-PostgreSQL stores authoritative execution state. Relevant task/run/review/event metadata is projected asynchronously into OpenSearch for discovery and analysis.
+Do not turn the operational database into the cross-organizational retrieval engine.
+
+The control plane owns current execution state. Relevant tasks, runs, reviews, events, telemetry, goals, and outcomes are projected asynchronously into OpenSearch for discovery, context assembly, and analysis.
 
 The OpenSearch projection can be deleted and rebuilt without damaging task continuity.
 
-## 5. Transactional events / outbox
+## 5. Projection/outbox boundary
 
-Prefer a transactional outbox pattern for durable state changes that must be projected to other systems.
+Prefer durable event/activity hooks or transactional outbox semantics from the selected control plane.
 
-Example:
+Conceptually:
 
 ```text
-PostgreSQL transaction
-  update task state
-  append event/outbox record
+authoritative state change
         ↓
-projection worker
+durable event / outbox / plugin event
         ↓
-OpenSearch / telemetry / notifications
+AI Factory projection adapter
+        ↓
+OpenSearch
 ```
 
-Do not make successful OpenSearch indexing a prerequisite for committing task-state transitions.
+OpenSearch indexing failure must not roll back valid task-state transitions.
 
-## 6. Artifacts
+Projection must be retryable, idempotent, and replayable.
 
-Large or binary outputs do not belong in PostgreSQL or MemPalace.
+If Paperclip exposes suitable activity/event/plugin hooks, use them rather than duplicating writes into another task database solely to obtain an outbox.
 
-Use an artifact store for:
+## 6. Artifact storage
 
-- browser screenshots/video;
-- Playwright traces;
+Large or binary outputs do not belong in task rows or memory stores.
+
+Use the selected artifact/storage provider for:
+
+- screenshots/video;
+- browser/Playwright traces;
 - large logs;
 - patches/diffs;
 - benchmark reports;
@@ -176,19 +178,31 @@ Use an artifact store for:
 - reviewer reports;
 - generated archives.
 
-PostgreSQL stores stable references and metadata.
+The authoritative control plane stores stable references and metadata when appropriate.
 
-## 7. MemPalace boundary
+Prefer an adopted platform's storage interface if it satisfies the requirement; add an AI Factory artifact adapter rather than a competing storage subsystem.
 
-MemPalace stores reusable experience, such as:
+## 7. Memory boundary — provider pending bake-off
+
+The memory provider is intentionally not fixed yet.
+
+Evaluate:
+
+```text
+A. MemPalace primary experiential memory + OpenSearch projection
+B. OpenSearch Agentic Memory primary memory
+C. MemPalace specialist memory + OpenSearch shared/system memory
+```
+
+Whichever architecture is selected, memory may own reusable experience such as:
 
 - incidents/root causes;
 - rejected approaches and reasons;
 - non-obvious repository behavior;
 - recurring QA patterns;
-- specialist lessons.
+- specialist lessons/diaries.
 
-It does **not** own:
+Memory must **not** own:
 
 - current task state;
 - current permissions;
@@ -196,20 +210,31 @@ It does **not** own:
 - canonical architecture;
 - operation idempotency.
 
-Useful memory metadata may be projected into OpenSearch with a pointer back to the original memory.
-
 ## 8. Rebuildability rule
 
 The system must survive loss of OpenSearch indexes and active model sessions.
 
-Durable recovery sources are:
+Durable recovery sources are the selected authoritative systems:
 
 ```text
-PostgreSQL
+control-plane database/state
 Git/canonical manifests
-MemPalace
+selected memory source
 artifact storage
-operation journal
+side-effect/operation evidence
 ```
 
-OpenSearch and code-graph indexes must be rebuildable derived state.
+OpenSearch and code-graph indexes remain rebuildable derived state.
+
+## 9. No duplicate truth
+
+Before adding a datastore, answer:
+
+```text
+What unique authoritative fact lives here?
+Why can the existing selected component not own it?
+Is this authoritative state or only a projection/cache/index?
+How is conflict resolved?
+```
+
+If no unique authoritative responsibility exists, do not add the datastore.
