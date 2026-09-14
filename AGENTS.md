@@ -12,7 +12,9 @@ Build a reusable autonomous software-engineering system that improves the effect
 2. `autonomy/INDEX.md`
 3. `autonomy/GOVERNANCE.md`
 4. `docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md`
-5. `docs/implementation/IMPLEMENTATION_KICKOFF.md` when working on V1 implementation.
+5. `docs/architecture/OPEN_SOURCE_ADOPTION_STRATEGY.md`
+6. `docs/implementation/ADOPTION_SPIKE.md` while the adoption phase is open
+7. `docs/implementation/IMPLEMENTATION_KICKOFF.md` when working on V1 implementation after adoption decisions are recorded.
 
 Then load only the specialist documents relevant to the current task. Do not indiscriminately load the entire repository into context.
 
@@ -24,8 +26,8 @@ Then load only the specialist documents relevant to the current task. Do not ind
 4. **Skills are model-agnostic and selectively loaded.**
 5. **Capabilities/tools follow least privilege and are enforced outside prompts.**
 6. **Git and canonical documents represent current project truth.**
-7. **The task store represents current execution truth.**
-8. **MemPalace represents historical/experiential memory, not canonical truth.**
+7. **Exactly one control-plane system owns authoritative execution/task state.**
+8. **Historical/experiential memory is not canonical truth.**
 9. **OpenSearch is a rebuildable projection and retrieval fabric, not authority.**
 10. **Code graph/indexes assist discovery; current code must still be verified.**
 11. **Retries are bounded and repeated strategies must not loop indefinitely.**
@@ -34,8 +36,22 @@ Then load only the specialist documents relevant to the current task. Do not ind
 14. **Self-improvement proposes and proves changes; it does not blindly mutate canonical infrastructure.**
 15. **Recurring reasoning should move toward deterministic automation.**
 16. **The core framework remains project-independent. Project behavior enters through overlays/configuration.**
+17. **Existing mature open-source capability must be evaluated before substantial equivalent custom infrastructure is written.**
+18. **Adopting a dependency must not create competing sources of truth.**
 
-## Build policy
+## Reuse-first build policy
+
+Before implementing a substantial subsystem:
+
+1. inspect `docs/architecture/OPEN_SOURCE_ADOPTION_STRATEGY.md`;
+2. search for existing maintained OSS/libraries/MCPs that satisfy the capability;
+3. prefer configuration → plugin → adapter → upstream contribution over a fork;
+4. document gaps before writing bespoke infrastructure;
+5. record why a rejected candidate cannot satisfy the architectural contract.
+
+Current adoption candidates must remain experimental until the spike records a decision. Do not silently make Paperclip, ToolHive, SWE-ReX, MemPalace, DBOS, LiteLLM, or another candidate a permanent dependency without the required decision record.
+
+## General build policy
 
 - Build the smallest vertical slice that proves a real capability before adding generic infrastructure.
 - Do not create an LLM agent for work that deterministic code can perform reliably.
@@ -74,6 +90,7 @@ For meaningful changes:
 
 - state the task and acceptance criteria;
 - inspect the smallest relevant code/document surface;
+- check for reusable existing implementation before creating substantial infrastructure;
 - keep changes bounded;
 - update canonical docs when architecture or behavior changes;
 - run deterministic validation where available;
