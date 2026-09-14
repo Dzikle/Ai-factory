@@ -7,15 +7,12 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 - Product goals and success criteria → [`GOALS.md`](GOALS.md)
 - System-wide governance and lifecycle → [`GOVERNANCE.md`](GOVERNANCE.md)
 - Full architecture → [`../docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md`](../docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md)
+- Reuse-first/open-source policy → [`../docs/architecture/OPEN_SOURCE_ADOPTION_STRATEGY.md`](../docs/architecture/OPEN_SOURCE_ADOPTION_STRATEGY.md)
+- State/storage boundaries → [`../docs/architecture/STATE_AND_STORAGE.md`](../docs/architecture/STATE_AND_STORAGE.md)
+- OpenSearch knowledge fabric → [`../docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md`](../docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md)
+- MCP/capability model → [`../docs/architecture/MCP_AND_CAPABILITY_MODEL.md`](../docs/architecture/MCP_AND_CAPABILITY_MODEL.md)
+- Current adoption spike → [`../docs/implementation/ADOPTION_SPIKE.md`](../docs/implementation/ADOPTION_SPIKE.md)
 - V1 implementation contract → [`../docs/implementation/IMPLEMENTATION_KICKOFF.md`](../docs/implementation/IMPLEMENTATION_KICKOFF.md)
-
-## Foundational runtime architecture
-
-Load these when implementing the control/knowledge/runtime foundation:
-
-- Durable state and PostgreSQL task/control DB → [`../docs/architecture/STATE_AND_STORAGE.md`](../docs/architecture/STATE_AND_STORAGE.md)
-- OpenSearch 3.x knowledge fabric, indexes, aliases, projections and retrieval → [`../docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md`](../docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md)
-- MCP/capability model and OpenSearch MCP retrieval contract → [`../docs/architecture/MCP_AND_CAPABILITY_MODEL.md`](../docs/architecture/MCP_AND_CAPABILITY_MODEL.md)
 
 ## Specialist roles
 
@@ -36,6 +33,12 @@ Load these when implementing the control/knowledge/runtime foundation:
 - Policies → `policies/README.md`
 - Evaluation framework → `evals/README.md`
 - Project overlays → `projects/README.md`
+
+## Current phase rule
+
+During Phase 0.5, agents must not begin substantial custom implementation of control-plane, MCP-runtime, sandbox, skills-format, model-gateway, code-graph, or memory infrastructure until the adoption spike has evaluated the corresponding existing candidate.
+
+The spike must produce explicit adoption/rejection decisions and source-of-truth ownership before the final V1 implementation plan is treated as executable.
 
 ## Context-loading rule
 
