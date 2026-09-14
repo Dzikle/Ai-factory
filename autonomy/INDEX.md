@@ -9,6 +9,14 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 - Full architecture → [`../docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md`](../docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md)
 - V1 implementation contract → [`../docs/implementation/IMPLEMENTATION_KICKOFF.md`](../docs/implementation/IMPLEMENTATION_KICKOFF.md)
 
+## Foundational runtime architecture
+
+Load these when implementing the control/knowledge/runtime foundation:
+
+- Durable state and PostgreSQL task/control DB → [`../docs/architecture/STATE_AND_STORAGE.md`](../docs/architecture/STATE_AND_STORAGE.md)
+- OpenSearch 3.x knowledge fabric, indexes, aliases, projections and retrieval → [`../docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md`](../docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md)
+- MCP/capability model and OpenSearch MCP retrieval contract → [`../docs/architecture/MCP_AND_CAPABILITY_MODEL.md`](../docs/architecture/MCP_AND_CAPABILITY_MODEL.md)
+
 ## Specialist roles
 
 - Role catalog → [`agents/README.md`](agents/README.md)
