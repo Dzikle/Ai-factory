@@ -12,16 +12,77 @@ repo.write
 browser.navigate
 memory.search
 memory.write
+knowledge.search
+knowledge.msearch
 code.graph.search
+artifact.read
 artifact.write
 cloud.logs.read
 ```
 
-A runtime registry may resolve those to GitHub/local Git, Playwright, MemPalace, CodeGraph, OpenSearch MCP, or another provider.
+## Provider policy
+
+AI Factory owns the logical capability vocabulary and role/skill permission policy.
+
+Existing infrastructure should provide the runtime implementation whenever it satisfies the contract.
+
+Current candidates:
+
+```text
+knowledge.search / knowledge.msearch
+  → official OpenSearch MCP server
+
+repo.read / repo.write
+  → Git/local Git/provider integration
+
+memory.search / memory.write
+  → selected memory architecture after bake-off
+
+code.graph.search
+  → one selected existing code-graph provider
+
+MCP server lifecycle / isolation / registry / policy
+  → ToolHive candidate
+
+coding runtime / shell environment
+  → SWE-ReX candidate
+```
+
+Do not build a custom OpenSearch MCP server or generic MCP process manager until the adoption spike demonstrates a blocking gap.
+
+## Official OpenSearch MCP
+
+`opensearch-project/opensearch-mcp-server-py` is the preferred agent-facing provider for the OpenSearch knowledge fabric.
+
+V1 should validate at minimum:
+
+```text
+knowledge.search
+knowledge.msearch
+knowledge.mapping.read
+knowledge.index.metadata.read
+```
+
+Agent-facing access defaults to read/query capabilities. Knowledge projection writes belong to deterministic services/workers or tightly scoped administrative paths, not arbitrary agents.
+
+## ToolHive candidate
+
+Evaluate `stacklok/toolhive` before implementing custom MCP infrastructure for:
+
+- server lifecycle;
+- runtime isolation;
+- identity/access policy;
+- registry/tool discovery;
+- secrets integration;
+- audit and observability.
+
+If adopted, ToolHive implements the runtime/security layer; AI Factory still decides which logical capabilities each role/skill/task is allowed to request.
 
 ## Do not over-abstract
 
 Provider-specific operations should remain provider-specific when two tools do not actually mean the same thing. Avoid creating a generic abstraction more complicated than the underlying capabilities.
+
+A logical capability abstraction must have a stable semantic contract, not merely hide provider names.
 
 ## Least privilege
 
@@ -30,19 +91,56 @@ Permissions are enforced outside prompts.
 Example Reviewer:
 
 ```text
-ALLOW repo.read, code.graph.search, memory.search
-DENY  repo.write, repo.merge, deployment.write
+ALLOW
+repo.read
+knowledge.search
+knowledge.msearch
+code.graph.search
+memory.search
+artifact.write
+
+DENY
+repo.write
+repo.merge
+production.deploy
 ```
 
 Example QA/UX:
 
 ```text
-ALLOW repo.read, browser.navigate, artifact.write, memory.search
-DENY  repo.merge, production.deploy, database.write
+ALLOW
+repo.read
+knowledge.search
+memory.search
+browser.navigate
+artifact.write
+
+DENY
+repo.merge
+production.deploy
+database.write
 ```
 
 ## Provider lifecycle
 
-Candidate provider → experimental → validated → canonical → deprecated.
+```text
+candidate
+→ experimental spike
+→ validated
+→ canonical provider
+→ deprecated/replaced
+```
 
-New privileged MCP/tool providers require security review and measured value before canonical adoption.
+New privileged providers require security review and demonstrated value before canonical adoption.
+
+## Extension preference
+
+When a candidate is close but incomplete, prefer:
+
+```text
+configuration
+→ thin adapter
+→ plugin/extension
+→ upstream contribution
+→ fork only as last resort
+```
