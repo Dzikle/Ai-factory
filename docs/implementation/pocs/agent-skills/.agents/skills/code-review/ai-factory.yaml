@@ -1,0 +1,20 @@
+schema_version: 1
+skill: code-review
+skill_version: 0.1.0
+lifecycle: experimental
+risk: medium
+roles:
+  - reviewer
+required_capabilities:
+  - repo.read
+  - git.diff.read
+  - validation.run
+optional_capabilities:
+  - code.graph.search
+  - knowledge.search
+  - memory.search
+denied_capabilities:
+  - repo.write
+  - repo.merge
+eval_refs:
+  - evals/code-review-v1

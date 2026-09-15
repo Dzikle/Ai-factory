@@ -1,143 +1,275 @@
-# AI Factory — V1 Implementation Kickoff Contract
+# AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Blocked on completion of `docs/implementation/ADOPTION_SPIKE.md`.
+**Status:** Builder-ready after Milestone 0 adoption gates
 
-You are implementing the system defined by:
+**Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
-- `docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md`
-- `docs/architecture/OPEN_SOURCE_ADOPTION_STRATEGY.md`
-- `docs/architecture/STATE_AND_STORAGE.md`
-- `docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md`
-- `docs/architecture/MCP_AND_CAPABILITY_MODEL.md`
-- the canonical rules under `autonomy/`
-- the adopted/rejected dependency decisions produced by the adoption spike.
+**Matrix:** [`../decisions/ADOPTION_MATRIX.md`](../decisions/ADOPTION_MATRIX.md)
 
-Do **not** assume the control plane, skills runtime, MCP runtime, sandbox, memory layer, or provider gateway must be built from scratch.
+The open-source adoption spike is complete. V1 is an integration project around
+selected authorities, not a greenfield orchestration project.
 
-## Prerequisite
+## 1. Non-negotiable implementation boundaries
 
-Before substantial V1 implementation, the adoption spike must answer:
+- Paperclip is the only operational task/run/workspace/MCP-policy authority.
+- Do not add DBOS or an AI Factory task database beside Paperclip.
+- Git owns canonical docs, policy definitions, project overlays, evals, and Agent
+  Skills packages.
+- MemPalace is the only experiential-memory authority. OpenSearch receives a
+  projection; OpenSearch Agentic Memory is not run concurrently.
+- OpenSearch is disposable/rebuildable and never the workflow source of truth.
+- Paperclip's governed MCP gateway is the V1 runtime/security layer. Do not add
+  ToolHive unless its documented re-entry trigger is met.
+- Paperclip's workspace and sandbox-provider contract owns execution lifecycle.
+  SWE-ReX may later implement that provider contract; it may not own task state.
+- CodeGraphContext is the single V1 structural graph.
+- LiteLLM serves raw API model calls only. Native Codex/Claude/OpenCode/etc.
+  runtimes use Paperclip adapters directly.
+- Permissions are enforced by runtime credentials and Paperclip MCP profiles,
+  never by prompt or Agent Skills `allowed-tools` text.
+- Reviewer and QA are separate logical agents and policy participants; an
+  implementer cannot self-approve.
+- V1 may propose improvements. It cannot autonomously change canonical code,
+  skills, policies, models, permissions, or deployment configuration.
+
+## 2. Target package/integration seams
+
+Names are descriptive; preserve boundaries even if the eventual repository
+layout differs.
+
+| Seam | Responsibility | Explicit non-responsibility |
+| --- | --- | --- |
+| `control-paperclip` | Paperclip client/plugin/launcher integration, status mapping, fault-test helpers | No task tables, scheduler, queue, or retry engine |
+| `context-resolver` | Query plan, ranking, dedupe, provenance, freshness, source verification, hard context budget | No canonical storage or free-form index writes |
+| `projection-opensearch` | Versioned mappings/aliases, idempotent projectors, replay/reconciliation | No workflow decisions |
+| `knowledge-mcp-adapter` | Logical names, fixed aliases, source filters, bounded result shape | No replacement OpenSearch MCP server |
+| `skills-policy` | Agent Skills validation, sidecar schema, role/capability/eval checks, Paperclip sync | No competing skill format or authorization engine |
+| `capability-compiler` | Intersect role + skill + project + task policy and materialize Paperclip profiles/grants | No prompt-only grants |
+| `codegraph-adapter` | Revision-aware bounded symbol/caller/dependency/affected-path operations and symbol projection | No parser/graph implementation |
+| `memory-adapter` | MemPalace scoping, provenance, supersession, retention, projection, promotion proposals | No task/logstream/artifact authority |
+| `model-routing` | Task/risk/eval-based runtime selection and LiteLLM API adapter | No provider-specific task state |
+| `quality-evals` | Deterministic checks, Reviewer/QA contracts, scorecards, promotion/rollback gates | No autonomous canonical mutation |
+
+## 3. Milestone 0 — dependency admission gates
+
+Do this before production feature code.
+
+### 0.1 Pin and deploy Paperclip
+
+1. Choose a supported container/server deployment and pin a commit/release plus
+   image digest. Do not use a floating tag.
+2. Configure durable PostgreSQL/PGlite, storage, secrets, backups, and health
+   checks. Record schema/export/restore commands.
+3. Create representative Developer, Reviewer, and QA logical agents whose
+   identities remain unchanged while model/runtime bindings change.
+4. Prove create → claim → workspace → finite run → persist → restart → reconcile
+   → resume/reinvoke. Kill the model process and Paperclip process at controlled
+   points.
+5. Fault-inject stale checkout/execution owners, duplicate wakeups, silent output,
+   review handoff, MCP token/session expiry, and projection redelivery. Assert one
+   workspace writer and no lost task/side effect.
+6. Reproduce or close the upstream issues listed in ADR 001 for the pinned build.
+   Block admission on any correctness failure; upstream a fix rather than carrying
+   a private fork.
+
+### 0.2 Prove the pre-run seam
+
+Implement a throwaway Paperclip launcher/runtime wrapper that:
 
 ```text
-Which existing projects are adopted?
-Which are rejected?
-What does each adopted component own?
-What custom AI Factory components remain necessary?
-Where is every source of truth?
+claimed Paperclip run
+→ resolve placeholder bounded context
+→ persist context artifact + digest/sources/budget in contextSnapshot
+→ delegate to one native adapter
+→ persist result
 ```
 
-If those answers do not exist, continue the adoption spike rather than writing bespoke infrastructure.
+It passes only if no Paperclip core fork or duplicate run state is needed. If the
+existing adapter context is insufficient, propose a small general upstream
+pre-run enrichment hook and hold V1 feature implementation until accepted or an
+upgrade-safe wrapper is proven.
 
-## Fixed architectural requirements
+### 0.3 Admit the data providers
 
-These are requirements regardless of which OSS components implement them:
+- OpenSearch 3.8.x: pin image/digest, create dedicated cluster, versioned aliases,
+  read-only agent account and write-only projector account; prove delete/rebuild.
+- Official OpenSearch MCP 0.11.0: fixed single-cluster mode, explicit read tool
+  allowlist, no Generic API, no dynamic credentials; verify server and Paperclip
+  deny paths plus hard result limits.
+- CodeGraphContext 0.6.13: use a pinned Linux container/backend; measure cold and
+  one-file incremental indexing plus callers/dependencies on representative
+  Java/Spring, TypeScript, and Go fixtures. Do not admit the failed Windows
+  embedded profile.
+- MemPalace 3.9.0: one-writer/team-hub profile, destructive sync disabled,
+  concurrent-write/restart/export/backup/restore test, and scoped MCP grants.
+- LiteLLM 1.102.0: provider contract test for one API agent, bounded call fallback,
+  error mapping and usage reconciliation. Do not route a native harness through it.
 
-- exactly one authoritative durable control/task state owner;
-- disposable LLM/model sessions;
-- logical expert identity separated from model/provider runtime;
-- portable model-agnostic skills;
-- least-privilege capabilities enforced outside prompts;
-- Git/canonical docs as current system/project truth;
-- OpenSearch 3.x as a separate rebuildable organizational knowledge fabric;
-- official OpenSearch MCP preferred for agent retrieval;
-- bounded Context Resolver / multi-search retrieval;
-- one primary code-graph provider in V1;
-- large artifacts stored outside the control DB;
-- deterministic validation before subjective LLM review where possible;
-- independent Reviewer and QA roles;
-- telemetry sufficient to measure cost per accepted correct task;
-- bounded retries and idempotent external side effects;
-- no autonomous self-modification in V1.
+Milestone 0 exits only when the pinned dependency manifest, license inventory,
+POC results, unresolved issue disposition, and rollback versions are committed.
 
-## Implementation ownership after the spike
+## 4. Milestone 1 — contracts, policy, and projections
 
-The final adoption matrix determines the physical implementation.
+### 1.1 Canonical Git contracts
 
-Example if Paperclip passes:
+Commit versioned schemas for:
 
-```text
-Paperclip
-  → authoritative operational control plane / tasks / agent runs / budgets / workspaces
+- project overlays and canonical-source precedence;
+- Agent Skills `ai-factory.yaml` sidecars;
+- logical capability definitions and role/project/task intersections;
+- context query plan, provenance envelope, per-domain and total budgets;
+- normalized task/run/review/QA/telemetry events;
+- memory provenance/supersession/retention and promotion proposals;
+- model selection/fallback/escalation policy;
+- deterministic validation and independent review outcomes.
 
-AI Factory extensions
-  → Context Resolver
-  → OpenSearch knowledge projection
-  → expert workflow policies
-  → capability mapping / selected plugins
-  → reviewer/QA integration
-  → memory integration chosen by bake-off
-  → telemetry/eval/self-improvement logic
-```
+These schemas describe integration data. They must not become a second task or
+MCP permission store.
 
-In this case, do **not** build a second custom PostgreSQL task engine simply because an earlier design document described logical task entities.
+### 1.2 Paperclip policy templates
 
-If Paperclip is rejected, implement the smallest control plane that satisfies the same contract, reusing DBOS or other components only where the adoption decisions justify them.
-
-## Target V1 vertical slice
-
-The selected stack must prove:
+Materialize the first engineering execution policy:
 
 ```text
-task
-→ authoritative durable state
-→ agent selection
-→ portable skill/capability resolution
-→ OpenSearch MCP bounded context retrieval
-→ isolated execution/workspace
+Developer implementation
 → deterministic validation
-→ independent review
-→ persisted outcome/artifacts
-→ OpenSearch projection
-→ interruption/recovery/resumability
+→ independent Reviewer
+→ conditional independent QA/UX
+→ integration approval
 ```
 
-## Custom pieces we expect may remain
+Use distinct logical agent IDs, read-oriented Reviewer/QA profiles, explicit
+return-to-implementation transitions, and no-self-approval checks.
 
-Even with strong reuse, AI Factory will likely still need differentiated code for:
+### 1.3 OpenSearch projection foundation
 
-1. **Context Resolver** — compose bounded provenance-aware context from OpenSearch multi-search and original-source verification;
-2. **OpenSearch projection adapters/workers** — project tasks, runs, docs, memory metadata, capabilities, code metadata, reviews, and telemetry from chosen durable sources;
-3. **AI Factory expert/workflow policy** — Orchestrator/Architect/Developer/Reviewer/QA semantics and stage rules;
-4. **project overlays** — reusable framework + repository-specific policy/context;
-5. **capability mapping** — map logical AI Factory capabilities to selected MCP/runtime providers;
-6. **memory adapter** — based on the selected memory architecture;
-7. **quality/eval integration** — deterministic checks, independent review, task outcomes, and later process optimization;
-8. **telemetry normalization** — enough common data to compare models/providers/task classes across runtimes.
+Implement versioned mappings/aliases and idempotent projectors for:
 
-Do not assume even these require large bespoke services; prefer plugins/adapters where the selected base supports them.
+```text
+Git docs/ADRs/project overlays
+Agent Skills/capability metadata
+Paperclip tasks/runs/reviews/QA/costs/approvals/MCP audit
+MemPalace memories and temporal status
+CodeGraphContext symbol pointers
+artifact metadata
+```
 
-## Required implementation plan after adoption
+Use deterministic document IDs, source revision/version, tombstones or
+supersession, replay cursor, dead-letter evidence, and periodic source
+reconciliation. Projection failure never rolls back valid source state.
 
-Produce and commit:
+Milestone 1 exits when every index can be deleted and rebuilt from its named
+authority and a duplicate event produces no duplicate document.
 
-1. final selected component diagram;
-2. exact source-of-truth ownership table;
-3. custom components/packages that remain to build;
-4. extension/plugin/adapter points for adopted projects;
-5. data-flow and failure/recovery sequence diagrams;
-6. OpenSearch index mappings/versioned aliases/rebuild path;
-7. Context Resolver retrieval contract;
-8. skill/capability manifest contract compatible with Agent Skills;
-9. runtime sequence for a code-changing task;
-10. telemetry/eval schema;
-11. V1 milestone breakdown;
-12. explicit deferred post-V1 work.
+## 5. Milestone 2 — Context Resolver vertical slice
 
-## V1 completion test
+Implement one task class against one real repository.
 
-A real coding task must be able to:
+1. Paperclip claims a code-change task atomically and binds a worktree.
+2. Role/project/task policy selects the `repository-discovery` and appropriate
+   implementation/review skills.
+3. Capability compiler materializes a least-privilege Paperclip profile. A
+   missing required capability blocks rather than widens access.
+4. Context Resolver issues separate bounded OpenSearch searches for canonical
+   docs, active decisions, relevant history, similar tasks/reviews, capability/
+   skill metadata, and code symbols.
+5. It optionally expands selected memories and graph relationships, verifies
+   source claims in Git, filters superseded/stale records, and writes one bounded
+   context-package artifact.
+6. A native Developer adapter works only inside the assigned worktree.
+7. Deterministic repository checks run and become artifacts/evidence.
+8. A separate Reviewer receives task, diff, checks, and bounded context. A
+   policy-selected QA agent runs separately when applicable.
+9. Paperclip persists outcome/cost/artifact references and projectors update
+   OpenSearch.
+10. Kill the active Developer process and change its model binding; the task
+    resumes from Paperclip state, context artifact, and workspace without the
+    original conversation.
 
-1. enter the selected authoritative control plane;
-2. obtain a logical expert role and selected model/runtime;
-3. load portable skills and least-privilege capabilities;
-4. retrieve bounded knowledge through OpenSearch MCP/Context Resolver;
-5. execute in an isolated task workspace;
-6. survive intentional interruption of the active model/process;
-7. resume from durable state without the original chat session;
-8. complete deterministic validation;
-9. receive an independent review;
-10. persist outcome, telemetry, and artifact references;
-11. project useful history into OpenSearch;
-12. allow a later similar task to retrieve that prior experience.
+Milestone 2 acceptance:
 
-If that cannot be demonstrated, V1 is not complete.
+- one authoritative task/run state throughout;
+- no unauthorized tool appears in each role's MCP catalog;
+- context stays inside configured per-domain and total limits;
+- every supplied record has source, revision/time, status and provenance;
+- stale memory cannot override Git;
+- one process interruption recovers without duplicate side effects;
+- Developer cannot mark its own review/QA accepted;
+- OpenSearch loss does not prevent task-state recovery and its indexes rebuild.
+
+## 6. Milestone 3 — experiential memory loop
+
+Add memory only after Milestone 2 is stable.
+
+1. Store the seven representative memory scenarios from the adoption decision.
+2. Validate project/role/agent scoping, temporal supersession, provenance,
+   retention/review dates, token impact, and exact-backend fallback.
+3. Record which retrieved memories were supplied, used, rejected as stale, or
+   contradicted by canonical sources.
+4. Detect repeated evidence patterns and create a Paperclip improvement proposal.
+5. Demonstrate one reviewed promotion:
+
+```text
+experience
+→ repeated pattern with source evidence
+→ reviewed Agent Skill or deterministic check in Git
+→ eval
+→ approval
+→ versioned rollout/rollback
+```
+
+No automatic write to canonical Git is allowed in V1.
+
+## 7. Milestone 4 — evaluation, self-healing, and operations
+
+- Build retrieval query sets/judgments/experiments in OpenSearch Search Relevance
+  Workbench and keep expected outcomes/promotion thresholds in Git.
+- Project Paperclip native telemetry and calculate cost/latency/tokens per
+  accepted correct task, first-pass review/QA rate, escaped defects, recovery
+  success, duplicate effects, context size/use, stale-memory rejection, and
+  model/skill version correlations.
+- Implement bounded self-healing actions: retry idempotent reads, restart an MCP
+  runtime slot, rebuild a disposable graph/index, rehydrate a workspace, or
+  escalate. Every action is policy-constrained and audited.
+- Run restore, dependency rollback, OpenSearch rebuild, MemPalace restore, and
+  model/provider substitution drills.
+- Add Promptfoo, Phoenix, Langfuse, ToolHive, SWE-ReX, DBOS, or another store only
+  when a measured gap and the authority boundary are recorded in a new ADR.
+
+## 8. V1 completion test
+
+A real coding task must demonstrate:
+
+```text
+Paperclip durable task/claim
+→ stable logical expert + replaceable model/runtime
+→ validated Agent Skills + least-privilege Paperclip MCP profile
+→ bounded OpenSearch/Memory/CodeGraph context with Git verification
+→ task worktree/sandbox
+→ deterministic checks
+→ independent Reviewer
+→ independent conditional QA/UX
+→ durable outcome/artifacts/telemetry
+→ replayable OpenSearch projection
+→ forced interruption and model-change recovery
+→ later scoped retrieval of the proven experience
+```
+
+The task fails V1 acceptance if it relies on the original chat, permits duplicate
+workflow truth, silently bypasses MCP governance, treats memory/projection as
+current truth, or cannot replace any selected dependency through its documented
+adapter/restore path.
+
+## 9. Explicit post-V1 deferrals
+
+- autonomous canonical self-modification;
+- multi-primary/global Paperclip deployment;
+- untrusted multi-tenant hostile-code execution beyond a selected provider;
+- ToolHive runtime substrate;
+- DBOS control-plane replacement;
+- SWE-ReX sandbox-provider implementation;
+- OpenSearch Agentic Memory migration;
+- E2B or other hosted sandbox;
+- Promptfoo/Phoenix/Langfuse;
+- more than one code graph;
+- automatic memory-to-automation promotion without human review.

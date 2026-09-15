@@ -36,19 +36,20 @@ repo.read / repo.write
   → Git/local Git/provider integration
 
 memory.search / memory.write
-  → selected memory architecture after bake-off
+  → MemPalace through the AI Factory memory adapter
 
 code.graph.search
-  → one selected existing code-graph provider
+  → CodeGraphContext through the AI Factory graph adapter
 
 MCP server lifecycle / isolation / registry / policy
-  → ToolHive candidate
+  → Paperclip governed MCP gateway
 
 coding runtime / shell environment
-  → SWE-ReX candidate
+  → Paperclip execution workspace / sandbox-provider contract
 ```
 
-Do not build a custom OpenSearch MCP server or generic MCP process manager until the adoption spike demonstrates a blocking gap.
+Do not build a custom OpenSearch MCP server or generic MCP process manager. The
+spike found no blocking gap that justifies either in V1.
 
 ## Official OpenSearch MCP
 
@@ -65,9 +66,9 @@ knowledge.index.metadata.read
 
 Agent-facing access defaults to read/query capabilities. Knowledge projection writes belong to deterministic services/workers or tightly scoped administrative paths, not arbitrary agents.
 
-## ToolHive candidate
+## ToolHive deferred boundary
 
-Evaluate `stacklok/toolhive` before implementing custom MCP infrastructure for:
+ToolHive was evaluated for:
 
 - server lifecycle;
 - runtime isolation;
@@ -76,7 +77,10 @@ Evaluate `stacklok/toolhive` before implementing custom MCP infrastructure for:
 - secrets integration;
 - audit and observability.
 
-If adopted, ToolHive implements the runtime/security layer; AI Factory still decides which logical capabilities each role/skill/task is allowed to request.
+It is deferred because Paperclip now implements these responsibilities. Reconsider
+ToolHive only when untrusted third-party stdio/container isolation provides
+measured value, and only after proving that Paperclip remains the single active
+policy/approval/audit authority.
 
 ## Do not over-abstract
 

@@ -13,8 +13,9 @@ Build a reusable autonomous software-engineering system that improves the effect
 3. `autonomy/GOVERNANCE.md`
 4. `docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md`
 5. `docs/architecture/OPEN_SOURCE_ADOPTION_STRATEGY.md`
-6. `docs/implementation/ADOPTION_SPIKE.md` while the adoption phase is open
-7. `docs/implementation/IMPLEMENTATION_KICKOFF.md` when working on V1 implementation after adoption decisions are recorded.
+6. `docs/decisions/ADOPTION_MATRIX.md`
+7. `docs/decisions/V1_ADOPTION_ARCHITECTURE.md`
+8. `docs/implementation/IMPLEMENTATION_KICKOFF.md` when working on V1 implementation.
 
 Then load only the specialist documents relevant to the current task. Do not indiscriminately load the entire repository into context.
 
@@ -49,7 +50,10 @@ Before implementing a substantial subsystem:
 4. document gaps before writing bespoke infrastructure;
 5. record why a rejected candidate cannot satisfy the architectural contract.
 
-Current adoption candidates must remain experimental until the spike records a decision. Do not silently make Paperclip, ToolHive, SWE-ReX, MemPalace, DBOS, LiteLLM, or another candidate a permanent dependency without the required decision record.
+The Phase 0.5 decisions are recorded in the adoption matrix and ADRs. Do not
+silently expand a selected dependency's authority or activate a deferred
+candidate such as ToolHive, SWE-ReX, DBOS, OpenSearch Agentic Memory, or another
+overlapping system without a new evidence-backed decision record.
 
 ## General build policy
 

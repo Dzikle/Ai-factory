@@ -1,0 +1,20 @@
+schema_version: 1
+skill: repository-discovery
+skill_version: 0.1.0
+lifecycle: experimental
+risk: low
+roles:
+  - researcher
+  - architect
+  - developer
+  - reviewer
+  - qa
+required_capabilities:
+  - repo.read
+  - repo.search
+  - git.read
+denied_capabilities:
+  - repo.write
+  - repo.merge
+eval_refs:
+  - evals/repository-discovery-v1

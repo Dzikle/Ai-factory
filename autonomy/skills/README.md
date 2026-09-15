@@ -62,14 +62,18 @@ skill metadata / short description
 
 The exact runtime mechanics may differ by harness, but the canonical skill content should remain portable.
 
-## Early spike skills
+## Adoption-spike specimens
 
-The adoption spike should implement at least two representative portable skills:
+The adoption spike includes two representative portable skill specimens:
 
 - `repository-discovery`
 - `code-review`
 
-Use them from at least two different agent/model runtimes to prove the canonical skill is transferable.
+They are stored under `docs/implementation/pocs/agent-skills/` and were validated
+both as directly loaded `SKILL.md` procedures and through an indexed metadata-first
+catalog flow. A live two-harness execution remains an admission test before the
+first production skill is promoted; the file-format POC alone does not claim
+behavioral parity between harnesses.
 
 ## Later candidate skills
 

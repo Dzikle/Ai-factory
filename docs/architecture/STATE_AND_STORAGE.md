@@ -1,6 +1,6 @@
 # AI Factory — State and Storage Architecture
 
-**Status:** Canonical logical architecture; physical control-plane owner pending adoption spike
+**Status:** Canonical V1 architecture; physical owners selected by the adoption spike
 
 This document defines responsibility and authority boundaries. It does **not** require AI Factory to build every datastore or workflow engine itself.
 
@@ -8,15 +8,17 @@ The most important rule is:
 
 > Exactly one system owns authoritative operational task/execution state.
 
-If Paperclip is adopted as the control plane, its durable database/state model may satisfy this role. Do not build a second authoritative AI Factory task database beside it.
+Paperclip is adopted as the control plane; its durable database/state model owns
+this role. Do not build a second authoritative AI Factory task database beside
+it.
 
 ## 1. Storage roles
 
 | Logical store / owner | Primary responsibility | Authority |
 | --- | --- | --- |
-| Selected control plane (PostgreSQL-backed preferred) | durable task/run/execution state | execution truth |
+| Paperclip control plane | durable task/run/execution state | execution truth |
 | Git + canonical Markdown/YAML | current system/project definitions | canonical configuration / project truth |
-| Selected memory architecture | experiential and episodic memory | historical knowledge, not truth |
+| MemPalace | experiential and episodic memory | historical knowledge, not current truth |
 | OpenSearch 3.x | rebuildable search projection across organizational knowledge | projection only |
 | Artifact store | large task outputs, reports, screenshots, traces, patches | artifact source |
 | Code graph provider | structural code relationships | derived structural index |
@@ -80,11 +82,11 @@ event / activity
 
 These are architectural data requirements, not a mandate to recreate the schema if the selected control plane already stores equivalent information.
 
-### Paperclip candidate
+### Paperclip selection
 
-The adoption spike must determine whether Paperclip's tasks/issues, agent runs, workspaces, budgets/costs, activities, approvals, and execution state satisfy these requirements directly or through small extensions.
-
-If yes:
+The adoption spike determined that Paperclip's tasks/issues, agent runs,
+workspaces, budgets/costs, activities, approvals, and execution state satisfy
+these requirements directly or through bounded adapters and adoption gates.
 
 ```text
 Paperclip durable state
@@ -93,9 +95,10 @@ Paperclip durable state
 
 AI Factory may still project normalized copies into OpenSearch for search/analytics, but those copies are not authoritative.
 
-### Custom/DBOS fallback
+### DBOS replacement fallback
 
-If no candidate control plane can satisfy the continuity contract, implement or compose the smallest PostgreSQL-backed control layer necessary. DBOS may be evaluated as a durable workflow mechanism in that scenario.
+If Paperclip fails its pinned-release continuity gates, DBOS may be evaluated as
+part of a mutually exclusive replacement control plane.
 
 Do not operate multiple workflow engines as competing authorities.
 
@@ -182,19 +185,17 @@ The authoritative control plane stores stable references and metadata when appro
 
 Prefer an adopted platform's storage interface if it satisfies the requirement; add an AI Factory artifact adapter rather than a competing storage subsystem.
 
-## 7. Memory boundary — provider pending bake-off
+## 7. Memory boundary — MemPalace selected
 
-The memory provider is intentionally not fixed yet.
-
-Evaluate:
+The bake-off decision is:
 
 ```text
-A. MemPalace primary experiential memory + OpenSearch projection
-B. OpenSearch Agentic Memory primary memory
-C. MemPalace specialist memory + OpenSearch shared/system memory
+SELECTED: MemPalace primary experiential memory + OpenSearch projection
+DEFERRED FALLBACK: OpenSearch Agentic Memory primary memory
+REJECTED: two concurrent primary memory authorities
 ```
 
-Whichever architecture is selected, memory may own reusable experience such as:
+MemPalace may own reusable experience such as:
 
 - incidents/root causes;
 - rejected approaches and reasons;
@@ -219,7 +220,7 @@ Durable recovery sources are the selected authoritative systems:
 ```text
 control-plane database/state
 Git/canonical manifests
-selected memory source
+MemPalace
 artifact storage
 side-effect/operation evidence
 ```

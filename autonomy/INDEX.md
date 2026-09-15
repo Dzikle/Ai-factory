@@ -12,6 +12,8 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 - OpenSearch knowledge fabric → [`../docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md`](../docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md)
 - MCP/capability model → [`../docs/architecture/MCP_AND_CAPABILITY_MODEL.md`](../docs/architecture/MCP_AND_CAPABILITY_MODEL.md)
 - Current adoption spike → [`../docs/implementation/ADOPTION_SPIKE.md`](../docs/implementation/ADOPTION_SPIKE.md)
+- Completed adoption matrix → [`../docs/decisions/ADOPTION_MATRIX.md`](../docs/decisions/ADOPTION_MATRIX.md)
+- Selected physical V1 architecture → [`../docs/decisions/V1_ADOPTION_ARCHITECTURE.md`](../docs/decisions/V1_ADOPTION_ARCHITECTURE.md)
 - V1 implementation contract → [`../docs/implementation/IMPLEMENTATION_KICKOFF.md`](../docs/implementation/IMPLEMENTATION_KICKOFF.md)
 
 ## Specialist roles
@@ -36,9 +38,13 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 
 ## Current phase rule
 
-During Phase 0.5, agents must not begin substantial custom implementation of control-plane, MCP-runtime, sandbox, skills-format, model-gateway, code-graph, or memory infrastructure until the adoption spike has evaluated the corresponding existing candidate.
+Phase 0.5 is complete. During Phase 1, agents must follow the selected
+integration boundaries and pass Milestone 0 dependency gates before substantial
+V1 feature implementation.
 
-The spike must produce explicit adoption/rejection decisions and source-of-truth ownership before the final V1 implementation plan is treated as executable.
+Changes that introduce a second task/workflow, MCP policy, memory, sandbox
+lifecycle, or graph authority require a new ADR and evidence that the existing
+selected boundary cannot satisfy the requirement.
 
 ## Context-loading rule
 

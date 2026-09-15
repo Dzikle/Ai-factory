@@ -1,10 +1,16 @@
 # AI Factory — MCP and Capability Model
 
-**Status:** Canonical V1 decision
+**Status:** Canonical V1 decision; Paperclip gateway selected as enforcement layer
 
 MCP/tool providers expose external capabilities to logical agents. Agents should not receive every available server or tool.
 
 The runtime grants only the capabilities required by the current role, skill set, project, and task.
+
+For V1, Paperclip's governed MCP gateway is the active catalog/profile/policy/
+approval/audit authority. Git under `autonomy/` owns the logical capability and
+role-policy definitions; the capability compiler resolves those definitions
+into Paperclip profiles and grants. ToolHive is deferred to avoid a second
+catalog/policy/audit authority.
 
 ## 1. Capability-first model
 

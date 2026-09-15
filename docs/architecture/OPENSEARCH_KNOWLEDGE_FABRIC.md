@@ -14,7 +14,10 @@ OpenSearch answers:
 
 It is **not** the source of truth for those records.
 
-Canonical sources remain PostgreSQL, Git/canonical documents, MemPalace, artifacts, and code repositories.
+Canonical sources remain Paperclip's operational database, Git/canonical
+documents, MemPalace, the artifact store, and code repositories. MemPalace was
+selected by the completed memory bake-off; OpenSearch Agentic Memory is a
+mutually exclusive fallback, not a concurrent primary store.
 
 ## 2. V1 logical indexes
 
@@ -128,7 +131,7 @@ Expected sources:
 
 ```text
 Git/canonical docs ───────┐
-PostgreSQL tasks/reviews ─┤
+Paperclip tasks/reviews ──┤
 MemPalace metadata ───────┤
 Runtime events/telemetry ─┤→ projection workers → OpenSearch
 Capability registry ──────┤
@@ -216,7 +219,7 @@ All indexes are projections.
 If OpenSearch is lost, rebuild from:
 
 - Git/canonical documents;
-- PostgreSQL task/control data;
+- Paperclip task/control data;
 - MemPalace metadata/memories;
 - capability/skill manifests;
 - code-graph metadata;

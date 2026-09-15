@@ -3,6 +3,13 @@
 **Status:** Canonical architectural policy  
 **Purpose:** Prevent AI Factory from rebuilding mature infrastructure without evidence.
 
+The Phase 0.5 candidates below have now been evaluated. Their binding decisions,
+versions, authority boundaries, gates, and replacements are in
+[`../decisions/ADOPTION_MATRIX.md`](../decisions/ADOPTION_MATRIX.md) and
+[`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md).
+Candidate descriptions are retained to explain the evaluated hypotheses; the
+decision records take precedence over old candidate language.
+
 ## 1. Reuse-first principle
 
 AI Factory is not a greenfield exercise in reimplementing agent infrastructure.
@@ -21,7 +28,7 @@ A custom implementation requires an explicit gap statement explaining why availa
 
 ## 2. AI Factory remains the architectural contract
 
-External projects are implementation candidates, not the definition of AI Factory.
+External projects are implementation providers or alternatives, not the definition of AI Factory.
 
 The following AI Factory properties remain non-negotiable:
 
@@ -40,11 +47,11 @@ The following AI Factory properties remain non-negotiable:
 
 If an external control plane or runtime cannot preserve these properties through configuration, plugins, adapters, or bounded extensions, it does not automatically become the foundation merely because it already exists.
 
-## 3. Candidate implementation stack
+## 3. Evaluated implementation stack
 
-The following projects should be evaluated before equivalent custom code is written.
+The following projects were evaluated before equivalent custom code was authorized.
 
-### Paperclip — primary control-plane candidate
+### Paperclip — selected control plane
 
 Repository: `paperclipai/paperclip`  
 License: MIT at time of evaluation.
@@ -64,15 +71,19 @@ Paperclip already provides many capabilities that overlap with our planned commo
 - skills management;
 - plugins, secrets, storage, events, and audit surfaces.
 
-**Adoption status:** primary candidate, not yet canonical dependency.
+**Adoption status:** **ADAPT** — selected as the sole operational authority,
+subject to pinned-release recovery/MCP/workspace gates in ADR 001.
 
-The first implementation phase must determine whether Paperclip can supply the control-plane foundation without creating competing sources of truth or preventing our knowledge/retrieval/improvement architecture.
+The first implementation milestone must validate the pinned Paperclip release
+against the documented recovery, MCP, workspace, and pre-run integration gates
+without creating competing sources of truth.
 
 Prefer extending Paperclip through its supported plugin/adapter surfaces over forking it.
 
-### DBOS — durable workflow fallback / optional underlay
+### DBOS — deferred replacement, not an underlay
 
-DBOS should be evaluated only if the chosen control plane cannot meet our hard continuity requirement.
+DBOS was evaluated and remains available only if Paperclip cannot meet the hard
+continuity requirement.
 
 Potential value:
 
@@ -81,11 +92,11 @@ Potential value:
 - retries/queues;
 - durable AI/tool-call execution patterns.
 
-**Adoption status:** fallback candidate.
+**Adoption status:** **DEFER** — mutually exclusive Paperclip replacement only.
 
 Do not combine Paperclip task state + DBOS workflow state + a third AI Factory state model without a demonstrated need and a clearly defined authority boundary.
 
-### Agent Skills — canonical skill packaging direction
+### Agent Skills — adopted skill packaging format
 
 Repository: `agentskills/agentskills`.
 
@@ -103,9 +114,9 @@ skills/<skill-id>/
 
 AI Factory may maintain additional machine-readable metadata where required for permissions, evaluation, lifecycle, or capability resolution, but should preserve compatibility with the external skill standard whenever practical.
 
-**Adoption status:** preferred/canonical format direction.
+**Adoption status:** **ADOPT** — Git owns canonical skill packages.
 
-### Official OpenSearch MCP server — canonical knowledge MCP provider
+### Official OpenSearch MCP server — selected knowledge MCP provider
 
 Repository: `opensearch-project/opensearch-mcp-server-py`.
 
@@ -113,13 +124,14 @@ Do not build a custom OpenSearch MCP server unless the official server lacks a r
 
 AI Factory capabilities should map to the official server where appropriate, including search/multi-search and read-only knowledge discovery.
 
-**Adoption status:** canonical provider unless spike reveals a blocking gap.
+**Adoption status:** **ADAPT** — fixed-cluster/read-only with a bounded logical
+adapter and Paperclip gateway enforcement.
 
-### ToolHive — MCP runtime/security/registry candidate
+### ToolHive — deferred MCP runtime alternative
 
 Repository: `stacklok/toolhive`.
 
-Evaluate ToolHive before building custom infrastructure for:
+ToolHive was evaluated for:
 
 - MCP server lifecycle;
 - MCP isolation;
@@ -128,39 +140,47 @@ Evaluate ToolHive before building custom infrastructure for:
 - secrets/policy integration;
 - audit/observability around MCP calls.
 
-**Adoption status:** candidate.
+**Adoption status:** **DEFER** — duplicates Paperclip's selected V1 MCP
+catalog/policy/secrets/approval/audit/runtime responsibilities.
 
-AI Factory still owns the logical capability policy (`knowledge.search`, `repo.read`, etc.); ToolHive may provide enforcement/runtime infrastructure underneath it.
+AI Factory still owns logical capability definitions (`knowledge.search`,
+`repo.read`, etc.). Paperclip is the active enforcement/runtime authority in V1;
+ToolHive has no V1 authority.
 
-### SWE-ReX — execution/sandbox candidate
+### SWE-ReX — deferred sandbox-provider option
 
 Repository: `SWE-agent/SWE-ReX`.
 
-Evaluate SWE-ReX before building a custom execution abstraction for coding agents. The desired boundary is that agent logic should not own environment provisioning or shell-runtime details.
+SWE-ReX was evaluated before selecting Paperclip's execution abstraction. Agent
+logic still does not own environment provisioning or shell-runtime details.
 
-**Adoption status:** primary lightweight sandbox/runtime candidate.
+**Adoption status:** **DEFER** — Paperclip owns execution lifecycle; reconsider
+SWE-ReX only behind Paperclip's `sandbox_provider` contract.
 
 A heavier sandbox such as E2B may be evaluated later if stronger hostile-code isolation or remote execution semantics become necessary.
 
-### CodeGraphContext / code graph provider — structural discovery candidate
+### CodeGraphContext — selected structural graph
 
-Use one primary code-graph provider in V1. Evaluate an existing MCP-compatible code graph before writing our own structural index.
+Use CodeGraphContext as the one primary code-graph provider in V1 rather than
+writing our own structural index.
 
-**Adoption status:** candidate; only one provider should be active initially.
+**Adoption status:** **ADAPT** — one containerized, revision-aware, bounded V1
+provider; Git remains code truth.
 
-### LiteLLM — API-model gateway candidate
+### LiteLLM — selected raw API-model gateway
 
-Evaluate LiteLLM for models exposed through standard APIs when it can reduce custom provider routing, retry, budget, and cost-accounting code.
+Use LiteLLM for models exposed through standard APIs where it reduces custom
+provider routing, retry, and cost-accounting code.
 
 CLI/harness agents such as Codex, Claude Code, OpenCode, or CommandCode remain adapter-driven because they are not equivalent to raw model API calls.
 
-**Adoption status:** candidate.
+**Adoption status:** **ADAPT** — raw/API agents only; native harnesses remain
+Paperclip adapters.
 
-### Memory — explicit bake-off required
+### Memory — MemPalace selected by bake-off
 
-The memory architecture must not blindly operate two overlapping stores.
-
-Evaluate:
+The memory architecture must not operate two overlapping primary stores. The
+completed bake-off evaluated:
 
 ```text
 A. MemPalace as experiential memory, projected into OpenSearch
@@ -181,7 +201,9 @@ Compare at least:
 - rebuildability;
 - ability to support the experience → skill → deterministic automation lifecycle.
 
-Until this spike is complete, `MemPalace` is a preferred candidate, not an irreversible V1 dependency.
+**Adoption status:** MemPalace **ADAPT** as the sole experiential-memory
+authority with OpenSearch projection. OpenSearch Agentic Memory is a mutually
+exclusive deferred fallback; dual-primary memory is rejected.
 
 ### OpenAI Symphony — orchestration reference, not required dependency
 
@@ -235,7 +257,7 @@ Adoption must not create competing authorities.
 
 For any selected external component, document exactly what it owns.
 
-Example if Paperclip is adopted:
+Selected Paperclip boundary:
 
 ```text
 Paperclip
@@ -254,7 +276,9 @@ Artifact store
   → large outputs
 ```
 
-If Paperclip becomes authoritative for task state, do not duplicate the same workflow state into a separate custom PostgreSQL task engine. Project/analytics projections into our own schema are acceptable; dual-authoritative workflow engines are not.
+Paperclip is authoritative for task state. Do not duplicate the same workflow
+state into a separate custom PostgreSQL task engine. Project/analytics
+projections are acceptable; dual-authoritative workflow engines are not.
 
 ## 6. Extension-before-fork rule
 

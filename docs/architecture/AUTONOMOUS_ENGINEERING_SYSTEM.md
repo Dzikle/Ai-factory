@@ -50,23 +50,22 @@ deterministic automation
 
 Before building a major subsystem, evaluate whether maintained OSS already supplies it.
 
-Current primary candidates include:
+The Phase 0.5 spike selected:
 
 ```text
-Paperclip                    → control plane / agents / tasks / budgets / workspaces
-Agent Skills                 → portable skill format
-Official OpenSearch MCP      → agent-facing knowledge retrieval
-ToolHive                     → MCP runtime/security/registry candidate
-SWE-ReX                      → coding execution/sandbox candidate
-Existing code-graph provider → structural discovery
-LiteLLM                      → API-model gateway candidate
-MemPalace / OS Agentic Memory→ memory bake-off
-DBOS                         → durable workflow fallback if needed
-OpenAI Symphony              → orchestration reference/invariants
-Promptfoo                    → later eval harness candidate
+Paperclip                    → operational control plane, MCP governance, workspaces/sandbox contract
+Agent Skills                 → Git-owned portable skill format
+Official OpenSearch MCP      → bounded agent-facing knowledge retrieval
+CodeGraphContext             → single derived structural graph
+LiteLLM                      → raw API-model gateway only
+MemPalace                    → sole experiential-memory authority
+OpenAI Symphony/OpenHands    → reference patterns only
+DBOS/ToolHive/SWE-ReX        → deferred alternatives, not concurrent V1 layers
+Promptfoo/Phoenix/Langfuse   → deferred until a measured eval/telemetry gap
 ```
 
-These are implementation candidates, not architectural authorities.
+These are selected implementation providers or explicitly deferred alternatives;
+the AI Factory contract remains the architectural authority.
 
 Prefer:
 
@@ -99,9 +98,11 @@ The selected deterministic control system owns:
 
 No LLM session owns unique durable state.
 
-**Paperclip is the primary adoption candidate for this plane.** If it satisfies the contract, do not build a second equivalent AI Factory task engine.
+**Paperclip is the selected authority for this plane.** Do not build a second
+equivalent AI Factory task engine.
 
-DBOS is a fallback/underlay candidate only if the selected control plane cannot meet hard durability/recovery requirements without competing workflow authorities.
+DBOS is a mutually exclusive replacement candidate only if Paperclip fails its
+hard durability/recovery gates. It is not a Paperclip underlay.
 
 ### Execution Plane
 
@@ -121,7 +122,10 @@ logical role
 
 Agent identity remains stable while the execution model/harness may change because of cost, quota, context needs, provider availability, task difficulty, or escalation.
 
-Execution environments should be delegated to an existing runtime such as SWE-ReX when practical rather than embedded into agent logic.
+Execution environments use Paperclip's execution-workspace and
+`sandbox_provider` contract. Trusted-host V1 runs use task worktrees; a tested
+provider is mandatory before untrusted execution. SWE-ReX is deferred as a
+possible provider implementation, not a second lifecycle owner.
 
 ### Knowledge Plane
 
@@ -256,10 +260,10 @@ AI Factory owns capability semantics and role/skill permission rules.
 Selected infrastructure may enforce/host them:
 
 ```text
-knowledge.*      → official OpenSearch MCP
-MCP lifecycle    → ToolHive candidate
-code.graph.*     → one selected existing graph provider
-execution shell  → SWE-ReX candidate
+knowledge.*      → official OpenSearch MCP through a bounded adapter
+MCP lifecycle    → Paperclip governed MCP gateway
+code.graph.*     → CodeGraphContext through a revision-aware adapter
+execution shell  → Paperclip workspace/sandbox-provider contract
 ```
 
 Capabilities follow least privilege. Permission enforcement belongs outside prompts.
@@ -321,12 +325,12 @@ Passing tests in an isolated workspace is not proof that merged state is valid.
 
 Memory is experiential/historical knowledge, never canonical truth or workflow state.
 
-The provider is intentionally pending an explicit bake-off:
+The bake-off selected one primary memory architecture:
 
 ```text
-A. MemPalace primary experiential memory + OpenSearch projection
-B. OpenSearch Agentic Memory primary memory
-C. MemPalace specialist/episodic memory + OpenSearch shared/system memory
+SELECTED: MemPalace primary experiential memory + OpenSearch projection
+DEFERRED FALLBACK: OpenSearch Agentic Memory primary memory
+REJECTED: MemPalace and OpenSearch as concurrent primary memory stores
 ```
 
 Required memory behavior includes:
@@ -433,7 +437,7 @@ from
 coding-agent/CLI harness runtimes
 ```
 
-LiteLLM is a candidate gateway for API-model concerns such as provider normalization, fallback/retry, and cost accounting.
+LiteLLM is the selected gateway for API-model concerns such as provider normalization, fallback/retry, and cost accounting.
 
 Codex/Claude Code/OpenCode/CommandCode-style agents remain explicit harness adapters because they own more than a completion API.
 
@@ -523,7 +527,8 @@ Maintain representative task/eval suites and measure:
 - retries/escalations;
 - human intervention.
 
-OpenSearch/native telemetry is the initial system of record for cross-run analysis.
+Paperclip native telemetry is the operational evidence authority; its OpenSearch
+projection is the initial cross-run analysis plane.
 
 Promptfoo is a later candidate for regression/eval suites. Phoenix/Langfuse are deferred until real telemetry gaps justify another observability platform.
 
@@ -533,7 +538,9 @@ Agents consume untrusted repositories, web pages, issues, docs, MCP output, memo
 
 Privileged capabilities and secrets are runtime/security boundaries, never prompt conventions.
 
-Evaluate ToolHive before building custom MCP server isolation/policy machinery.
+Paperclip's governed MCP gateway is the selected V1 enforcement/runtime layer.
+ToolHive is deferred because a concurrent deployment would duplicate catalog,
+policy, secrets, approval, audit, and runtime authority.
 
 External side effects must be journaled/idempotent by the authoritative control plane or its approved extension. A restarted agent must not unknowingly create duplicate issues, deployments, messages, or writes.
 
@@ -556,22 +563,16 @@ Every permanent component should improve quality, reliability, cost, latency, to
 
 ## 21. Current implementation phase
 
-The current phase is **Phase 0.5 — open-source adoption spike**.
+The current phase is **Phase 1 — dependency admission and integration-first V1**.
 
-Required first:
+The Phase 0.5 decisions are complete. The spike selected Paperclip, Agent Skills,
+the official OpenSearch MCP server, CodeGraphContext, LiteLLM's API-only gateway,
+and MemPalace; deferred competing control, MCP-runtime, sandbox, memory, eval, and
+observability layers; and captured Symphony/OpenHands invariants as references.
 
-1. evaluate Paperclip as control-plane foundation;
-2. evaluate Agent Skills compatibility;
-3. validate official OpenSearch MCP against our retrieval contract;
-4. evaluate ToolHive for MCP runtime/security;
-5. evaluate SWE-ReX for execution runtime;
-6. select one code-graph provider;
-7. evaluate LiteLLM boundary for API models;
-8. run MemPalace vs OpenSearch Agentic Memory bake-off;
-9. mine Symphony invariants;
-10. document adoption/rejection and exact authority boundaries.
-
-Only then finalize the physical V1 implementation.
+The physical V1 architecture and adoption gates are defined in
+`docs/decisions/V1_ADOPTION_ARCHITECTURE.md` and
+`docs/implementation/IMPLEMENTATION_KICKOFF.md`.
 
 ## 22. V1 target
 

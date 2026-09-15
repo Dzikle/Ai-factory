@@ -1,6 +1,17 @@
 # AI Factory — Open Source Adoption Spike
 
-**Status:** Required before substantial V1 implementation
+**Status:** Complete — decisions accepted 2026-09-14
+
+Results:
+
+- [`../decisions/ADOPTION_MATRIX.md`](../decisions/ADOPTION_MATRIX.md)
+- [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
+- [`../decisions/adr/`](../decisions/adr/)
+- [`ADOPTION_POC_RESULTS.md`](ADOPTION_POC_RESULTS.md)
+- integration-first [`IMPLEMENTATION_KICKOFF.md`](IMPLEMENTATION_KICKOFF.md)
+
+This file is retained as the spike's acceptance contract. The links above are
+the completed evidence and decisions.
 
 The architecture is now reuse-first. Do not begin by writing a custom control plane, skills system, MCP runtime, sandbox, or provider gateway.
 
