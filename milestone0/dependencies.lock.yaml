@@ -1,0 +1,59 @@
+schema_version: 1
+recorded_at: "2026-09-15"
+platform:
+  host: "Windows 11"
+  containers: "linux/amd64"
+
+dependencies:
+  paperclip:
+    version: "commit 5282cabde84624320e63bd942f6ed5124952f2a2"
+    source: "https://github.com/paperclipai/paperclip.git"
+    license: "MIT"
+    image: "ghcr.io/paperclipai/paperclip@sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83"
+    image_platform_manifest: "sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83"
+    source_release_claim: "v2026.831.1"
+    note: "The claimed release tag had no registry manifest; admission pins the commit image digest. Milestone 0 blocked this revision on orphan environment-lease cleanup and the native-adapter pre-run delegation seam."
+  postgres:
+    version: "17.11 (17-alpine image line)"
+    license: "PostgreSQL"
+    image: "postgres@sha256:7456ef82e5f5bc43d997f4781bbd7c0d6389bff397564649a356e206ba473aee"
+    image_platform_manifest: "sha256:7456ef82e5f5bc43d997f4781bbd7c0d6389bff397564649a356e206ba473aee"
+  agent_skills:
+    version: "skills-ref 0.1.0; commit 69ef37e9424c0a7ea9dd2293b559e43ec8176379"
+    source: "https://github.com/agentskills/agentskills.git"
+    license: "Apache-2.0"
+  opensearch:
+    version: "3.8.0"
+    license: "Apache-2.0"
+    image: "opensearchproject/opensearch@sha256:39a8f8c63028e8b5d6b70539af1d0339b15a6729002dd5b3f4a65f520376fd30"
+    image_platform_manifest: "sha256:39a8f8c63028e8b5d6b70539af1d0339b15a6729002dd5b3f4a65f520376fd30"
+  opensearch_mcp:
+    version: "0.11.0; commit fcb23ec17186ba905590fb06b2eeecb063bc54a7"
+    source: "https://github.com/opensearch-project/opensearch-mcp-server-py.git"
+    license: "Apache-2.0"
+    deployment: "Source checkout with uv.lock; fixed single-cluster Streamable HTTP transport and an explicit four-tool read allowlist"
+  mempalace:
+    version: "3.9.0; commit 38260df588968604186b525ecdffb41c140e5f61"
+    source: "https://github.com/MemPalace/mempalace.git"
+    license: "MIT"
+    image: "ghcr.io/mempalace/mempalace@sha256:65da0834ab5ddc2d8247de43aff611393a151eac2893108e66b64f077bf1f232"
+    image_platform_manifest: "sha256:65da0834ab5ddc2d8247de43aff611393a151eac2893108e66b64f077bf1f232"
+    deployment: "One-writer sqlite_exact profile; application read-only for restored replicas; deterministic openai-compat embedding endpoint used only for mechanics admission"
+  codegraphcontext:
+    version: "0.6.13; commit 2ef71b05a2ad1c5fd644c3ba52d77b502adaf1cf"
+    source: "https://github.com/CodeGraphContext/CodeGraphContext.git"
+    license: "MIT"
+    deployment: "Locally built Linux image aif-m0/codegraphcontext:0.6.13-2ef71b0 with explicit ladybugdb backend"
+    image_id: "sha256:9b299edcef77e86e2250dbb8f1d3cafdca576a23165bdea8522dfc35403c88b3"
+  litellm:
+    version: "1.102.0; commit b94b8bca211e366328bcee3acd57d859fd35e52c"
+    source: "https://github.com/BerriAI/litellm.git"
+    license: "MIT core only; proxy extra directly depends on LicenseRef-Proprietary litellm-enterprise 0.1.67"
+    deployment: "Exact source and frozen uv.lock, Linux core-only image aif-m0/litellm-core:1.102.0-b94b8bc"
+    image_id: "sha256:c735b6415326127a4aed012df3c30dab07cd218a1887cc7184512c85e16bf63c"
+    note: "Core Router is admitted for raw API calls. The current server proxy is not admitted as open source; production use requires a commercial-license decision or a different service wrapper."
+
+rollback_policy:
+  rule: "Rollback means restoring the recorded volume/database backup and starting the last admitted immutable digest; never retag a mutable image."
+  current_admitted_set: null
+  reason: "Milestone 0 is blocked by Paperclip. Base architecture commit 71b5a5d is the rollback point and the tested set must not be promoted as a production-admitted stack."

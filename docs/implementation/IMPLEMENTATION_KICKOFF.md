@@ -1,17 +1,22 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Builder-ready after Milestone 0 adoption gates
+**Status:** BLOCKED in Milestone 0; do not start V1 implementation
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
 **Matrix:** [`../decisions/ADOPTION_MATRIX.md`](../decisions/ADOPTION_MATRIX.md)
 
-The open-source adoption spike is complete. V1 is an integration project around
-selected authorities, not a greenfield orchestration project.
+The open-source adoption spike is complete, but the selected stack is not
+admitted. Milestone 0 found blocking Paperclip lease-recovery and pre-run seam
+failures. V1 remains an integration project rather than a greenfield
+orchestration project, but implementation cannot start until Paperclip is fixed
+upstream and re-admitted. See
+[`MILESTONE_0_DEPENDENCY_ADMISSION.md`](MILESTONE_0_DEPENDENCY_ADMISSION.md).
 
 ## 1. Non-negotiable implementation boundaries
 
-- Paperclip is the only operational task/run/workspace/MCP-policy authority.
+- Once admitted, Paperclip is the only operational task/run/workspace/MCP-policy
+  authority. The pinned revision is not admitted.
 - Do not add DBOS or an AI Factory task database beside Paperclip.
 - Git owns canonical docs, policy definitions, project overlays, evals, and Agent
   Skills packages.
@@ -23,8 +28,9 @@ selected authorities, not a greenfield orchestration project.
 - Paperclip's workspace and sandbox-provider contract owns execution lifecycle.
   SWE-ReX may later implement that provider contract; it may not own task state.
 - CodeGraphContext is the single V1 structural graph.
-- LiteLLM serves raw API model calls only. Native Codex/Claude/OpenCode/etc.
-  runtimes use Paperclip adapters directly.
+- LiteLLM's MIT core Router serves raw API model calls only. Its current server
+  proxy extra is not admitted under the open-source decision. Native
+  Codex/Claude/OpenCode/etc. runtimes use Paperclip adapters directly.
 - Permissions are enforced by runtime credentials and Paperclip MCP profiles,
   never by prompt or Agent Skills `allowed-tools` text.
 - Reviewer and QA are separate logical agents and policy participants; an
@@ -53,6 +59,11 @@ layout differs.
 ## 3. Milestone 0 — dependency admission gates
 
 Do this before production feature code.
+
+**Execution result (2026-09-15): BLOCKED.** Paperclip `5282cab` leaked an active
+ephemeral environment lease after controller loss, and the public external
+adapter could not enrich and then delegate to a registered native adapter in the
+same run. Remain in Milestone 0. Do not begin sections 4–8.
 
 ### 0.1 Pin and deploy Paperclip
 
@@ -89,6 +100,10 @@ existing adapter context is insufficient, propose a small general upstream
 pre-run enrichment hook and hold V1 feature implementation until accepted or an
 upgrade-safe wrapper is proven.
 
+Result: **failed at the pinned revision.** The adapter can execute before a
+provider and call governed MCP, but has no supported native-adapter delegation
+operation and its context mutation is not persisted to the host run snapshot.
+
 ### 0.3 Admit the data providers
 
 - OpenSearch 3.8.x: pin image/digest, create dedicated cluster, versioned aliases,
@@ -103,12 +118,24 @@ upgrade-safe wrapper is proven.
 - MemPalace 3.9.0: one-writer/team-hub profile, destructive sync disabled,
   concurrent-write/restart/export/backup/restore test, and scoped MCP grants.
 - LiteLLM 1.102.0: provider contract test for one API agent, bounded call fallback,
-  error mapping and usage reconciliation. Do not route a native harness through it.
+  error mapping and usage reconciliation. Use the MIT core Router; the server
+  `proxy` extra is not admitted as open source. Do not route a native harness
+  through it.
+
+Data-provider result: OpenSearch/MCP, MemPalace, CodeGraphContext, Agent Skills,
+and LiteLLM core passed their bounded mechanics tests with the exact caveats in
+the Milestone 0 report. Those partial passes do not override the control-plane
+blocker.
 
 Milestone 0 exits only when the pinned dependency manifest, license inventory,
 POC results, unresolved issue disposition, and rollback versions are committed.
+It also requires every mandatory Paperclip correctness and seam gate to pass;
+that condition is currently unmet.
 
 ## 4. Milestone 1 — contracts, policy, and projections
+
+**Hold:** this section is not authorized until the Milestone 0 status above is
+changed by a committed re-admission result.
 
 ### 1.1 Canonical Git contracts
 

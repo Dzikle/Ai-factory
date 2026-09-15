@@ -1,8 +1,24 @@
 # ADR 004: Adopt CodeGraphContext as the single V1 structural graph
 
-**Status:** Accepted with container/runtime POC gate
+**Status:** Accepted with rebuild/performance and security gates
 
 **Date:** 2026-09-15
+
+## Milestone 0 amendment — 2026-09-15
+
+The pinned Linux source build passed real Java, TypeScript, and Go symbol/
+caller/callee MCP tests and recovery from deletion of its derived volume. The
+measured `cgc update` path deleted and reindexed the fixture in 64.01 seconds;
+it was not a true one-file incremental update. Cold and disaster rebuilds took
+108 and 113.63 seconds. V1 must schedule updates as rebuilds until upstream
+incrementality is measured on our repository sizes.
+
+The MCP exposes 29 tools, including graph mutation, repository deletion and raw
+Cypher, so only a small read allowlist is admissible. The source-built image also
+reported 16 npm audit findings (1 low, 6 moderate, 9 high), which are a
+remediation gate before broader deployment. Backend auto-detection selected an
+empty FalkorDB beside the populated LadybugDB during a later smoke check, so the
+container must pin `ladybugdb` and its data path explicitly.
 
 ## Context
 
@@ -33,7 +49,9 @@ At the pinned commit, 32 Java/TypeScript parser and live watcher tests passed
 with one skip, and the Go parser test passed. Full embedded indexing on this
 Windows host failed because the Ladybug C API shared library could not load.
 The package marks itself alpha, and large-repository caching, integrity recovery,
-performance, and semantic impact work remain open upstream.
+performance, and semantic impact work remain open upstream. Milestone 0's real
+container POC confirmed cross-file callers for all three required languages and
+rebuildability from Git, while disproving the assumed incremental update cost.
 
 ## Authority boundary
 
@@ -54,7 +72,9 @@ does not match the task's source revision.
 
 The thin adapter composes `affected_paths` from callers/importers/dependencies
 because a complete semantic impact engine is not yet proven. Memory/buffer limits,
-query depth, result count, index revision, and incremental latency are telemetry.
+query depth, result count, index revision, and rebuild latency are telemetry.
+V1 treats update as a disposable rebuild until a later pin proves true
+incremental behavior.
 
 ## Risks
 

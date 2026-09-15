@@ -1,0 +1,28 @@
+# Evaluation-only server-proxy profile. LiteLLM 1.102.0's `proxy` extra pulls
+# the proprietary litellm-enterprise package, so this profile is not admitted
+# for open-source production use. The admitted mechanics probe uses the MIT
+# core Router via milestone0/scripts/litellm_router_probe.py.
+model_list:
+  - model_name: admission-api-agent
+    litellm_params:
+      model: openai/admission-primary
+      api_base: http://127.0.0.1:18081/v1
+      api_key: admission-not-a-secret
+      timeout: 2
+  - model_name: admission-fallback
+    litellm_params:
+      model: openai/admission-fallback
+      api_base: http://127.0.0.1:18082/v1
+      api_key: admission-not-a-secret
+      timeout: 2
+
+router_settings:
+  num_retries: 0
+  allowed_fails: 0
+  cooldown_time: 1
+  fallbacks:
+    - admission-api-agent:
+        - admission-fallback
+
+general_settings:
+  master_key: os.environ/AIF_M0_LITELLM_MASTER_KEY

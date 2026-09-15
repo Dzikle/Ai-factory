@@ -1,0 +1,20 @@
+tool_filters:
+  enabled_tools:
+    - ListIndexTool
+    - IndexMappingTool
+    - SearchIndexTool
+    - MsearchTool
+  disabled_tools:
+    - GenericOpenSearchApiTool
+    # The upstream filter always enables its built-in core_tools category.
+    # Explicitly subtract read-only tools that are outside the V1 capability surface.
+    - GetShardsTool
+    - ClusterHealthTool
+    - CountTool
+    - ExplainTool
+  settings:
+    allow_write: false
+
+tools:
+  SearchIndexTool:
+    max_size_limit: 8

@@ -1,0 +1,9 @@
+{
+  "name": "@ai-factory/milestone0-context-seam-adapter",
+  "version": "0.0.0-admission",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": "./index.mjs"
+  }
+}

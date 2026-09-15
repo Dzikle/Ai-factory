@@ -1,8 +1,23 @@
 # ADR 006: Adopt MemPalace as the single experiential-memory authority
 
-**Status:** Accepted with operational gates
+**Status:** Accepted with proven single-writer/application-read-only profile
 
 **Date:** 2026-09-15
+
+## Milestone 0 amendment — 2026-09-15
+
+The real 3.9.0 service passed one-writer exclusion, persistence, dependency-loss
+recovery, export, restored search, and mutating-tool denial under application
+`--read-only`. A filesystem read-only data mount is not a valid restore profile:
+the service reports healthy but attempts to write lock/sync state under
+`/data/.mempalace` and cannot open the palace. Restored replicas require writable
+storage plus application read-only enforcement.
+
+The default MiniLM configuration also reported healthy before its first write
+started a roughly 79.3 MB model download and held the writer lease for more than
+70 seconds. Admission readiness must include a warmed authenticated add/search
+probe. A deterministic OpenAI-compatible embedder proved mechanics only; its
+retrieval quality is not admitted.
 
 ## Context
 
@@ -24,8 +39,9 @@ into OpenSearch. Restrict usage to drawers/search, specialist diaries, and
 temporal facts/supersession. Disable/exclude MemPalace task launcher, logstream,
 and artifact responsibilities.
 
-Run one tested writer/team hub, back it up, and expose only the scoped AI Factory
-memory adapter through Paperclip's governed gateway.
+Run one tested writer/team hub, back it up, restore replicas with application
+read-only enforcement, and expose only the scoped AI Factory memory adapter
+through Paperclip's governed gateway.
 
 ## Evidence
 
@@ -38,7 +54,9 @@ Targeted tests at the pinned commit passed for temporal supersession, persisted
 source provenance, and the SQLite exact backend. Its current issue tracker also
 contains serious writer-lease, write-loss, partial-index, HTTP conflict,
 startup, split-brain, and destructive-sync reports, so operational acceptance is
-conditional.
+conditional. The Milestone 0 service POC additionally proved writer exclusion,
+export/restore, application read-only denial, service-loss recovery, and exact
+provenance retrieval.
 
 OpenSearch Agentic Memory (3.3+) offers session/working/long-term/history APIs,
 fact consolidation, and namespace filters. Retention arrived experimentally in
@@ -72,10 +90,11 @@ a skill/tool/check/automation.
 
 ## Risks
 
-Before use, test concurrent writes, process/host restart, backup/restore/export,
-large-store startup, HNSW/exact fallback, and destructive sync denial at the
-pinned commit. A failed memory service degrades context but cannot block task
-truth or permit stale claims to become canonical.
+Before use, warm the selected embedding model, test large-store startup and
+retrieval quality, keep a single writer, use application rather than filesystem
+read-only restore, and enforce a narrow MCP allowlist. A failed memory service
+degrades context but cannot block task truth or permit stale claims to become
+canonical.
 
 ## Exit/replacement strategy
 

@@ -1,0 +1,61 @@
+name: aif-m0-paperclip
+
+services:
+  postgres:
+    image: postgres@sha256:7456ef82e5f5bc43d997f4781bbd7c0d6389bff397564649a356e206ba473aee
+    environment:
+      POSTGRES_USER: paperclip
+      POSTGRES_PASSWORD: ${AIF_M0_POSTGRES_PASSWORD:?set AIF_M0_POSTGRES_PASSWORD}
+      POSTGRES_DB: paperclip
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - paperclip-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperclip -d paperclip"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  paperclip:
+    image: ghcr.io/paperclipai/paperclip@sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83
+    environment:
+      DATABASE_URL: postgresql://paperclip:${AIF_M0_POSTGRES_PASSWORD}@postgres:5432/paperclip
+      PORT: "3100"
+      PAPERCLIP_BIND: custom
+      PAPERCLIP_BIND_HOST: 0.0.0.0
+      PAPERCLIP_ALLOWED_HOSTNAMES: localhost,127.0.0.1,paperclip
+      PAPERCLIP_PUBLIC_URL: http://localhost:13100
+      PAPERCLIP_API_URL: http://paperclip:3100
+      PAPERCLIP_DEPLOYMENT_MODE: authenticated
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: private
+      BETTER_AUTH_SECRET: ${AIF_M0_BETTER_AUTH_SECRET:?set AIF_M0_BETTER_AUTH_SECRET}
+      PAPERCLIP_AGENT_JWT_SECRET: ${AIF_M0_AGENT_JWT_SECRET:?set AIF_M0_AGENT_JWT_SECRET}
+      PAPERCLIP_SECRETS_MASTER_KEY: ${AIF_M0_SECRETS_MASTER_KEY:?set AIF_M0_SECRETS_MASTER_KEY}
+      PAPERCLIP_SECRETS_STRICT_MODE: "true"
+    ports:
+      - "127.0.0.1:13100:3100"
+    volumes:
+      - paperclip-data:/paperclip
+      - type: bind
+        source: ../fixtures/paperclip
+        target: /milestone0
+        read_only: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:3100/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    pids_limit: 512
+    restart: unless-stopped
+
+volumes:
+  paperclip-postgres:
+    name: aif-m0-paperclip-postgres
+  paperclip-data:
+    name: aif-m0-paperclip-data

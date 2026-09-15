@@ -1,0 +1,35 @@
+name: aif-m0-opensearch
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch@sha256:39a8f8c63028e8b5d6b70539af1d0339b15a6729002dd5b3f4a65f520376fd30
+    environment:
+      discovery.type: single-node
+      cluster.name: aif-m0
+      node.name: aif-m0-opensearch
+      bootstrap.memory_lock: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms1g -Xmx1g
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${AIF_M0_OPENSEARCH_ADMIN_PASSWORD:?set AIF_M0_OPENSEARCH_ADMIN_PASSWORD}
+    ports:
+      - "127.0.0.1:19200:9200"
+      - "127.0.0.1:19600:9600"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "curl -kfsS -u admin:$${OPENSEARCH_INITIAL_ADMIN_PASSWORD} https://127.0.0.1:9200/_cluster/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 45s
+    restart: unless-stopped
+
+volumes:
+  opensearch-data:
+    name: aif-m0-opensearch-data

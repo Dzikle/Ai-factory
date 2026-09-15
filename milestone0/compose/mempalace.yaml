@@ -1,0 +1,39 @@
+name: aif-m0-mempalace
+
+services:
+  mempalace:
+    image: ghcr.io/mempalace/mempalace@sha256:65da0834ab5ddc2d8247de43aff611393a151eac2893108e66b64f077bf1f232
+    command:
+      - serve
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8765"
+      - --backend
+      - sqlite_exact
+      - --palace
+      - /data/palace
+    environment:
+      MEMPALACE_MCP_HTTP_TOKEN: ${AIF_M0_MEMPALACE_TOKEN:?set AIF_M0_MEMPALACE_TOKEN}
+      MEMPALACE_BACKEND: sqlite_exact
+      MEMPALACE_EMBEDDING_DEVICE: cpu
+      MEMPALACE_EMBEDDING_MODEL: openai-compat
+      MEMPALACE_EMBEDDING_API_URL: http://host.docker.internal:18083/v1
+      MEMPALACE_EMBEDDING_API_MODEL: admission-deterministic-8
+      MEMPALACE_MCP_IDLE_HOURS: "0"
+      MEMPALACE_PALACE_PATH: /data/palace
+    ports:
+      - "127.0.0.1:18765:8765"
+    volumes:
+      - mempalace-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8765/healthz').read().strip()==b'ok' else sys.exit(1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  mempalace-data:
+    name: aif-m0-mempalace-data

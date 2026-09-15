@@ -1,10 +1,17 @@
 # AI Factory — V1 Adoption Architecture
 
-**Status:** Accepted for integration kickoff
+**Status:** Target architecture selected; integration kickoff blocked by Milestone 0
 
 **Decision date:** 2026-09-15
 
 **Scope:** Phase 0.5 open-source adoption spike; this is not a V1 implementation
+
+> **Admission hold (2026-09-15):** Paperclip `5282cab` failed mandatory
+> environment-lease cleanup and transparent pre-run delegation gates. This
+> document remains the target architecture, not an authorization to start V1.
+> LiteLLM is narrowed to its MIT core Router; its current server `proxy` extra
+> directly installs proprietary code. See the
+> [Milestone 0 report](../implementation/MILESTONE_0_DEPENDENCY_ADMISSION.md).
 
 ## 1. Decision
 
@@ -13,12 +20,13 @@ of mature commodity components. It will not build a second task engine, workflow
 engine, MCP supervisor, sandbox lifecycle, skill specification, code graph,
 provider gateway, or memory framework in V1.
 
-Paperclip is the authoritative operational control plane. Agent Skills is the
+Once admitted, Paperclip is the authoritative operational control plane. Agent Skills is the
 canonical portable skill format. OpenSearch 3.x remains the rebuildable
 knowledge fabric and its official Python MCP server is the retrieval provider.
 Paperclip's governed MCP gateway and execution-workspace/sandbox-provider
 contract own the corresponding runtime concerns. CodeGraphContext supplies the
-single V1 structural graph. LiteLLM is used only for raw API model calls.
+single V1 structural graph. LiteLLM's MIT core Router is used only for raw API
+model calls.
 MemPalace is the single experiential-memory authority and projects a searchable
 view into OpenSearch.
 
@@ -30,7 +38,7 @@ section 12. No selected dependency may require a long-lived fork.
 
 | Concern | V1 selection | Decision and boundary |
 | --- | --- | --- |
-| Control plane | Paperclip, pinned from `5282cab` | **ADAPT.** Owns logical agents, tasks, runs, leases, continuation, review policies, budgets, approvals, workspaces, active runtime configuration, and run history. |
+| Control plane | Paperclip, pinned from `5282cab` | **ADAPT; NOT ADMITTED.** Intended to own logical agents, tasks, runs, leases, continuation, review policies, budgets, approvals, workspaces, active runtime configuration, and run history after its blocking gates pass. |
 | Durable workflow | Paperclip wake queue, heartbeat scheduler, execution locks, and recovery services | No DBOS beside Paperclip. DBOS is the mutually exclusive fallback if Paperclip fails its adoption gates. |
 | Skills | Agent Skills specification; canonical packages in Git | **ADOPT.** Paperclip skill records/installations are runtime projections. Namespaced metadata and `ai-factory.yaml` sidecars carry AI Factory policy. |
 | Knowledge fabric | Dedicated OpenSearch 3.8.x cluster | Rebuildable projection only. Use filtered lexical/vector hybrid retrieval, multi-search, aliases, and Search Relevance Workbench. |
@@ -38,11 +46,11 @@ section 12. No selected dependency may require a long-lived fork.
 | MCP runtime/security | Paperclip managed MCP gateway | Owns the active catalog, profiles, grants, approvals, short-lived run tokens, rate limits, redaction, runtime slots, and MCP audit. ToolHive is deferred to avoid duplicate policy/catalog/audit truth. |
 | Execution sandbox | Paperclip execution workspaces and `sandbox_provider` contract | Trusted-host V1 uses task-scoped Git worktrees. Untrusted execution must use one tested Paperclip sandbox provider before admission. SWE-ReX is a deferred provider option, not a second lifecycle owner. |
 | Code graph | CodeGraphContext 0.6.13 at `2ef71b0` | **ADAPT.** One bounded read-only graph service, containerized on Linux until its Windows embedded backend passes. Git remains code truth. |
-| API model gateway | LiteLLM 1.102.0 at `b94b8bc` | **ADAPT.** Provider normalization, model API retry/fallback, routing primitives, and usage estimates for raw API agents only. |
-| Agent runtime adapters | Paperclip native/ACP adapters | Codex, Claude Code, OpenCode, Cursor, Gemini, and similar harnesses retain their native tools and session behavior and do not pass through LiteLLM. |
+| API model gateway | LiteLLM MIT core Router 1.102.0 at `b94b8bc` | **ADAPT.** Embed the core Router for provider normalization, API-call fallback, routing primitives, and usage estimates. The server `proxy` extra is not admitted under the open-source decision. |
+| Agent runtime adapters | Paperclip native/ACP adapters, after control-plane admission | Codex, Claude Code, OpenCode, Cursor, Gemini, and similar harnesses retain their native tools and session behavior and do not pass through LiteLLM. |
 | Memory | MemPalace 3.9.0 at `38260df` | **ADAPT.** Sole durable experiential-memory authority, restricted to memories/diaries/temporal facts. No MemPalace task coordination, logstream, or artifact authority. |
 | Artifact storage | Paperclip storage provider | Paperclip stores authoritative artifact metadata; the configured durable object/filesystem store owns bytes. Use `local_disk` only for the single-host V1 slice and an S3-compatible provider before multi-host operation. |
-| Telemetry | Paperclip run/cost/activity records plus OpenSearch projection | Paperclip owns native operational evidence. OpenSearch supports cross-run analysis. Detailed logs/traces become artifact objects. |
+| Telemetry | Paperclip run/cost/activity records after admission, plus OpenSearch projection | Paperclip owns native operational evidence only after admission. OpenSearch supports cross-run analysis. Detailed logs/traces become artifact objects. |
 | Evals | Deterministic repository checks plus OpenSearch Search Relevance Workbench | AI Factory owns eval definitions and acceptance metrics in Git. Promptfoo is deferred until model/prompt regression suites justify it; Phoenix and Langfuse are deferred. |
 
 ## 3. Physical/runtime architecture
@@ -68,7 +76,7 @@ flowchart TB
     Package --> Select{Runtime type}
     Select -->|native harness| Native[Codex / Claude Code / OpenCode / ...]
     Select -->|raw model API| APIAgent[API-based agent]
-    APIAgent --> LLM[LiteLLM]
+    APIAgent --> LLM[LiteLLM MIT core Router]
 
     PC --> GW[Paperclip governed MCP gateway]
     Native --> GW
@@ -211,7 +219,7 @@ template is not a second authority.
   normalizes symbol/caller/dependency/affected-path operations so the engine can
   be swapped.
 
-### LiteLLM
+### LiteLLM core Router
 
 - **Owns:** no AI Factory durable state; it executes normalized raw-model API
   calls and local retry/fallback/routing policy for that call class.
@@ -221,7 +229,7 @@ template is not a second authority.
   ledger, then OpenSearch.
 - **Failure:** Paperclip records the attempt; bounded call fallback may run inside
   LiteLLM, while task-level retry remains Paperclip's decision.
-- **Recovery/replacement:** swap the API gateway adapter; native harness adapters
+- **Recovery/replacement:** swap the API adapter/library; native harness adapters
   are unaffected.
 
 ### Native and API agent runtime adapters
@@ -520,13 +528,13 @@ and semantic impact [#1164](https://github.com/CodeGraphContext/CodeGraphContext
 
 | Candidate | Evaluated revision | License/activity evidence | Practical evidence |
 | --- | --- | --- | --- |
-| Paperclip | `5282cabde84624320e63bd942f6ed5124952f2a2`, release `v2026.831.1` | MIT; active 2026-09-14; rapid releases and large issue volume | 52 targeted recovery/context/review/stale-lock tests passed across two final runs. An earlier stale-lock run had host skips and an embedded-DB setup timeout. Source install exposed Windows path/symlink/native-build friction. |
+| Paperclip | `5282cabde84624320e63bd942f6ed5124952f2a2`, release `v2026.831.1` | MIT; active 2026-09-14; rapid releases and large issue volume | Unit evidence passed, but live controller loss leaked an active ephemeral environment lease and the public external adapter could not enrich then delegate to a native adapter in the same run. Not admitted. |
 | Agent Skills | `69ef37e9424c0a7ea9dd2293b559e43ec8176379`, `skills-ref` 0.1.0 | Apache-2.0; active 2026-08-09 | Both repository specimens validate; metadata parsing and prompt-catalog generation pass. |
 | OpenSearch MCP | `fcb23ec17186ba905590fb06b2eeecb063bc54a7`, 0.11.0 | Apache-2.0; active 2026-09-02 | Mapping, filtered search plumbing, write filtering, response-size behavior, and msearch JSON-to-NDJSON tests: 5 passed. |
-| CodeGraphContext | `2ef71b05a2ad1c5fd644c3ba52d77b502adaf1cf`, 0.6.13 | MIT; active 2026-09-06; package labels itself alpha | Java/TypeScript parsers and live incremental watcher: 32 passed/1 skipped; Go parser passed; full Windows embedded index failed on missing Ladybug native library. |
+| CodeGraphContext | `2ef71b05a2ad1c5fd644c3ba52d77b502adaf1cf`, 0.6.13 | MIT; active 2026-09-06; package labels itself alpha | Exact Linux image passed Java/TS/Go symbol/caller MCP queries and rebuild after volume loss. Measured update was a 64.01 s full reindex; image reported 16 npm audit findings. |
 | SWE-ReX | `5c995c365dfb1fd5bc56fda688be5d8538f9931f`, 1.4.0 | MIT; last evaluated commit 2026-03-02 | Host-local Windows import failed; Docker image started, reported alive, and executed `printf 42` successfully after injecting undeclared `aiohttp`. |
-| MemPalace | `38260df588968604186b525ecdffb41c140e5f61`, 3.9.0 | MIT; active 2026-09-13 | Temporal supersession, source provenance persistence, and SQLite exact-backend status: 3 passed. |
-| LiteLLM | `b94b8bca211e366328bcee3acd57d859fd35e52c`, package 1.102.0 | MIT except separately licensed enterprise directory; active 2026-09-14 | Source inspection of Router retry/fallback/budget and cost interfaces; no native-harness POC because that path is explicitly excluded. |
+| MemPalace | `38260df588968604186b525ecdffb41c140e5f61`, 3.9.0 | MIT; active 2026-09-13 | Real service passed one-writer, provenance, loss recovery, export/restore and application-read-only denial. Default embedding readiness and filesystem read-only restore failed. |
+| LiteLLM | `b94b8bca211e366328bcee3acd57d859fd35e52c`, package 1.102.0 | MIT core; `proxy` depends on proprietary `litellm-enterprise`; active 2026-09-14 | Exact-source core Router passed primary-to-fallback selection, usage, bounded full loss and recovery. Server proxy not admitted under the open-source decision. |
 | ToolHive | `630354f0e8139c97907e5a517b908a7d7a9e8817`, 0.49.0 | Apache-2.0; active 2026-09-14 | Source/docs inspection of RunConfig, authz, secrets, registry, audit, and OTel. Go was unavailable on the host, so no local unit run. |
 | DBOS Python | `8e8ef5200898bf23c621aa3f327cec2f05545b5a`, 2.31.1 | MIT; active 2026-09-14 | Source/docs inspection of PostgreSQL workflows, steps, queues, scheduled recovery, messaging, and fork/restart APIs. No POC because the selected design forbids a concurrent workflow owner. |
 | Symphony | `e0ccc83720a42a600a53b61c5f8d3e518bebe1db`, 0.0.2 | Apache-2.0; active 2026-09-09 | Specification and implementation inspection for reconciliation/workspace/retry invariants. |
@@ -536,8 +544,10 @@ Repository popularity/activity figures were treated only as maintenance signals,
 not capability proof. All architectural claims above were checked against source,
 tests, schemas, or current official documentation.
 
-Exact commands and host-specific results are recorded in
-[`../implementation/ADOPTION_POC_RESULTS.md`](../implementation/ADOPTION_POC_RESULTS.md).
+Initial spike commands are in
+[`../implementation/ADOPTION_POC_RESULTS.md`](../implementation/ADOPTION_POC_RESULTS.md);
+live dependency-admission results are in
+[`../implementation/MILESTONE_0_DEPENDENCY_ADMISSION.md`](../implementation/MILESTONE_0_DEPENDENCY_ADMISSION.md).
 
 ## 15. Primary references
 
