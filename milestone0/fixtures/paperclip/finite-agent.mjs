@@ -1,4 +1,5 @@
-import { appendFile, mkdir, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import process from "node:process";
 
 const required = [
@@ -75,6 +76,18 @@ if (process.env.PAPERCLIP_RUNTIME_TOOLS_MCP_URL && process.env.PAPERCLIP_RUNTIME
 }
 
 const outputDir = process.env.AIF_M0_OUTPUT_DIR || "/paperclip/milestone0-runs";
+let consumedContext = null;
+if (process.env.AIF_M0_EXPECT_ENRICHMENT === "1") {
+  // Admission-only convention: prove the unchanged native process consumes
+  // the placeholder artifact written before dispatch, not a nested adapter.
+  const path = `/paperclip/milestone0-context/${process.env.PAPERCLIP_RUN_ID}.json`;
+  const bytes = await readFile(path);
+  const context = JSON.parse(bytes);
+  if (context.runId !== process.env.PAPERCLIP_RUN_ID || context.adapterType !== "process") {
+    throw new Error("pre-run context does not identify this native invocation");
+  }
+  consumedContext = { ref: `file://${path}`, sha256: createHash("sha256").update(bytes).digest("hex") };
+}
 await mkdir(outputDir, { recursive: true });
 const record = {
   runId: process.env.PAPERCLIP_RUN_ID,
@@ -85,6 +98,7 @@ const record = {
   wakeReason: process.env.PAPERCLIP_WAKE_REASON || null,
   runtimeBinding: process.env.AIF_M0_RUNTIME_BINDING || "fixture-a",
   authorizationChecks,
+  consumedContext,
   at: new Date().toISOString(),
 };
 await writeFile(`${outputDir}/${record.runId}.json`, `${JSON.stringify(record, null, 2)}\n`, { flag: "wx" });

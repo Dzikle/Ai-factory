@@ -1,0 +1,25 @@
+name: aif-m0-mempalace-production
+
+services:
+  mempalace:
+    image: ghcr.io/mempalace/mempalace@sha256:65da0834ab5ddc2d8247de43aff611393a151eac2893108e66b64f077bf1f232
+    command: ["serve", "--host", "0.0.0.0", "--port", "8765", "--backend", "sqlite_exact", "--palace", "/data/palace_sqlite"]
+    environment:
+      MEMPALACE_MCP_HTTP_TOKEN: ${AIF_M0_MEMPALACE_TOKEN:?set AIF_M0_MEMPALACE_TOKEN}
+      MEMPALACE_BACKEND: sqlite_exact
+      MEMPALACE_EMBEDDING_MODEL: embeddinggemma
+      MEMPALACE_EMBEDDING_DEVICE: cpu
+      MEMPALACE_EMBEDDING_THREADS: "2"
+      MEMPALACE_MCP_IDLE_HOURS: "0"
+      MEMPALACE_PALACE_PATH: /data/palace_sqlite
+      # Pre-warm and verify the model snapshot/hashes in dependencies.lock.yaml.
+      # Offline execution prevents a later upstream model revision changing vectors.
+      HF_HUB_OFFLINE: "1"
+    ports: ["127.0.0.1:18767:8765"]
+    volumes: ["embedding-data:/data"]
+    restart: unless-stopped
+
+volumes:
+  embedding-data:
+    name: aif-m0-mempalace-embeddinggemma-data
+    external: true

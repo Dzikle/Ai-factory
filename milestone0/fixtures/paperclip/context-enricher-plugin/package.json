@@ -1,0 +1,11 @@
+{
+  "name": "@ai-factory/milestone0-context-enricher-plugin",
+  "version": "0.0.0-admission",
+  "description": "Admission-only deterministic pre-run enrichment fixture",
+  "type": "module",
+  "license": "UNLICENSED",
+  "paperclipPlugin": {
+    "manifest": "./dist/manifest.mjs",
+    "worker": "./dist/worker.mjs"
+  }
+}

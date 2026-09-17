@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** BLOCKED in Milestone 0; do not start V1 implementation
+**Status:** Milestone 0B WAITING FOR UPSTREAM; do not start V1 implementation
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -27,7 +27,8 @@ upstream and re-admitted. See
   ToolHive unless its documented re-entry trigger is met.
 - Paperclip's workspace and sandbox-provider contract owns execution lifecycle.
   SWE-ReX may later implement that provider contract; it may not own task state.
-- CodeGraphContext is the single V1 structural graph.
+- CodeGraphContext is the single selected graph candidate, but current V1
+  enablement is deferred pending compatible protobuf remediation/re-audit.
 - LiteLLM's MIT core Router serves raw API model calls only. Its current server
   proxy extra is not admitted under the open-source decision. Native
   Codex/Claude/OpenCode/etc. runtimes use Paperclip adapters directly.
@@ -63,7 +64,10 @@ Do this before production feature code.
 **Execution result (2026-09-15): BLOCKED.** Paperclip `5282cab` leaked an active
 ephemeral environment lease after controller loss, and the public external
 adapter could not enrich and then delegate to a registered native adapter in the
-same run. Remain in Milestone 0. Do not begin sections 4–8.
+same run. Milestone 0B (2026-09-17) prepared/tested minimal upstream proposals
+for recorded host leases and an optional plugin enrichment hook. It is **WAITING
+FOR UPSTREAM**, not an admitted private fork. Next: Milestone 0C supported
+upstream release/image and migration-path re-admission. Do not begin sections 4–8.
 
 ### 0.1 Pin and deploy Paperclip
 
@@ -85,10 +89,10 @@ same run. Remain in Milestone 0. Do not begin sections 4–8.
 
 ### 0.2 Prove the pre-run seam
 
-Implement a throwaway Paperclip launcher/runtime wrapper that:
+Use the proposed optional plugin enrichment stage (do not duplicate adapters):
 
 ```text
-claimed Paperclip run
+Paperclip creates/claims run
 → resolve placeholder bounded context
 → persist context artifact + digest/sources/budget in contextSnapshot
 → delegate to one native adapter
@@ -100,9 +104,11 @@ existing adapter context is insufficient, propose a small general upstream
 pre-run enrichment hook and hold V1 feature implementation until accepted or an
 upgrade-safe wrapper is proven.
 
-Result: **failed at the pinned revision.** The adapter can execute before a
-provider and call governed MCP, but has no supported native-adapter delegation
-operation and its context mutation is not persisted to the host run snapshot.
+Baseline external wrapper failed. Milestone 0B's plugin hook persists a bounded
+artifact reference/digest before the original selected native adapter dispatch
+in the same run. The placeholder native process consumes those bytes; restart
+checks the same durable digest. Wait for upstream acceptance/release; do not
+implement the real Context Resolver against a private patch.
 
 ### 0.3 Admit the data providers
 
@@ -126,6 +132,12 @@ Data-provider result: OpenSearch/MCP, MemPalace, CodeGraphContext, Agent Skills,
 and LiteLLM core passed their bounded mechanics tests with the exact caveats in
 the Milestone 0 report. Those partial passes do not override the control-plane
 blocker.
+
+Milestone 0B narrows that result: real offline MemPalace embedding readiness now
+passes; LiteLLM's final V1 shape is embedded MIT core Router only (licensed proxy
+DEFERRED); CodeGraphContext's current image is disabled until its mandatory
+protobuf/bindings and runtime dependency security gates pass. No additional
+memory, graph, gateway, scheduler, or workflow authority is introduced.
 
 Milestone 0 exits only when the pinned dependency manifest, license inventory,
 POC results, unresolved issue disposition, and rollback versions are committed.

@@ -4,8 +4,12 @@
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+import hashlib
 import http.cookiejar
 import json
+import os
 import secrets
 import subprocess
 import time
@@ -17,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 STATE_PATH = ROOT / ".milestone0" / "paperclip-state.json"
+TEST_ROUND = os.environ.get("AIF_M0_PAPERCLIP_TEST_ROUND", "m0b-host-lease-v3")
 
 
 class ApiError(RuntimeError):
@@ -328,6 +333,37 @@ def configure_process_agent(client: Client, agent_id: str, sleep_ms: int) -> Non
     )
 
 
+def read_container_bytes(path: str) -> bytes:
+    if not path.startswith("/paperclip/"):
+        raise RuntimeError(f"refusing to read an unexpected container path: {path}")
+    return subprocess.check_output(
+        ["docker", "exec", "aif-m0-paperclip-paperclip-1", "cat", path]
+    )
+
+
+def assert_exact_search_profile(effective: object, profile_id: str, connection_id: str) -> None:
+    if not isinstance(effective, dict):
+        raise RuntimeError("effective capability response is not an object")
+    profile_ids = {
+        profile.get("id")
+        for profile in effective.get("profiles", [])
+        if isinstance(profile, dict)
+    }
+    if profile_ids != {profile_id}:
+        raise RuntimeError(f"unexpected effective profiles: {sorted(str(item) for item in profile_ids)}")
+    if effective.get("allowedToolNames") != ["SearchIndexTool"]:
+        raise RuntimeError(
+            f"effective tool set is not exact search-only: {effective.get('allowedToolNames')}"
+        )
+    installed_ids = {
+        item.get("id") or item.get("connectionId")
+        for item in effective.get("installedConnections", [])
+        if isinstance(item, dict)
+    }
+    if connection_id not in installed_ids:
+        raise RuntimeError(f"OpenSearch connection is not installed: {sorted(str(item) for item in installed_ids)}")
+
+
 def find_issue_run(
     client: Client,
     company_id: str,
@@ -335,6 +371,7 @@ def find_issue_run(
     issue_id: str,
     *,
     statuses: set[str] | None = None,
+    exclude_ids: set[str] | None = None,
     timeout: float = 45,
 ) -> dict:
     deadline = time.monotonic() + timeout
@@ -348,10 +385,13 @@ def find_issue_run(
         matching = [
             run
             for run in last_runs
-            if run.get("nativeIssueId") == issue_id
-            or (
-                isinstance(run.get("contextSnapshot"), dict)
-                and run["contextSnapshot"].get("issueId") == issue_id
+            if run.get("id") not in (exclude_ids or set())
+            and (
+                run.get("nativeIssueId") == issue_id
+                or (
+                    isinstance(run.get("contextSnapshot"), dict)
+                    and run["contextSnapshot"].get("issueId") == issue_id
+                )
             )
         ]
         matching.sort(key=lambda run: str(run.get("createdAt") or ""), reverse=True)
@@ -393,11 +433,11 @@ def process_crash() -> None:
         "POST",
         f"/api/companies/{company_id}/issues",
         {
-            "title": "Milestone 0 killed child process v5",
+            "title": f"Milestone 0 child loss {TEST_ROUND}",
             "description": "Admission-only process failure and task continuity probe.",
             "status": "todo",
             "assigneeAgentId": agent_id,
-            "idempotencyKey": "milestone0-process-crash-v5",
+            "idempotencyKey": f"{TEST_ROUND}-process-crash",
         },
         expected=(200, 201),
     )
@@ -411,7 +451,7 @@ def process_crash() -> None:
             "triggerDetail": "system",
             "reason": "issue_assigned",
             "payload": {"issueId": issue["id"], "mutation": "admission_process_crash"},
-            "idempotencyKey": "milestone0-process-crash-wake-v5",
+            "idempotencyKey": f"{TEST_ROUND}-process-crash-wake",
         },
         expected=(200, 202),
     )
@@ -440,6 +480,10 @@ def process_crash() -> None:
     if not isinstance(active_recovery, dict):
         raise RuntimeError(f"failed run produced no active recovery action: {recovery}")
     configure_process_agent(client, agent_id, 1_000)
+    _, runs_before = client.request(
+        "GET", f"/api/companies/{company_id}/heartbeat-runs?agentId={agent_id}&limit=100"
+    )
+    previous_run_ids = {item["id"] for item in runs_before if isinstance(item, dict)} if isinstance(runs_before, list) else set()
     _, resolved_recovery = client.request(
         "POST",
         f"/api/issues/{issue['id']}/recovery-actions/resolve",
@@ -465,6 +509,7 @@ def process_crash() -> None:
         agent_id,
         issue["id"],
         statuses={"succeeded"},
+        exclude_ids=previous_run_ids,
         timeout=45,
     )
     _, persisted_issue = client.request("GET", f"/api/issues/{issue['id']}")
@@ -483,6 +528,7 @@ def process_crash() -> None:
             )
         )
     ] if isinstance(runs, list) else []
+    client.request("PATCH", f"/api/issues/{issue['id']}", {"status": "cancelled"})
     client.request("POST", f"/api/agents/{agent_id}/pause")
     state.update({
         "processCrashIssueId": issue["id"],
@@ -577,11 +623,11 @@ def orphan_prepare() -> None:
         "POST",
         f"/api/companies/{company_id}/issues",
         {
-            "title": "Milestone 0 controller orphan recovery v3",
+            "title": f"Milestone 0 controller loss {TEST_ROUND}",
             "description": "Admission-only controller crash, orphan lease, and durable retry probe.",
             "status": "todo",
             "assigneeAgentId": agent_id,
-            "idempotencyKey": "milestone0-controller-orphan-v3",
+            "idempotencyKey": f"{TEST_ROUND}-controller-orphan",
         },
         expected=(200, 201),
     )
@@ -595,7 +641,7 @@ def orphan_prepare() -> None:
             "triggerDetail": "system",
             "reason": "issue_assigned",
             "payload": {"issueId": issue["id"], "mutation": "admission_controller_loss"},
-            "idempotencyKey": "milestone0-controller-orphan-wake-v3",
+            "idempotencyKey": f"{TEST_ROUND}-controller-orphan-wake",
         },
         expected=(200, 202),
     )
@@ -607,6 +653,8 @@ def orphan_prepare() -> None:
     # The already-spawned child keeps its captured 60s delay. A recovered
     # successor reads this 1s configuration after the controller restarts.
     configure_process_agent(client, agent_id, 1_000)
+    state.pop("orphanSuccessorRunId", None)
+    state.pop("orphanRecoverySuccessorRunId", None)
     state.update({"orphanIssueId": issue["id"], "orphanRunId": run["id"]})
     save_state(state)
     print(json.dumps(public({
@@ -627,7 +675,29 @@ def orphan_report() -> None:
     active_recovery = recovery.get("active") if isinstance(recovery, dict) else None
     resolved_recovery: object | None = None
     successor: dict | None = None
+    _, runs_before = client.request(
+        "GET", f"/api/companies/{company_id}/heartbeat-runs?agentId={agent_id}&limit=100"
+    )
+    preexisting_issue_run_ids = {
+        item["id"]
+        for item in runs_before
+        if isinstance(item, dict)
+        and isinstance(item.get("id"), str)
+        and (
+            item.get("nativeIssueId") == state["orphanIssueId"]
+            or (
+                isinstance(item.get("contextSnapshot"), dict)
+                and item["contextSnapshot"].get("issueId") == state["orphanIssueId"]
+            )
+        )
+    } if isinstance(runs_before, list) else set()
     if isinstance(active_recovery, dict):
+        evidence = active_recovery.get("evidence")
+        recovery_run_id = (
+            evidence.get("runId")
+            if isinstance(evidence, dict) and isinstance(evidence.get("runId"), str)
+            else original_run_id
+        )
         _, resolved_recovery = client.request(
             "POST",
             f"/api/issues/{state['orphanIssueId']}/recovery-actions/resolve",
@@ -637,7 +707,7 @@ def orphan_report() -> None:
                 "sourceIssueStatus": "todo",
                 "resolutionNote": "Admission operator verified the killed controller and its child are stopped; retry is safe.",
                 "executionReconciliation": {
-                    "runId": original_run_id,
+                    "runId": recovery_run_id,
                     "providerStopped": True,
                     "actionOutcome": "mixed",
                     "outcomeEvidence": (
@@ -653,7 +723,8 @@ def orphan_report() -> None:
             agent_id,
             state["orphanIssueId"],
             statuses={"succeeded"},
-            timeout=45,
+            exclude_ids=preexisting_issue_run_ids,
+            timeout=90,
         )
     _, runs = client.request(
         "GET", f"/api/companies/{company_id}/heartbeat-runs?agentId={agent_id}&limit=100"
@@ -672,6 +743,9 @@ def orphan_report() -> None:
     ] if isinstance(runs, list) else []
     _, issue = client.request("GET", f"/api/issues/{state['orphanIssueId']}")
     client.request("POST", f"/api/agents/{agent_id}/pause")
+    if successor:
+        state["orphanRecoverySuccessorRunId"] = successor["id"]
+        save_state(state)
     print(json.dumps(public({
         "originalRun": summarize_run(original),
         "activeRecoveryAction": active_recovery,
@@ -704,19 +778,19 @@ def orphan_resume() -> None:
             "triggerDetail": "system",
             "reason": "issue_recovery_action_restored",
             "payload": {"issueId": issue_id, "mutation": "admission_orphan_resume"},
-            "idempotencyKey": "milestone0-controller-orphan-resume-v3",
+            "idempotencyKey": f"{TEST_ROUND}-controller-orphan-resume",
         },
         expected=(200, 202),
     )
-    successor = find_issue_run(
-        client,
-        company_id,
-        agent_id,
-        issue_id,
-        statuses={"succeeded"},
-        timeout=45,
-    )
+    assert isinstance(wake, dict)
+    successor_run_id = wake.get("runId") or wake.get("id") or wake.get("executionRunId")
+    if not isinstance(successor_run_id, str):
+        raise RuntimeError(f"explicit resume returned no run id: {wake}")
+    successor = wait_run(client, successor_run_id, timeout=90)
+    if successor.get("status") != "succeeded":
+        raise RuntimeError(f"explicit resume did not succeed: {summarize_run(successor)}")
     _, issue = client.request("GET", f"/api/issues/{issue_id}")
+    client.request("PATCH", f"/api/issues/{issue_id}", {"status": "cancelled"})
     client.request("POST", f"/api/agents/{agent_id}/pause")
     state["orphanSuccessorRunId"] = successor["id"]
     save_state(state)
@@ -733,6 +807,105 @@ def orphan_resume() -> None:
             "executionRunId": issue.get("executionRunId") if isinstance(issue, dict) else None,
         },
     }), indent=2, sort_keys=True))
+
+
+def locking() -> None:
+    state, client = state_client()
+    agent_ids = [state["agents"]["developer"], state["agents"]["reviewer"]]
+    for agent_id in agent_ids:
+        client.request("POST", f"/api/agents/{agent_id}/pause")
+    _, issue = client.request("POST", f"/api/companies/{state['companyId']}/issues", {
+        "title": f"Milestone 0 atomic checkout {TEST_ROUND}",
+        "status": "todo",
+        "idempotencyKey": f"{TEST_ROUND}-atomic-checkout",
+    }, expected=(200, 201))
+    assert isinstance(issue, dict)
+
+    def checkout(agent_id: str) -> tuple[int, object]:
+        contender = Client(state["baseUrl"], state["boardApiKey"])
+        return contender.request("POST", f"/api/issues/{issue['id']}/checkout", {
+            "agentId": agent_id, "expectedStatuses": ["todo"],
+        }, expected=(200, 409))
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        outcomes = list(executor.map(checkout, agent_ids))
+    if sorted(status for status, _ in outcomes) != [200, 409]:
+        raise RuntimeError(f"atomic checkout did not select exactly one owner: {outcomes}")
+    _, persisted = client.request("GET", f"/api/issues/{issue['id']}")
+    winner = next(body for status, body in outcomes if status == 200)
+    if not isinstance(persisted, dict) or not isinstance(winner, dict) or persisted.get("assigneeAgentId") != winner.get("assigneeAgentId"):
+        raise RuntimeError("persisted checkout owner differs from the sole successful claimant")
+    client.request("PATCH", f"/api/issues/{issue['id']}", {"status": "cancelled"})
+    print(json.dumps(public({"issueId": issue["id"], "claimStatuses": [status for status, _ in outcomes],
+                            "soleOwnerAgentId": persisted["assigneeAgentId"]}), indent=2, sort_keys=True))
+
+
+def recovery_report() -> None:
+    state, client = state_client()
+    run_ids = [state[key] for key in (
+        "processCrashRunId", "processCrashSuccessorRunId", "orphanRunId", "orphanSuccessorRunId", "orphanRecoverySuccessorRunId"
+    ) if isinstance(state.get(key), str)]
+    run_ids.extend(state.get("recoveryScenarioRunIds", []))
+    tracked_ids = set(run_ids)
+    issue_ids = {state[key] for key in ("processCrashIssueId", "orphanIssueId")}
+    _, recent_runs = client.request("GET", f"/api/companies/{state['companyId']}/heartbeat-runs?limit=100")
+    if not isinstance(recent_runs, list) or len(recent_runs) >= 100:
+        raise RuntimeError("task-writer assertion requires an untruncated fixture run inventory")
+    for issue_id in issue_ids:
+        issue_runs = [item for item in recent_runs if isinstance(item, dict)
+                      and (item.get("nativeIssueId") == issue_id
+                           or (item.get("contextSnapshot") or {}).get("issueId") == issue_id)]
+        intervals = sorted((datetime.fromisoformat(item["startedAt"].replace("Z", "+00:00")),
+                            datetime.fromisoformat(item["finishedAt"].replace("Z", "+00:00")))
+                           for item in issue_runs if item.get("startedAt") and item.get("finishedAt"))
+        if any(current[0] < previous[1] for previous, current in zip(intervals, intervals[1:])):
+            raise RuntimeError(f"overlapping task execution intervals: {issue_id}")
+        run_ids.extend(item["id"] for item in issue_runs)
+    run_ids = list(dict.fromkeys(run_ids))
+    releases: dict[str, str] = {}
+    report: list[dict] = []
+    deadline = time.monotonic() + 360
+    for run_id in run_ids:
+        _, run = client.request("GET", f"/api/heartbeat-runs/{run_id}")
+        if not isinstance(run, dict) or run.get("status") not in {"succeeded", "failed", "cancelled", "timed_out", "interrupted"}:
+            raise RuntimeError(f"recovery left a nonterminal run: {run}")
+        context = run.get("contextSnapshot", {})
+        lease_id = context.get("paperclipEnvironment", {}).get("leaseId")
+        if not isinstance(lease_id, str):
+            if run_id not in tracked_ids and run.get("status") == "cancelled":
+                report.append({"runId": run_id, "runStatus": "cancelled", "noLeaseAcquired": True})
+                continue
+            raise RuntimeError(f"run {run_id} has no durable environment lease identity")
+        while True:
+            _, lease = client.request("GET", f"/api/environment-leases/{lease_id}")
+            if isinstance(lease, dict) and lease.get("releasedAt") and lease.get("status") not in {"active", "pending_cleanup"}:
+                break
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"terminal run lease did not eventually release: {lease}")
+            time.sleep(0.5)
+        releases[lease_id] = lease["releasedAt"]
+        report.append({"runId": run_id, "runStatus": run["status"], "leaseId": lease_id,
+                       "leaseStatus": lease["status"], "releasedAt": lease["releasedAt"]})
+    previous = state.get("verifiedLeaseReleases")
+    if isinstance(previous, dict) and any(previous.get(key) not in {None, value} for key, value in releases.items()):
+        raise RuntimeError(f"repeated recovery changed a release receipt: before={previous} after={releases}")
+    for issue_key in ("processCrashIssueId", "orphanIssueId"):
+        _, issue = client.request("GET", f"/api/issues/{state[issue_key]}")
+        if not isinstance(issue, dict) or issue.get("executionRunId") or issue.get("checkoutRunId"):
+            raise RuntimeError(f"terminal recovery left issue locks: {issue}")
+        live = [item["id"] for item in recent_runs if isinstance(item, dict)
+                and item.get("status") in {"queued", "running"}
+                and (item.get("nativeIssueId") == state[issue_key]
+                     or (item.get("contextSnapshot") or {}).get("issueId") == state[issue_key])]
+        if live:
+            raise RuntimeError(f"recovery left live task writers: {live}")
+    state["verifiedLeaseReleases"] = releases
+    state["recoveryScenarioRunIds"] = run_ids
+    save_state(state)
+    print(json.dumps(public({"allSourceAndSuccessorLeasesReleased": report,
+                            "releaseReceiptsUnchanged": isinstance(previous, dict),
+                            "issueLocksCleared": True, "noLiveTaskWriters": True,
+                            "taskExecutionIntervalsDoNotOverlap": True}), indent=2, sort_keys=True))
 
 
 def capability() -> None:
@@ -929,6 +1102,7 @@ def capability() -> None:
     _, effective = client.request(
         "GET", f"/api/companies/{company_id}/tools/profiles/effective/agents/{developer_id}"
     )
+    assert_exact_search_profile(effective, profile["id"], connection_id)
 
     process_config = {
         "command": "node",
@@ -967,11 +1141,11 @@ def capability() -> None:
         "POST",
         f"/api/companies/{company_id}/issues",
         {
-            "title": "Milestone 0 capability enforcement",
+            "title": "Milestone 0B capability enforcement",
             "description": "Admission-only tool gateway boundary probe.",
             "status": "todo",
             "assigneeAgentId": developer_id,
-            "idempotencyKey": "milestone0-capability-enforcement-v1",
+            "idempotencyKey": f"{TEST_ROUND}-capability-enforcement",
         },
         expected=(200, 201),
     )
@@ -985,9 +1159,11 @@ def capability() -> None:
     if not isinstance(run_id, str):
         raise RuntimeError(f"heartbeat invoke returned no run id: {invoked}")
     run = wait_run(client, run_id)
+    client.request("PATCH", f"/api/issues/{issue['id']}", {"status": "cancelled"})
     client.request("POST", f"/api/agents/{developer_id}/pause")
 
     seam_id = state["agents"]["seam"]
+    client.request("POST", "/api/adapters/aif_context_seam_poc/reload")
     seam_config = {
         "allowedTool": allowed_tool,
         "allowedToolArgs": {
@@ -1021,6 +1197,17 @@ def capability() -> None:
         raise RuntimeError(f"seam heartbeat invoke returned no run id: {seam_invoked}")
     seam_run = wait_run(client, seam_run_id)
     client.request("POST", f"/api/agents/{seam_id}/pause")
+    if seam_run.get("status") != "succeeded":
+        raise RuntimeError(f"capability probe adapter failed: {summarize_run(seam_run)}")
+    seam_result = seam_run.get("resultJson")
+    probes = seam_result.get("assignedMcp") if isinstance(seam_result, dict) else None
+    if not isinstance(probes, list) or len(probes) != 1:
+        raise RuntimeError(f"capability probe did not receive one governed MCP server: {probes}")
+    if probes[0].get("allowed", {}).get("status") != 200:
+        raise RuntimeError(f"assigned search failed: {probes[0]}")
+    denied = probes[0].get("denied", {})
+    if denied.get("status") != 403 or denied.get("reasonCode") != "deny_default":
+        raise RuntimeError(f"unassigned msearch was not denied exactly: {denied}")
 
     state.update(
         {
@@ -1057,6 +1244,255 @@ def capability() -> None:
     )
 
 
+def pre_run_enrichment() -> None:
+    state, client = state_client()
+    company_id = state["companyId"]
+    developer_id = state["agents"]["developer"]
+    connection_id = state["connectionId"]
+    profile_id = state.get("capabilityProfileId")
+    allowed_tool = state.get("allowedTool")
+    denied_tool = state.get("deniedTool")
+    if not all(isinstance(value, str) for value in (profile_id, allowed_tool, denied_tool)):
+        raise RuntimeError("run the capability action before the enrichment action")
+
+    try:
+        _, installed_plugin = client.request(
+            "POST",
+            "/api/plugins/install",
+            {
+                "packageName": "/milestone0/context-enricher-plugin",
+                "isLocalPath": True,
+            },
+            expected=(200,),
+        )
+    except ApiError as exc:
+        if exc.status != 400 or "already installed" not in str(exc.body).lower():
+            raise
+        _, plugin_response = client.request("GET", "/api/plugins")
+        plugin_items = (
+            plugin_response.get("plugins", [])
+            if isinstance(plugin_response, dict)
+            else plugin_response
+        )
+        installed_plugin = next(
+            item
+            for item in plugin_items
+            if isinstance(item, dict)
+            and item.get("pluginKey") == "ai-factory.milestone0-context-enricher"
+        )
+    if not isinstance(installed_plugin, dict) or installed_plugin.get("status") != "ready":
+        raise RuntimeError(f"context enricher plugin is not ready: {installed_plugin}")
+
+    _, effective = client.request(
+        "GET", f"/api/companies/{company_id}/tools/profiles/effective/agents/{developer_id}"
+    )
+    assert_exact_search_profile(effective, profile_id, connection_id)
+
+    process_config = {
+        "command": "node",
+        "args": ["/milestone0/finite-agent.mjs"],
+        "cwd": "/paperclip",
+        "timeoutSec": 180,
+        "graceSec": 2,
+        "env": {
+            "AIF_M0_EXPECT_ENRICHMENT": "1",
+            "AIF_M0_OUTPUT_DIR": "/paperclip/milestone0-runs",
+            "AIF_M0_ALLOWED_TOOL": allowed_tool,
+            "AIF_M0_ALLOWED_TOOL_ARGS": json.dumps(
+                {
+                    "index": "aif_docs_current",
+                    "query_dsl": {
+                        "query": {
+                            "bool": {
+                                "filter": [
+                                    {"term": {"project_id": "ai-factory"}},
+                                    {"term": {"status": "current"}},
+                                ]
+                            }
+                        }
+                    },
+                    "size": 2,
+                },
+                separators=(",", ":"),
+            ),
+            "AIF_M0_DENIED_TOOL": denied_tool,
+        },
+    }
+    client.request(
+        "PATCH",
+        f"/api/agents/{developer_id}",
+        {"adapterConfig": process_config, "replaceAdapterConfig": True},
+    )
+    _, agent = client.request("GET", f"/api/agents/{developer_id}")
+    if not isinstance(agent, dict) or agent.get("adapterType") != "process":
+        raise RuntimeError(f"native adapter selection changed: {agent}")
+
+    _, issue = client.request(
+        "POST",
+        f"/api/companies/{company_id}/issues",
+        {
+            "title": f"Milestone 0 pre-run enrichment {TEST_ROUND}",
+            "description": "Admission-only deterministic pre-run enrichment and native delegation probe.",
+            "status": "todo",
+            "assigneeAgentId": developer_id,
+            "idempotencyKey": f"{TEST_ROUND}-pre-run-enrichment",
+        },
+        expected=(200, 201),
+    )
+    assert isinstance(issue, dict)
+    client.request("POST", f"/api/agents/{developer_id}/resume")
+    _, invoked = client.request(
+        "POST",
+        f"/api/agents/{developer_id}/wakeup",
+        {
+            "source": "assignment",
+            "triggerDetail": "system",
+            "reason": "issue_assigned",
+            "payload": {"issueId": issue["id"], "mutation": "admission_pre_run_enrichment"},
+            "idempotencyKey": f"{TEST_ROUND}-pre-run-enrichment-wake",
+        },
+        expected=(200, 202),
+    )
+    assert isinstance(invoked, dict)
+    run_id = invoked.get("runId") or invoked.get("id")
+    if isinstance(run_id, str):
+        run = wait_run(client, run_id, timeout=120)
+    else:
+        run = find_issue_run(
+            client,
+            company_id,
+            developer_id,
+            issue["id"],
+            statuses={"succeeded"},
+            timeout=15,
+        )
+        run_id = run["id"]
+    client.request("PATCH", f"/api/issues/{issue['id']}", {"status": "cancelled"})
+    client.request("POST", f"/api/agents/{developer_id}/pause")
+    _, run_detail = client.request("GET", f"/api/heartbeat-runs/{run_id}")
+    if not isinstance(run_detail, dict):
+        raise RuntimeError("enrichment run detail is not an object")
+    run = run_detail
+    if run.get("status") != "succeeded":
+        raise RuntimeError(f"native adapter did not complete normally: {summarize_run(run)}")
+
+    context = run.get("contextSnapshot")
+    enrichment = context.get("paperclipRunContextEnrichment") if isinstance(context, dict) else None
+    entries = enrichment.get("entries") if isinstance(enrichment, dict) else None
+    if not isinstance(entries, list) or len(entries) != 1 or not isinstance(entries[0], dict):
+        raise RuntimeError(f"durable enrichment record is missing or ambiguous: {enrichment}")
+    entry = entries[0]
+    artifact = entry.get("artifact") if isinstance(entry.get("artifact"), dict) else {}
+    artifact_ref = artifact.get("ref")
+    artifact_digest = artifact.get("sha256")
+    if not isinstance(artifact_ref, str) or not artifact_ref.startswith("file:///paperclip/"):
+        raise RuntimeError(f"unexpected artifact reference: {artifact_ref}")
+    if not isinstance(artifact_digest, str):
+        raise RuntimeError("artifact digest is missing")
+    artifact_path = artifact_ref.removeprefix("file://")
+    artifact_bytes = read_container_bytes(artifact_path)
+    actual_digest = hashlib.sha256(artifact_bytes).hexdigest()
+    if actual_digest != artifact_digest:
+        raise RuntimeError(f"artifact digest mismatch: durable={artifact_digest} actual={actual_digest}")
+    artifact_body = json.loads(artifact_bytes)
+    if artifact_body.get("runId") != run_id or artifact_body.get("adapterType") != "process":
+        raise RuntimeError(f"artifact does not identify the delegated run/adapter: {artifact_body}")
+
+    assigned = artifact_body.get("assignedMcp")
+    if not isinstance(assigned, list) or len(assigned) != 1:
+        raise RuntimeError(f"enricher did not receive the exact governed MCP surface: {assigned}")
+    probe = assigned[0]
+    listed_names = probe.get("listed", {}).get("toolNames")
+    expected_context_tools = {
+        "paperclip_list_resources",
+        "paperclip_read_resource",
+        "paperclip_list_prompts",
+        "paperclip_get_prompt",
+    }
+    if not isinstance(listed_names, list):
+        raise RuntimeError(f"enricher MCP list is missing: {probe}")
+    external_names = set(listed_names) - expected_context_tools
+    if external_names != {allowed_tool} or denied_tool in listed_names:
+        raise RuntimeError(f"enricher external MCP grant is not exact search-only: {probe}")
+    if probe.get("allowed", {}).get("status") != 200 or probe.get("allowed", {}).get("isError") is not False:
+        raise RuntimeError(f"enricher allowed call failed: {probe.get('allowed')}")
+    denied = probe.get("denied", {})
+    if denied.get("status") != 403 or denied.get("reasonCode") != "deny_default":
+        raise RuntimeError(f"enricher broad MCP call was not denied: {denied}")
+
+    native_record = json.loads(read_container_bytes(f"/paperclip/milestone0-runs/{run_id}.json"))
+    if native_record.get("runId") != run_id or native_record.get("agentId") != developer_id:
+        raise RuntimeError(f"native adapter did not execute as the same run: {native_record}")
+    if native_record.get("consumedContext") != {"ref": artifact_ref, "sha256": artifact_digest}:
+        raise RuntimeError("native fixture did not consume the exact durably identified context artifact")
+
+    state.update(
+        {
+            "contextEnricherPluginId": installed_plugin["id"],
+            "enrichmentIssueId": issue["id"],
+            "enrichmentRunId": run_id,
+            "enrichmentArtifactRef": artifact_ref,
+            "enrichmentArtifactDigest": artifact_digest,
+        }
+    )
+    save_state(state)
+    print(
+        json.dumps(
+            public(
+                {
+                    "plugin": installed_plugin,
+                    "effective": effective,
+                    "selectedAdapter": agent.get("adapterType"),
+                    "run": summarize_run(run),
+                    "durableEnrichment": enrichment,
+                    "artifactDigestVerified": actual_digest,
+                    "artifact": artifact_body,
+                    "nativeAdapterRecord": native_record,
+                }
+            ),
+            indent=2,
+            sort_keys=True,
+        )
+    )
+
+
+def enrichment_report() -> None:
+    state, client = state_client()
+    run_id = state.get("enrichmentRunId")
+    expected_ref = state.get("enrichmentArtifactRef")
+    expected_digest = state.get("enrichmentArtifactDigest")
+    if not all(isinstance(value, str) for value in (run_id, expected_ref, expected_digest)):
+        raise RuntimeError("run pre-run-enrichment first")
+    _, run = client.request("GET", f"/api/heartbeat-runs/{run_id}")
+    if not isinstance(run, dict):
+        raise RuntimeError("persisted run is not an object")
+    context = run.get("contextSnapshot")
+    enrichment = context.get("paperclipRunContextEnrichment") if isinstance(context, dict) else None
+    entries = enrichment.get("entries") if isinstance(enrichment, dict) else None
+    artifact = entries[0].get("artifact") if isinstance(entries, list) and len(entries) == 1 else None
+    if not isinstance(artifact, dict):
+        raise RuntimeError(f"persisted enrichment is missing after restart: {enrichment}")
+    if artifact.get("ref") != expected_ref or artifact.get("sha256") != expected_digest:
+        raise RuntimeError(f"persisted artifact identity changed after restart: {artifact}")
+    artifact_bytes = read_container_bytes(expected_ref.removeprefix("file://"))
+    actual_digest = hashlib.sha256(artifact_bytes).hexdigest()
+    if actual_digest != expected_digest:
+        raise RuntimeError("persisted artifact content no longer matches the durable digest")
+    print(
+        json.dumps(
+            public(
+                {
+                    "run": summarize_run(run),
+                    "durableEnrichment": enrichment,
+                    "artifactDigestVerifiedAfterRestart": actual_digest,
+                }
+            ),
+            indent=2,
+            sort_keys=True,
+        )
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -1069,6 +1505,10 @@ def main() -> int:
             "orphan-prepare",
             "orphan-report",
             "orphan-resume",
+            "locking",
+            "recovery-report",
+            "pre-run-enrichment",
+            "enrichment-report",
         ],
     )
     parser.add_argument("--base-url", default="http://127.0.0.1:13100")
@@ -1087,6 +1527,14 @@ def main() -> int:
         orphan_report()
     elif args.action == "orphan-resume":
         orphan_resume()
+    elif args.action == "locking":
+        locking()
+    elif args.action == "recovery-report":
+        recovery_report()
+    elif args.action == "pre-run-enrichment":
+        pre_run_enrichment()
+    elif args.action == "enrichment-report":
+        enrichment_report()
     return 0
 
 

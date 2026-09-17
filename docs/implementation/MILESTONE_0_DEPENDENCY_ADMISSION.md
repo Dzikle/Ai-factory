@@ -1,8 +1,8 @@
 # AI Factory — Milestone 0 Dependency Admission
 
-**Status:** BLOCKED — do not begin Milestone 1
+**Status:** WAITING FOR UPSTREAM — Milestone 1 remains BLOCKED
 
-**Executed:** 2026-09-15
+**Executed:** 2026-09-15 (baseline); 2026-09-16–17 (Milestone 0B)
 
 **Architecture baseline:** `71b5a5d50e7bf0e25aa1d643895779654a1522ca`
 
@@ -11,27 +11,28 @@ fault tests only. No Context Resolver or production workflow was implemented.
 
 ## 1. Executive verdict
 
-The selected data-plane components are usable behind the boundaries defined by
-the adoption spike, but the selected control plane is not admitted at its
-pinned revision. Paperclip recovers task/run state after a controller crash,
-yet leaves the crashed run's ephemeral environment lease permanently active.
-Its public external-adapter contract can run a pre-provider enrichment adapter,
-but cannot transparently delegate to a separately registered native adapter or
-persist mutations of the invocation context back into the host run snapshot.
+Milestone 0B produced minimal upstream-compatible Paperclip proposals for both
+blockers and an immutable local test image. The sandbox ordering fix landed
+upstream during this work; real re-admission exposed a remaining local/SSH lease
+cleanup defect, now covered by a separate correction. A general optional plugin
+enrichment hook preserves the original adapter and run identity and durably
+records the context artifact. **Neither local proposal is upstream-accepted.**
 
-Milestone 0 therefore does not exit. Do not implement Milestone 1 or substitute
-a private Paperclip fork. The next milestone is a narrow upstream remediation
-and re-admission cycle for Paperclip's lease reaper and pre-run extension seam.
+Outcome B: **UPSTREAM REMEDIATION READY, WAITING**. These patches are test/PR
+material, not a private production fork. Milestone 0 does not exit and Milestone
+1 is not authorized. A supported release build/image and tested migration path
+are also required; the admission source-layer image is not that release.
+Next: Milestone 0C upstream release and release-image re-admission.
 
 | Dependency boundary | Verdict | Admission result |
 | --- | --- | --- |
-| Paperclip control plane | **BLOCKED** | Process-loss recovery passes; controller-loss lease cleanup and required transparent pre-run seam fail. |
+| Paperclip control plane | **WAITING FOR UPSTREAM** | Local remediation and same-run native enrichment tested; require upstream merge/release and supported-image re-admission. Section 3.0 is current evidence. |
 | PostgreSQL durability | **PASS** | Persistent restart and `pg_dump`/restore counts match. |
 | Agent Skills format | **PASS** | Both skills validate and lazily load in metadata and prompt-catalog styles. |
 | OpenSearch 3.8.0 | **PASS** | Role isolation, filtered/multi-search, alias rebuild, persistence and loss recovery pass. |
 | Official OpenSearch MCP | **PASS WITH ADAPTER** | Four-tool read-only surface and bounded results pass; explicit core-tool disables are required. |
-| MemPalace 3.9.0 | **PASS WITH GATES** | Single-writer, persistence, export/restore, application read-only mode and loss recovery pass; default embedding readiness and filesystem read-only restore do not. |
-| CodeGraphContext 0.6.13 | **PASS WITH ADAPTER** | Java/TS/Go symbol and caller tests plus destructive rebuild pass; update is a full reindex and MCP must be allowlisted. |
+| MemPalace 3.9.0 | **PASS WITH GATES** | Real embeddinggemma SQLite authenticated add/search and offline restart now pass; application read-only required, organizational retrieval quality not inferred from smoke. |
+| CodeGraphContext 0.6.13 | **ENABLEMENT DEFERRED** | Functional graph/rebuild works; mandatory vulnerable protobuf cannot be safely overridden without regenerating old SCIP bindings. Current V1 image disabled. |
 | LiteLLM 1.102.0 core | **PASS WITH NARROWED BOUNDARY** | MIT core Router fallback/loss/recovery passes. The `proxy` profile is not admitted as open source because it directly depends on proprietary `litellm-enterprise`. |
 
 No dependency in this report becomes authoritative merely because its mechanics
@@ -40,6 +41,10 @@ force, except that Paperclip cannot assume its intended authority until the
 blocking gates pass.
 
 ## 2. Reproducible environment and pins
+
+Sections 2 and 3.1–8 retain the **Milestone 0A baseline** pins/failure evidence.
+Section 3.0, secondary amendments, and the current lock supersede them for 0B;
+do not deploy the old Paperclip revision as an admitted fallback.
 
 Host observations:
 
@@ -76,8 +81,310 @@ During testing Docker Desktop itself stopped responding. The exact stale local
 runtime directories were moved aside and empty runtime directories recreated;
 unrelated containers and volumes were not modified. This was a host failure,
 not attributed to a candidate dependency.
+On 2026-09-17 the stale inference socket directory
+`C:\Users\User\AppData\Local\Docker\run` was preserved as
+`run-m0b-preserved-20260917` before Docker Desktop was restarted. That host
+repair removed no repository, image, persistent volume, or unrelated container.
 
 ## 3. Paperclip admission
+
+### 3.0 Milestone 0B current remediation / re-admission
+
+#### Immutable identity and compatibility
+
+- Official base: `e1f245a6607f3920d1618409ee0d5b90c822d81e`, merged
+  [lease PR #13515](https://github.com/paperclipai/paperclip/pull/13515) on
+  2026-09-16. Its bounded active-lease sweep and same-tick sandbox cleanup are
+  reused, not redundantly patched.
+- Latest inspected upstream: `165b10bd98f842d5a3f1b1f8bd1cf731271b4a4e`
+  on 2026-09-17; relevant newer source changes supplied no equivalent host-lease
+  correction or enrichment/delegation hook.
+- Temporary composite: `b75cbb5fa6ee408c516e04544365cdcd2ff1a383`, tree
+  `8414940ca75347bd85f6b1be58af40697c82c03c`.
+- Image index/observed ID:
+  `sha256:3b4d342b8262f5d6ccc97d0dd6307034c5f3d644e5b52e5a92da33e9527f7943`;
+  Linux manifest `sha256:97e08a86247823eba27851706e9af268f9ce20ed5315f2db187933255c9de0b5`.
+- PostgreSQL 17.11 remains the same pinned durable container, with isolated
+  `paperclip_m0b` database and `aif-m0b-paperclip-data` volume. Original database,
+  Paperclip data volume and pre-upgrade backup are preserved.
+
+The normal upstream server build is obstructed by runner-manifest freshness and
+optional Sentry peer typings. The POC rebuilds shared/plugin SDK normally and
+server with `tsc --noCheck`, retaining the pinned baseline native runner/CLI
+layer and UI. Tests validate this exact hybrid image, **not** a normal upstream
+release or paid Codex/Claude execution. The original database could not be
+migrated using the newer divergent journal: duplicate existing
+`agent_runtime_state` relation. A backup preceded the attempt; fresh-database
+admission cannot prove an upgrade. No manual journal/schema rewrite is approved.
+
+Pre-upgrade dump SHA-256:
+`f0dcc74931513ba01363676d163b01b17ceeca4691880ecb7dbaf291a708c5cc`.
+
+#### Recovery defect and correction
+
+The original baseline source lease `1663b64b-ce98-46be-a56f-05222519cae0`
+was still active/released-null when reproduced before the image change.
+Upstream #13515 resolves the stranded **sandbox** ordering but is not enough
+for built-in host drivers. On official base + enrichment, real controller source
+`4b6531c8-db57-4b68-80a7-4b429b10ccbc` became `interrupted` /
+`orphaned_running_run`; lease `b0393e93-9c8d-48b8-824d-be85bb4a1a7b` moved
+from active into `pending_cleanup`, failed cleanup, and stayed stranded.
+
+Root cause: local/SSH drivers acquire ephemeral logical leases and normally
+release only their DB records. Pending cleanup routes every ephemeral lease to
+`retryPendingSandboxTeardown`, an operation these drivers do not have. The
+sandbox shared-resource guard also incorrectly defers SSH logical release when
+a successor holds the same host/workspace URI. The correction uses recorded
+`metadata.driver` + ephemeral policy, CAS-releases only the logical record,
+preserves an existing release timestamp, and never deletes shared directories
+or tears down a host. It repairs capped/missing-environment pending host rows
+before sandbox retry-cap logic. Unknown drivers are not blanket-exempted.
+
+No migration, provider contract, new task writer or state engine is added.
+Existing sandbox resource ownership guards, teardown and bounded retries remain.
+After corrected-image startup the actual stranded lease above became
+`expired` / cleanup `success`, preserving its existing receipt
+`2026-09-17T05:07:43.484Z`. A timestamp alone was **not** counted as cleanup:
+terminal lease state and successful cleanup were required for this repair.
+
+Relevant source: `server/src/services/heartbeat.ts` active/pending lease sweeps;
+`server/src/services/environment-runtime.ts` local/SSH release vs sandbox
+teardown; `server/src/services/environments.ts` lease persistence. See the two
+independent patches and compatibility/reproduction notes in
+[`milestone0/patches/paperclip/README.md`](../../milestone0/patches/paperclip/README.md).
+
+#### Optional pre-run extension contract
+
+Existing plugin SDK/worker RPC is extended with explicit `agent.run.enrich`,
+`onRunContextEnrich`, and `enrichRunContext`, rather than introducing a wrapper
+adapter or nested executor:
+
+```text
+existing Paperclip run + selected adapter + governed MCP assignment
+→ ready/company-enabled optional plugin enrichment
+→ bounded artifact ref + SHA-256 + metadata / optional prompt
+→ context_snapshot.paperclipRunContextEnrichment persisted before dispatch
+→ original native/legacy adapter, same run ID, existing budget/permission logic
+```
+
+Maximum eight enrichers, 64 KiB prompt and 16 KiB metadata each, 2,048-char
+artifact URI and required SHA-256. Plugin/validation/persistence failure stops
+before provider invocation. Existing snapshots make repeat same-run enrichment
+idempotent; before-persist crashes may repeat the hook, so artifact writes must
+be idempotent. Worker timeout/cancellation/token expiry remain Paperclip's.
+The host validates a digest assertion; it does not fetch arbitrary URIs.
+Artifact bytes are independently hashed by the admission fixture.
+
+Production plugins must not persist credentials. Installing the capability
+trusts the plugin with **run-scoped governed** MCP credentials, not privileged
+OpenSearch access. Role-specific composition/token policy remains future
+Resolver work; no Resolver, capability compiler, projections or workflow pack
+was built.
+
+Native proof run `a0b156c5-1312-4c21-b607-1ecfb0bd490f` succeeded using the
+unchanged built-in **process** adapter and logical Developer identity
+`bca6f9d6-9755-440b-93af-698a3fb20f76`. The placeholder plugin wrote:
+
+- ref: `file:///paperclip/milestone0-context/a0b156c5-1312-4c21-b607-1ecfb0bd490f.json`;
+- SHA-256: `8741004fc254a0af35726afd51ae4dfe62eac55f3631b4e1441578773f9fa5d2`;
+- 1,094 bytes, fixture `placeholder-v1`, one governed MCP assignment.
+
+The native process itself consumed those bytes and recorded the identical
+ref/digest. The artifact, durable snapshot and completed run stayed identical
+after controller restart. This proves order/identity/delegation using a real
+native adapter; it does **not** claim live Codex/Claude harness admission.
+
+#### Regression and live gates
+
+Baseline Linux red run: original 12 tests PASS; four new local/SSH cases FAIL
+with active/pending leases rather than expired. An earlier synthetic reaper
+fixture also caused an unrelated FK cleanup error; that run was discarded and
+the lease sweeps isolated. First fix attempt exposed SQL Date parameter
+encoding; it was corrected, not counted as green.
+
+Final immutable-image command:
+
+```sh
+docker run --rm --user node --tmpfs /tmp:rw,exec,nosuid,size=512m,mode=1777 \
+  --entrypoint sh aif-paperclip-m0b:b75cbb5fa -lc \
+  'cd /app && ./node_modules/.bin/vitest run server/src/__tests__/heartbeat-orphaned-active-lease-sweep.test.ts server/src/__tests__/heartbeat-pending-cleanup-sweep.test.ts server/src/__tests__/heartbeat-run-context-enrichment.test.ts packages/plugins/sdk/tests/run-context-enrichment.test.ts --silent --no-file-parallelism --maxWorkers=1'
+```
+
+Fresh pre-commit result: **4 files / 41 tests PASS**, no skips, 27.75 s,
+Vitest 4.1.11. An earlier same-image full pass took 194.42 s. Two final
+overlay-filesystem rechecks (parallel and serialized) timed out in the existing
+20-second embedded-PostgreSQL setup hook: 25 passed, 16 not executed, suite
+failure. They are not counted as passes. Moving only disposable test DBs to
+tmpfs and serializing files restored the full pass without changing source,
+assertions or timeouts. Production recovery tests still used real durable
+Docker/PostgreSQL volumes, not tmpfs. Upstream should align this old 20-second
+hook with its existing embedded-DB test-cost budget; this operational test
+flakiness remains a review note, not a claimed recovery assertion failure.
+The passing tests include overlapping
+CAS cleanup, stable repeated receipts, live shared-host successor preservation,
+capped pending repair, existing sandbox backoff/retry-cap/provider-unavailable
+tests, durable pre-dispatch snapshot, and SDK opt-in/backward compatibility.
+Host Windows runs had cold embedded-PostgreSQL setup/path/symlink failures and
+were not counted as integration passes. Full upstream CI/typecheck/release
+build remains required for merge/release.
+
+Live capability proof `55561903-b4d3-4e99-a703-46cbba36385c` succeeded. Company
+profile and agent-generated broad grants were unbound; effective external grant
+was exactly `SearchIndexTool` on connection
+`9a746e83-f6a3-437f-9b26-d05c96949bdd`, with search HTTP 200/isError false and
+msearch HTTP 403/`deny_default`. The enricher independently initialized the
+assigned gateway and got the same exact allow/deny surface. Four built-in
+Paperclip resource/prompt context helpers are explicitly permitted, not hidden
+external grants. The process adapter's separate connection-intent gateway 404
+responses are **not** permission evidence.
+
+Concurrent checkout issue `d8afbe9f-91ec-4ca9-942d-1c73894c1c8c`: HTTP
+200/409, one persisted Developer owner. The probe task was cancelled afterward;
+its run/claim evidence remains durable.
+
+Live child kill: PID 672, source `85b345c4-cc09-4ea6-ae3f-e05de916fd37`
+failed with `adapter_failed`, reconciliation action
+`1f79c024-1557-462b-aa3b-a390fe241d7d` explicitly acknowledged provider stop
+and recorded effects, successor `935a2227-1b17-4f5a-9578-f054ef03893c`
+succeeded. This is not automatic replay of uncertain side effects.
+
+Fast controller kill/restart (exit 137, before controller lease expiry): source
+`ea4ce4f7-e6df-4dae-a9c5-49ed3c661101` terminalized by backstop as
+`interrupted` / `orphaned_running_run`; explicit issue resume coalesced to live
+successor `ba114391-dd1f-405c-9186-10101bd22079`, which succeeded. An additive
+deferred wake made a **sequential**, not concurrent, extra run
+`9ef2d2b5-c15f-4c9f-8e5f-631f4a2bfad2`; closing the completed test task
+cancelled it. Its lease was included, not hidden from release assertions.
+Source host lease expired with cleanup success on the eligible periodic sweep,
+after the configured five-minute backoff (no test-only DB timestamp editing).
+
+| Fast-restart / child-loss run | Lease | Terminal state / unchanged release receipt |
+| --- | --- | --- |
+| `85b345c4-cc09-4ea6-ae3f-e05de916fd37` | `211ca0eb-6aeb-49cc-a8cc-15e7f162bfbb` | failed; `2026-09-17T05:25:23.774Z` |
+| `935a2227-1b17-4f5a-9578-f054ef03893c` | `ddc4da8e-7270-4102-ad69-141ba0f78ca8` | released; `2026-09-17T05:25:36.291Z` |
+| `ea4ce4f7-e6df-4dae-a9c5-49ed3c661101` | `61ad1891-58c2-4ec2-87df-f035c4cd2042` | expired / cleanup success; `2026-09-17T05:31:17.302Z` |
+| `ba114391-dd1f-405c-9186-10101bd22079` | `405cdacf-be29-4455-812c-62f02b8ba0eb` | released; `2026-09-17T05:27:55.071Z` |
+| `9ef2d2b5-c15f-4c9f-8e5f-631f4a2bfad2` | `8bee6f42-448c-4325-902e-40b88d60062a` | expired; `2026-09-17T05:27:55.425Z` |
+
+`recovery-report` PASS: every acquired source/successor lease terminal, cleared
+checkout/execution locks, no remaining live writers, no overlapping task run
+intervals, repeat receipts unchanged. Delayed cleanup within configured backoff
+is acceptable **eventual** release, not an exactly-once external side-effect
+claim. For host leases the corrected release is a single status-guarded DB write.
+
+Restart after controller-lease expiry was tested separately. Source
+`e2b6b9a4-0f80-44ce-be8d-e580116e2a30` had lease expiry
+`2026-09-17T05:32:50.334Z`; controller exit 137 occurred at
+`05:31:50.617456526Z`, and restart at `05:33:08.037879478Z`. Startup recovered
+it as `failed` / `process_lost`, immediately releasing its environment lease.
+Reconciliation action `0c7f7f63-5e1c-42a3-b398-e941172a6bf7` required explicit
+provider-stopped acknowledgement; recovery successor
+`cbeb08ff-e988-43d0-bd6d-d4c214f63da9` succeeded. A further explicit task
+resume `30c7acc3-124f-4fde-b161-44c509c27b9f` succeeded. Closing the completed
+fixture task cancelled its sequential deferred-wake extra run; that lease was
+also checked. No timestamp manipulation or uncertain-side-effect auto-replay
+was used.
+
+| Expired-controller startup run | Lease | Terminal state / unchanged release receipt |
+| --- | --- | --- |
+| `e2b6b9a4-0f80-44ce-be8d-e580116e2a30` | `8143ac46-4c4f-433f-9811-e17ae6f3a74d` | failed; `2026-09-17T05:33:15.259Z` |
+| `cbeb08ff-e988-43d0-bd6d-d4c214f63da9` | `1c05241f-c11c-4e3f-bf80-3a41d51cea61` | released; `2026-09-17T05:33:32.099Z` |
+| `30c7acc3-124f-4fde-b161-44c509c27b9f` | `72ec334d-d1ae-43fd-8389-7f42f1955274` | released; `2026-09-17T05:33:52.612Z` |
+| `bae8407f-1483-4ffe-afae-af1aedf735bd` | `a6563b39-3c8e-4f3c-bf5c-787b4427ac92` | expired; `2026-09-17T05:33:52.935Z` |
+
+#### Final backup/restore and repeat-startup check
+
+With the original controller stopped to quiesce writes, `pg_dump -Fc` of
+`paperclip_m0b` was restored with `pg_restore --exit-on-error` into the isolated
+`paperclip_m0b_readmission_restore` database. Both databases contained **48 runs,
+42 leases, 16 issues**. The restored completed native run retained the exact
+artifact ref/digest above, and the fast-restart/startup source lease states and
+release receipts matched. Separately, a read-only tar backup of
+`aif-m0b-paperclip-data` was extracted into disposable volume
+`aif-m0b-readmission-restore`; independently hashing the restored artifact
+returned the same `8741004f…` SHA-256. The original storage was never overwritten.
+
+Ignored local backup integrity receipts (contain secrets; do not commit):
+
+- `paperclip-m0b-readmission-20260917.dump`:
+  `375199a0c9ce91175f7f7de4d7ed04f8513a9e73b938583f2149edbbd96a9588`;
+- `paperclip-m0b-data-readmission-20260917.tar.gz`:
+  `a0a0c9f08e04082f409fc84ebbc68bfb76bc914af1499174bba894925872f541d`.
+
+This proves snapshot/data restoration, not an automated disaster-recovery SLA
+or old-database migration. Restore the same deployment secrets with the paired
+database/storage snapshot. After restarting the original controller and waiting
+for health, both commands passed again:
+
+```sh
+python milestone0/scripts/paperclip_admission.py recovery-report
+python milestone0/scripts/paperclip_admission.py enrichment-report
+```
+
+All **nine** acquired source/successor/cancelled-run leases above remained
+terminal with identical receipts; task execution intervals did not overlap,
+checkout/execution locks were clear, and there were no live task writers.
+The enriched run/artifact still had the same durable ref and full SHA-256.
+The exact external search-only effective MCP profile was also reasserted after
+this restart; both Paperclip and offline MemPalace Compose configs validate.
+A first verification request during `health=starting` disconnected and was not
+counted as a pass; healthy retry supplied the evidence. Disposable restoration
+targets were removed after validation; paired backup files and original data
+remain recoverable.
+
+| Paperclip 0B gate | Local immutable-image result | Admission consequence |
+| --- | --- | --- |
+| Child-process loss / reconciliation / successor | PASS | Explicit effects acknowledgement, both leases released. |
+| Controller loss before expiry / orphan backstop | PASS | Source eventually released at eligible sweep; sequential extra accounted for. |
+| Startup after controller expiry / explicit resume | PASS | Startup source release, both successors and extra released. |
+| Idempotent recovery / task locking / no duplicate writer | PASS | Nine stable receipts, non-overlapping intervals, 200/409 checkout. |
+| Generated broad grant removal / exact MCP profile | PASS | Search only externally; msearch deny-default; same governed surface in hook. |
+| Pre-run enrichment / original native dispatch / durable artifact | PASS | Same process-adapter run consumed bytes, snapshot survives restart/restore. |
+| Paired database/storage backup and restore | PASS | Counts and durable/actual artifact identity match. |
+| Supported upstream fixes / normal release build / migration | **WAITING** | Prepared independent proposals are not merged; hybrid image and fresh DB are insufficient. |
+
+Therefore the local technical remediation gates pass, but the **overall
+Paperclip admission gate remains WAITING FOR UPSTREAM**, not PASS.
+
+Failed fixture attempts (duplicate issue titles/idempotency, an external adapter
+artifact-path collision, unfinished probe-task re-wakes, and the initial native
+consumption assertion) were excluded. The harness now uses unique test rounds,
+exact wake/source exclusions, closes completed probe tasks, asserts native
+consumption, and includes all discovered source/successor/cancelled runs in its
+lease inventory. It checks cleared locks, terminal leases, stable repeated
+release receipts, and non-overlapping task execution intervals.
+
+#### Secondary gate dispositions
+
+**LiteLLM:** final V1 selection is embedded **MIT core Router only** at the
+existing exact pin. Licensed proxy DEFERRED; no V1 procurement or second gateway
+service. Native harnesses remain native adapters.
+
+**MemPalace:** real embeddinggemma q8 CPU/two-thread SQLite path warmed and
+tested. Exact HF snapshot
+`5090578d9565bb06545b4552f76e6bc2c93e4a66`, tokenizer/model hashes in lock,
+offline runtime. Warm six-document ingest 8.65 s; semantic order query returned
+relevant Java/TS paths with cosine 0.76/0.73/0.69 and zero BM25 contribution.
+Authenticated add/search returned provenance-rich drawer
+`drawer_ai-factory_pitfalls_e5c23039eaa28a2725c05cd0` at similarity 0.676;
+same search survived next-day restart offline. This is mechanics/semantic smoke,
+not organizational retrieval-quality proof. Cache material must be backed up,
+verified and prewarmed before offline readiness.
+
+**CodeGraphContext:** current V1 integration **disabled / enablement DEFERRED**.
+`pip-audit` 2.9.0 found eight advisories in pip 25.0.1 (six installer-only) and
+protobuf 3.20.3 (two runtime DoS). The mandatory source constraint prevents a
+supported fixed protobuf; 5.29.6 breaks generated `scip_pb2` import. Optional
+SCIP is default-disabled, but that is not a vulnerability waiver. Regenerate
+bindings/lift pin upstream, trim runtime dependencies and re-audit/retest before
+enabling the one graph candidate. See
+[protobuf parser advisory](https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-8qvm-5x2c-j2w7)
+and [JSON parser advisory](https://github.com/advisories/GHSA-7gcm-g887-7qv7).
+Separate npm build/web findings are not conflated with Python query reachability.
+
+No authority boundary changes: Paperclip is still the intended **sole** task/
+run/workspace owner only **after** admission; Git owns current canonical truth,
+MemPalace experiential memory, and OpenSearch/code graph remain projections.
 
 ### 3.1 Deployed shape
 
@@ -320,7 +627,8 @@ large nonessential proxy artifact download.
 The test image itself is 4.39 GB because it retains its Linux compiler layer;
 this is an admission artifact, not a production image. AI Factory admits the
 MIT core `litellm.Router` for raw API calls. A production integration needs a
-small wrapper/runtime image, or an explicit commercial decision for the proxy.
+small embedded raw-API adapter/runtime image. Milestone 0B explicitly defers the
+licensed proxy; it is not an alternative V1 deployment shape.
 It must not label the current proxy deployment wholly open source. Native coding
 harnesses remain outside both paths.
 
@@ -329,7 +637,7 @@ harnesses remain outside both paths.
 | Injected loss | Observed failure | Recovery | Authority effect |
 | --- | --- | --- | --- |
 | Agent child process | Durable failed run and explicit reconciliation | Successor run succeeded; locks/leases released | No task loss or duplicate writer |
-| Paperclip controller container | Orphaned run terminalized; issue blocked for disposition | Explicit task resume succeeded | **Failed:** source environment lease remained active |
+| Paperclip controller container | Orphan terminalized; uncertain effects require explicit disposition | Local 0B fast restart/resume and eventual original lease cleanup pass | Sole operational-owner design retained; production admission waits for upstream release |
 | OpenSearch under live MCP | Client timeout at 5.178 s | Same MCP recovered after cluster restart; 12 docs persisted | Paperclip/Git truth unaffected |
 | MemPalace service | Connection refused | Same drawer recovered after restart | Task/canonical truth unaffected; memory context degrades |
 | CodeGraph volume | Empty graph | Rebuilt from Git in 113.63 s | Git truth unaffected |
@@ -350,6 +658,9 @@ self-healing workflows; those remain post-admission implementation work.
 | Deterministic API/embedding test endpoint | [`milestone0/fixtures/mock-openai/server.py`](../../milestone0/fixtures/mock-openai/server.py) |
 | Admission probes | [`milestone0/scripts/`](../../milestone0/scripts) |
 | LiteLLM exact-source core build | [`milestone0/containers/litellm-core.Dockerfile`](../../milestone0/containers/litellm-core.Dockerfile) |
+| Paperclip independent upstream proposals / exact test bundle | [`milestone0/patches/paperclip/README.md`](../../milestone0/patches/paperclip/README.md) |
+| Paperclip immutable admission-only source-layer build | [`milestone0/containers/paperclip-m0b.Dockerfile`](../../milestone0/containers/paperclip-m0b.Dockerfile) |
+| MemPalace prewarmed offline production-embedding profile | [`milestone0/compose/mempalace-production-embedding.yaml`](../../milestone0/compose/mempalace-production-embedding.yaml) |
 
 Generated secrets, database dumps, board state, cloned upstream sources, graph
 databases, and runtime logs are deliberately ignored and are not canonical
@@ -357,19 +668,24 @@ repository artifacts.
 
 ## 11. Required next milestone
 
-Remain in Milestone 0 and do only the following:
+**Milestone 0C — supported upstream release re-admission**, not Milestone 1:
 
-1. report the Paperclip recovery ordering defect upstream with a minimal test
-   proving terminalized orphan runs release every associated environment lease;
-2. propose an upstream-compatible pre-run enrichment contract that can persist
-   a bounded context-artifact reference/digest and then delegate to a selected
-   native adapter in the same Paperclip run;
-3. upgrade to a fixed immutable Paperclip revision and repeat controller kill,
-   lease, capability, backup/restore, and seam tests;
-4. decide whether V1 uses MIT LiteLLM core Router or procures the current proxy
-   license, then pin only that admitted deployment shape;
-5. warm/validate the selected production embedding implementation and remediate
-   CodeGraphContext image vulnerabilities before enabling those integrations.
+1. Submit/review the prepared independent host-lease correction and optional
+   plugin enrichment proposals; record real upstream issue/PR references when
+   created. None is currently fabricated or implied to be submitted.
+2. Obtain upstream acceptance and a supported normal source/release build, pin
+   its immutable revision/image, and prove the baseline database/storage upgrade
+   or an explicitly approved export/import path. Do not maintain a private fork.
+3. Repeat the live kill/orphan/lease/resume/locking/profile/backup/enrichment/
+   delegation/digest gates on that release. Only a committed **ADMITTED** result
+   unblocks Milestone 1 contracts/policies/projections.
+4. Before graph enablement, require upstream-compatible regenerated SCIP
+   bindings/fixed protobuf, a trimmed audited image, and functional re-admission.
+   Current graph integration remains disabled rather than adding another graph.
+5. Carry forward the final MIT-core-only LiteLLM decision and verified offline
+   MemPalace cache/readiness profile; retain explicit retrieval-quality evals.
 
-Do not implement the actual Context Resolver, projections, capability compiler,
-or V1 engineering workflows until items 1–3 pass.
+No actual Context Resolver, projection worker, capability compiler, engineering
+workflow, model selection, self-healing or self-improvement was implemented or
+authorized. Paperclip remains the intended sole operational authority after
+admission; DBOS/custom control plane are not silent fallbacks.

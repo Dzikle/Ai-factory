@@ -1,18 +1,27 @@
 schema_version: 1
-recorded_at: "2026-09-15"
+recorded_at: "2026-09-17"
 platform:
   host: "Windows 11"
   containers: "linux/amd64"
 
 dependencies:
   paperclip:
-    version: "commit 5282cabde84624320e63bd942f6ed5124952f2a2"
+    version: "temporary test commit b75cbb5fa6ee408c516e04544365cdcd2ff1a383; NOT ADMITTED"
     source: "https://github.com/paperclipai/paperclip.git"
     license: "MIT"
-    image: "ghcr.io/paperclipai/paperclip@sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83"
-    image_platform_manifest: "sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83"
-    source_release_claim: "v2026.831.1"
-    note: "The claimed release tag had no registry manifest; admission pins the commit image digest. Milestone 0 blocked this revision on orphan environment-lease cleanup and the native-adapter pre-run delegation seam."
+    admission_status: "WAITING FOR UPSTREAM; Milestone 1 BLOCKED"
+    upstream_base: "e1f245a6607f3920d1618409ee0d5b90c822d81e"
+    upstream_lease_fix: "https://github.com/paperclipai/paperclip/pull/13515"
+    latest_upstream_inspected: "165b10bd98f842d5a3f1b1f8bd1cf731271b4a4e"
+    test_tree: "8414940ca75347bd85f6b1be58af40697c82c03c"
+    seam_test_commit: "d69a384ab1f8e2d68ec1bb16b4aa4874a720b054"
+    seam_standalone_commit: "939a02e96847282da5881a3a30f396c51659b32c"
+    host_lease_standalone_commit: "0453a773a59403f57f978ecf68359282a025f7ef"
+    image: "aif-paperclip-m0b@sha256:3b4d342b8262f5d6ccc97d0dd6307034c5f3d644e5b52e5a92da33e9527f7943"
+    image_platform_manifest: "sha256:97e08a86247823eba27851706e9af268f9ce20ed5315f2db187933255c9de0b5"
+    baseline_commit: "5282cabde84624320e63bd942f6ed5124952f2a2"
+    baseline_image: "ghcr.io/paperclipai/paperclip@sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83"
+    note: "Admission-only SDK/server source layer over baseline native-runner/CLI layer, not a normal supported release. Full build/typecheck and old-database migration compatibility remain gates. Exact temporary commits are preserved in patches/paperclip/paperclip-m0b-test.bundle; patches are upstream proposals, not a private production fork."
   postgres:
     version: "17.11 (17-alpine image line)"
     license: "PostgreSQL"
@@ -38,22 +47,32 @@ dependencies:
     license: "MIT"
     image: "ghcr.io/mempalace/mempalace@sha256:65da0834ab5ddc2d8247de43aff611393a151eac2893108e66b64f077bf1f232"
     image_platform_manifest: "sha256:65da0834ab5ddc2d8247de43aff611393a151eac2893108e66b64f077bf1f232"
-    deployment: "One-writer sqlite_exact profile; application read-only for restored replicas; deterministic openai-compat embedding endpoint used only for mechanics admission"
+    deployment: "One-writer sqlite_exact; application-read-only restored replicas; warmed local embeddinggemma q8 CPU (2 threads), 384-dimensional MRL; offline verified cache"
+    embedding_repository: "onnx-community/embeddinggemma-300m-ONNX"
+    embedding_snapshot: "5090578d9565bb06545b4552f76e6bc2c93e4a66"
+    embedding_files_sha256:
+      tokenizer.json: "4dda02faaf32bc91031dc8c88457ac272b00c1016cc679757d1c441b248b9c47"
+      onnx/model_quantized.onnx: "172efde319fe1542dc41f31be6154910b05b78f7a861c265c4600eec906bd6d8"
+      onnx/model_quantized.onnx_data: "705626e28e4c23c82ade34566b4197d97f534c12275fa406dfb71e9937d388c0"
+    embedding_readiness: "Authenticated add/search plus offline restart search PASS; semantic fixture smoke only, not organizational retrieval-quality admission"
   codegraphcontext:
     version: "0.6.13; commit 2ef71b05a2ad1c5fd644c3ba52d77b502adaf1cf"
     source: "https://github.com/CodeGraphContext/CodeGraphContext.git"
     license: "MIT"
     deployment: "Locally built Linux image aif-m0/codegraphcontext:0.6.13-2ef71b0 with explicit ladybugdb backend"
     image_id: "sha256:9b299edcef77e86e2250dbb8f1d3cafdca576a23165bdea8522dfc35403c88b3"
+    v1_enabled: false
+    admission_status: "DEFER ENABLEMENT: mandatory protobuf 3.20.3 has two runtime DoS advisories; compatible regenerated SCIP bindings/lifted constraint plus trimmed/re-audited runtime required"
+    audit_tool: "pip-audit 2.9.0; eight advisories in pip 25.0.1 (six installer) and protobuf 3.20.3 (two runtime); separate npm audit: 16 build/web findings"
   litellm:
     version: "1.102.0; commit b94b8bca211e366328bcee3acd57d859fd35e52c"
     source: "https://github.com/BerriAI/litellm.git"
     license: "MIT core only; proxy extra directly depends on LicenseRef-Proprietary litellm-enterprise 0.1.67"
     deployment: "Exact source and frozen uv.lock, Linux core-only image aif-m0/litellm-core:1.102.0-b94b8bc"
     image_id: "sha256:c735b6415326127a4aed012df3c30dab07cd218a1887cc7184512c85e16bf63c"
-    note: "Core Router is admitted for raw API calls. The current server proxy is not admitted as open source; production use requires a commercial-license decision or a different service wrapper."
+    note: "Final V1 decision: embedded MIT core Router only for raw API calls. Licensed proxy DEFERRED; no proxy procurement or second gateway service is in V1. Native harness agents bypass the raw-model abstraction."
 
 rollback_policy:
   rule: "Rollback means restoring the recorded volume/database backup and starting the last admitted immutable digest; never retag a mutable image."
   current_admitted_set: null
-  reason: "Milestone 0 is blocked by Paperclip. Base architecture commit 71b5a5d is the rollback point and the tested set must not be promoted as a production-admitted stack."
+  reason: "Milestone 0 waits for upstream Paperclip remediation/release and supported-image re-admission. No private fork or Milestone 1. Restore preserved baseline database+volume together; the temporary newer migration journal is not an in-place downgrade path."

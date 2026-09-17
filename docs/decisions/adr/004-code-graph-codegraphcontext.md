@@ -1,8 +1,27 @@
 # ADR 004: Adopt CodeGraphContext as the single V1 structural graph
 
-**Status:** Accepted with rebuild/performance and security gates
+**Status:** Selected candidate; V1 enablement DEFERRED on dependency security
 
 **Date:** 2026-09-15
+
+## Milestone 0B amendment — 2026-09-17
+
+Keep one graph candidate, but **disable the current integration for V1** until a
+compatible upstream security revision is tested. `pip-audit` 2.9.0 in the exact
+Linux image found eight advisories: six in installer-only pip 25.0.1 and two
+runtime denial-of-service advisories in protobuf 3.20.3
+(`CVE-2025-4565` / `GHSA-8qvm-5x2c-j2w7`, and `CVE-2026-0994` /
+`GHSA-7gcm-g887-7qv7`). The installed protobuf implementation is pure Python.
+The source requires `protobuf>=3.20,<3.21`; simply upgrading to 5.29.6 breaks
+`tools.scip_pb2` import with “Descriptors cannot be created directly”.
+
+SCIP is optional/default-disabled, which reduces reachability but does not make
+the vulnerable mandatory runtime dependency acceptable. Regenerate the old SCIP
+bindings, lift the protobuf constraint upstream, trim installer/build/web-only
+dependencies, and re-audit/test Java/TS/Go and SCIP before enablement. Do not carry
+a private graph fork or waive the findings by switching to a second graph.
+The earlier 16 npm findings remain a separate build/web dependency gate; they
+are not evidence of 16 reachable Python query vulnerabilities.
 
 ## Milestone 0 amendment — 2026-09-15
 
@@ -31,7 +50,8 @@ not operate multiple overlapping graph systems.
 
 Adopt [CodeGraphContext](https://github.com/CodeGraphContext/CodeGraphContext)
 0.6.13 at commit `2ef71b05a2ad1c5fd644c3ba52d77b502adaf1cf`
-(MIT) as the one V1 graph engine. Run a pinned Linux container/service until the
+(MIT) as the one intended V1 graph engine, with current enablement deferred by
+the amendment above. Run a pinned Linux container/service until the
 Windows embedded Ladybug backend is proven. Expose a read-only, bounded AI
 Factory adapter for symbol, callers, callees, dependencies, and affected paths;
 do not expose raw Cypher to agents.

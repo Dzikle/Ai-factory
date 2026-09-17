@@ -1,0 +1,3 @@
+# Preserve format-patch bytes and integrity receipts across Windows checkouts.
+*.patch -text -whitespace
+*.bundle -text

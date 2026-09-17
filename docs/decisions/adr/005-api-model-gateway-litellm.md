@@ -1,8 +1,17 @@
 # ADR 005: Adopt LiteLLM only for raw API model access
 
-**Status:** Amended — MIT core Router only; server proxy not admitted
+**Status:** Accepted — MIT core Router; licensed proxy DEFERRED from V1
 
 **Date:** 2026-09-15
+
+## Milestone 0B final deployment decision — 2026-09-17
+
+V1 uses **only the MIT core Router library embedded in the raw-API adapter**.
+No licensed proxy procurement, proxy-extra installation, or additional gateway
+service is part of V1. The current proxy is DEFERRED, not a second deployment
+option for builders. Re-entry requires a new explicit license/operational ADR
+and evidence that a service gateway removes meaningful work. Native harnesses
+continue through their original Paperclip runtime adapters.
 
 ## Milestone 0 amendment — 2026-09-15
 

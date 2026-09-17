@@ -93,8 +93,8 @@ export function createServerAdapter() {
       };
       const bytes = JSON.stringify(stable(contextPackage));
       const digest = createHash("sha256").update(bytes).digest("hex");
-      const artifact = `/paperclip/milestone0-context/${ctx.runId}.json`;
-      await mkdir("/paperclip/milestone0-context", { recursive: true });
+      const artifact = `/paperclip/milestone0-adapter-context/${ctx.runId}.json`;
+      await mkdir("/paperclip/milestone0-adapter-context", { recursive: true });
       await writeFile(artifact, `${JSON.stringify({ ...contextPackage, digest }, null, 2)}\n`, { flag: "wx" });
 
       // Deliberately mutate only the invocation copy. The admission test checks

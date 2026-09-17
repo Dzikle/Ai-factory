@@ -19,9 +19,9 @@ services:
     restart: unless-stopped
 
   paperclip:
-    image: ghcr.io/paperclipai/paperclip@sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83
+    image: aif-paperclip-m0b@sha256:3b4d342b8262f5d6ccc97d0dd6307034c5f3d644e5b52e5a92da33e9527f7943
     environment:
-      DATABASE_URL: postgresql://paperclip:${AIF_M0_POSTGRES_PASSWORD}@postgres:5432/paperclip
+      DATABASE_URL: postgresql://paperclip:${AIF_M0_POSTGRES_PASSWORD}@postgres:5432/paperclip_m0b
       PORT: "3100"
       PAPERCLIP_BIND: custom
       PAPERCLIP_BIND_HOST: 0.0.0.0
@@ -58,4 +58,4 @@ volumes:
   paperclip-postgres:
     name: aif-m0-paperclip-postgres
   paperclip-data:
-    name: aif-m0-paperclip-data
+    name: aif-m0b-paperclip-data

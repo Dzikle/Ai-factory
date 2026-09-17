@@ -4,6 +4,24 @@
 
 **Date:** 2026-09-15
 
+## Milestone 0B embedding admission amendment — 2026-09-17
+
+The intended local embedding path is now warmed and mechanics-admitted:
+`embeddinggemma`, ONNX q8 CPU with two threads, 384-dimensional MRL vectors,
+`sqlite_exact`. The exact `onnx-community/embeddinggemma-300m-ONNX` snapshot is
+`5090578d9565bb06545b4552f76e6bc2c93e4a66`; model/tokenizer hashes are recorded
+in `milestone0/dependencies.lock.yaml`. Restore/pre-warm that cache and use
+`HF_HUB_OFFLINE=1` because upstream downloads otherwise follow mutable main.
+
+Six real Java/TS/Go fixture documents ingested on the warmed SQLite path in
+8.65 s. A semantic order-creation query returned relevant controller/service
+paths with cosine scores 0.76/0.73/0.69 and zero BM25 contribution. Authenticated
+MCP add/search retrieved the readiness lesson with similarity 0.676 and preserved
+source path; the same drawer/search survived the next-day host/service restart
+offline. This is a small semantic smoke test, **not** an organizational retrieval
+quality benchmark. Authority, supersession, scoping, canonical precedence, and
+the single-writer/application-read-only requirements remain unchanged.
+
 ## Milestone 0 amendment — 2026-09-15
 
 The real 3.9.0 service passed one-writer exclusion, persistence, dependency-loss

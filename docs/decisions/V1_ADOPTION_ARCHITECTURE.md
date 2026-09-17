@@ -6,6 +6,17 @@
 
 **Scope:** Phase 0.5 open-source adoption spike; this is not a V1 implementation
 
+> **Current admission amendment (2026-09-17): WAITING FOR UPSTREAM.** Milestone
+> 0B prepared and locally tested Paperclip host-lease and plugin enrichment
+> proposals; no private production fork or Milestone 1 is admitted. Require a
+> supported upstream release/build/migration path and release-image re-admission.
+> CodeGraphContext remains the single selected candidate but its current V1
+> image is disabled pending compatible protobuf/bindings remediation/re-audit.
+> LiteLLM's final V1 shape is embedded MIT core Router only; licensed proxy is
+> deferred. Real offline MemPalace embedding readiness passed, not a full recall
+> benchmark. The [current report](../implementation/MILESTONE_0_DEPENDENCY_ADMISSION.md)
+> supersedes the historical hold below.
+
 > **Admission hold (2026-09-15):** Paperclip `5282cab` failed mandatory
 > environment-lease cleanup and transparent pre-run delegation gates. This
 > document remains the target architecture, not an authorization to start V1.
@@ -24,8 +35,9 @@ Once admitted, Paperclip is the authoritative operational control plane. Agent S
 canonical portable skill format. OpenSearch 3.x remains the rebuildable
 knowledge fabric and its official Python MCP server is the retrieval provider.
 Paperclip's governed MCP gateway and execution-workspace/sandbox-provider
-contract own the corresponding runtime concerns. CodeGraphContext supplies the
-single V1 structural graph. LiteLLM's MIT core Router is used only for raw API
+contract own the corresponding runtime concerns. CodeGraphContext remains the
+single structural graph candidate, disabled until security re-admission.
+LiteLLM's MIT core Router is used only for raw API
 model calls.
 MemPalace is the single experiential-memory authority and projects a searchable
 view into OpenSearch.
@@ -38,14 +50,14 @@ section 12. No selected dependency may require a long-lived fork.
 
 | Concern | V1 selection | Decision and boundary |
 | --- | --- | --- |
-| Control plane | Paperclip, pinned from `5282cab` | **ADAPT; NOT ADMITTED.** Intended to own logical agents, tasks, runs, leases, continuation, review policies, budgets, approvals, workspaces, active runtime configuration, and run history after its blocking gates pass. |
+| Control plane | Paperclip upstream base `e1f245a`; temporary 0B test `b75cbb5fa` | **ADAPT; WAITING FOR UPSTREAM.** Local fixes pass; no production fork admitted. Intended sole operational owner after supported upstream release/build/migration and release-image re-admission. |
 | Durable workflow | Paperclip wake queue, heartbeat scheduler, execution locks, and recovery services | No DBOS beside Paperclip. DBOS is the mutually exclusive fallback if Paperclip fails its adoption gates. |
 | Skills | Agent Skills specification; canonical packages in Git | **ADOPT.** Paperclip skill records/installations are runtime projections. Namespaced metadata and `ai-factory.yaml` sidecars carry AI Factory policy. |
 | Knowledge fabric | Dedicated OpenSearch 3.8.x cluster | Rebuildable projection only. Use filtered lexical/vector hybrid retrieval, multi-search, aliases, and Search Relevance Workbench. |
 | Knowledge MCP | `opensearch-mcp-server-py` 0.11.0 at `fcb23ec` | **ADAPT.** Fixed-cluster, read-only, allowlisted deployment behind bounded AI Factory capability aliases. |
 | MCP runtime/security | Paperclip managed MCP gateway | Owns the active catalog, profiles, grants, approvals, short-lived run tokens, rate limits, redaction, runtime slots, and MCP audit. ToolHive is deferred to avoid duplicate policy/catalog/audit truth. |
 | Execution sandbox | Paperclip execution workspaces and `sandbox_provider` contract | Trusted-host V1 uses task-scoped Git worktrees. Untrusted execution must use one tested Paperclip sandbox provider before admission. SWE-ReX is a deferred provider option, not a second lifecycle owner. |
-| Code graph | CodeGraphContext 0.6.13 at `2ef71b0` | **ADAPT.** One bounded read-only graph service, containerized on Linux until its Windows embedded backend passes. Git remains code truth. |
+| Code graph | CodeGraphContext 0.6.13 at `2ef71b0` | **ADAPT; ENABLEMENT DEFERRED.** Current V1 image disabled pending compatible protobuf/bindings remediation and re-audit. One bounded Linux read-only graph service when admitted; Git remains code truth. |
 | API model gateway | LiteLLM MIT core Router 1.102.0 at `b94b8bc` | **ADAPT.** Embed the core Router for provider normalization, API-call fallback, routing primitives, and usage estimates. The server `proxy` extra is not admitted under the open-source decision. |
 | Agent runtime adapters | Paperclip native/ACP adapters, after control-plane admission | Codex, Claude Code, OpenCode, Cursor, Gemini, and similar harnesses retain their native tools and session behavior and do not pass through LiteLLM. |
 | Memory | MemPalace 3.9.0 at `38260df` | **ADAPT.** Sole durable experiential-memory authority, restricted to memories/diaries/temporal facts. No MemPalace task coordination, logstream, or artifact authority. |
@@ -62,13 +74,13 @@ flowchart TB
     PC --> WR[Paperclip workspace + sandbox provider]
     WR --> GitWT[Task Git worktree / isolated runtime]
 
-    PC --> CR[AI Factory pre-run adapter + Context Resolver]
+    PC --> CR[Optional upstream plugin enrichment hook<br/>future Context Resolver, not built]
     CR --> OSMCP[Official OpenSearch MCP<br/>fixed read-only cluster]
     OSMCP --> OS[(OpenSearch 3.x<br/>rebuildable knowledge fabric)]
     CR --> MA[AI Factory memory adapter]
     MA --> MP[(MemPalace<br/>experiential authority)]
     CR --> CGA[AI Factory code-graph adapter]
-    CGA --> CG[(CodeGraphContext<br/>derived graph)]
+    CGA -. after security admission .-> CG[(CodeGraphContext<br/>derived graph, currently disabled)]
     CR --> Verify[Canonical-source verifier]
     Verify --> Git[(Git + canonical docs/skills)]
     CR --> Package[Bounded provenance-aware<br/>context package]
@@ -280,7 +292,7 @@ template is not a second authority.
 
 1. Paperclip claims the issue with an atomic checkout and creates/reattaches the
    task workspace.
-2. The AI Factory pre-run adapter resolves role, project overlay, skill versions,
+2. A future AI Factory plugin on the upstream pre-run enrichment hook resolves role, project overlay, skill versions,
    logical capabilities, task type, risk, and context budget.
 3. The Context Resolver performs separate bounded queries for canonical docs,
    active decisions, memories/incidents, similar tasks/reviews, capabilities,
@@ -299,11 +311,14 @@ The first implementation ceiling is configurable, but a run must always have a
 hard total token/byte limit and lower per-domain limits. The official MCP
 server's response-size guard is transport protection, not a context budget.
 
-Paperclip does not currently expose a stable generic in-process `beforeRun` hook.
-The V1 seam is an explicit AI Factory runtime/launcher adapter that invokes the
-resolver before delegating to the selected native or API runtime. A small
-upstream-compatible pre-run enrichment hook is preferable if this wrapper cannot
-populate the existing adapter context and `contextSnapshot` cleanly.
+The original wrapper/launcher proposal is explicitly superseded: the existing
+external-adapter contract cannot delegate to another registered native adapter
+or durably enrich the host snapshot. Milestone 0B instead proves the optional
+`agent.run.enrich` plugin contract, with snapshot persistence before unchanged
+native dispatch in the same run. It remains an upstream proposal, not a released
+contract. Milestone 1 may implement the Resolver plugin only after that seam is
+upstream-accepted and Paperclip re-admitted. Never copy native CLI adapters or
+introduce nested execution to bridge this gap.
 
 ## 7. Crash, restart, and model-change sequence
 
@@ -412,7 +427,7 @@ unless measured scaling or isolation demands one.
 
 | Integration | Thin work required |
 | --- | --- |
-| Paperclip pre-run | Runtime/launcher wrapper; persist context-package artifact and `contextSnapshot` digest; upstream a general enrichment hook if needed. |
+| Paperclip pre-run | Future plugin on upstream-accepted optional enrichment hook; persist bounded context artifact/digest before unchanged same-run native dispatch. Wrapper/launcher duplication rejected; Resolver not implemented. |
 | Paperclip → OpenSearch | Idempotent event/activity consumer with per-entity ordering keys, replay cursor, and polling/reconciliation fallback because plugin events are at-least-once and plugin runtime is alpha. |
 | Git/docs/skills → OpenSearch/Paperclip | Commit-aware document projector; Agent Skills validator and Paperclip skill sync. |
 | Capability policy → Paperclip MCP | Compile role/project/task/skill intersections into profiles and grants; verify denied tools are absent. |
@@ -525,6 +540,11 @@ and semantic impact [#1164](https://github.com/CodeGraphContext/CodeGraphContext
 | Phoenix / Langfuse | **DEFER** | Native telemetry plus OpenSearch is sufficient for V1. Reconsider only after a measured trace/eval workflow gap, and avoid another authoritative store. |
 
 ## 14. Evidence baseline and POC results
+
+The table below preserves the 2026-09-15 spike/0A ledger. For current Paperclip
+remediation, MemPalace embedding readiness, CodeGraph security disposition and
+immutable 0B pins, use the admission amendment/report and dependency lock above;
+do not interpret historical failed gates here as unremediated local defects.
 
 | Candidate | Evaluated revision | License/activity evidence | Practical evidence |
 | --- | --- | --- | --- |

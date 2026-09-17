@@ -1,0 +1,137 @@
+From 0453a773a59403f57f978ecf68359282a025f7ef Mon Sep 17 00:00:00 2001
+From: Stole Lazarov <72608012+Dzikle@users.noreply.github.com>
+Date: Thu, 17 Sep 2026 07:15:23 +0200
+Subject: [PATCH] fix(server): recover orphaned local and SSH workspace leases
+
+Release recorded ephemeral host-workspace leases with a status-guarded database receipt instead of attempting sandbox teardown. Repair previously capped pending rows and preserve existing release timestamps. Do not delete shared workspaces or stop a successor using the same host. No schema or provider contract changes.
+---
+ ...rtbeat-orphaned-active-lease-sweep.test.ts | 50 +++++++++++++++++++
+ server/src/services/heartbeat.ts              | 37 ++++++++++++++
+ 2 files changed, 87 insertions(+)
+
+diff --git a/server/src/__tests__/heartbeat-orphaned-active-lease-sweep.test.ts b/server/src/__tests__/heartbeat-orphaned-active-lease-sweep.test.ts
+index 126fba258..9faee9e3b 100644
+--- a/server/src/__tests__/heartbeat-orphaned-active-lease-sweep.test.ts
++++ b/server/src/__tests__/heartbeat-orphaned-active-lease-sweep.test.ts
+@@ -449,6 +449,56 @@ describeEmbeddedPostgres("heartbeat sweepOrphanedActiveLeases", () => {
+     expect(row?.status).toBe("expired");
+   });
+ 
++  it.each(["local", "ssh"])("releases a terminal %s workspace lease without destroying a live successor's workspace", async (driver) => {
++    const { companyId, agentId, environmentId } = await seedCompanyAgentAndEnvironment();
++    await db.update(environments).set({ driver }).where(eq(environments.id, environmentId));
++    const runId = await insertHeartbeatRun({ companyId, agentId, status: "interrupted" });
++    const successorId = await insertHeartbeatRun({ companyId, agentId, status: "running" });
++    const providerLeaseId = `${driver}://shared-workspace`;
++    const leaseId = await insertActiveLease({ companyId, environmentId, heartbeatRunId: runId, updatedAt: oldEnough(), provider: driver, providerLeaseId });
++    const successorLeaseId = await insertActiveLease({ companyId, environmentId, heartbeatRunId: successorId, updatedAt: oldEnough(), provider: driver, providerLeaseId });
++    for (const id of [leaseId, successorLeaseId]) {
++      await db.update(environmentLeases).set({ leasePolicy: "ephemeral", metadata: { driver } }).where(eq(environmentLeases.id, id));
++    }
++
++    const heartbeat = heartbeatService(db);
++    const sweeps = await Promise.all([
++      heartbeat.sweepOrphanedActiveLeases({ backoffMs: 0 }),
++      heartbeat.sweepOrphanedActiveLeases({ backoffMs: 0 }),
++    ]);
++    expect(sweeps.reduce((sum, result) => sum + result.recovered, 0)).toBe(1);
++    await heartbeat.sweepPendingCleanupLeases();
++    const released = await leaseRow(leaseId);
++    expect(released?.status).toBe("expired");
++    expect(released?.cleanupStatus).toBe("success");
++    expect(released?.releasedAt).toBeInstanceOf(Date);
++    expect((await leaseRow(successorLeaseId))?.status).toBe("active");
++    await heartbeat.sweepOrphanedActiveLeases({ backoffMs: 0 });
++    await heartbeat.sweepPendingCleanupLeases();
++    expect((await leaseRow(leaseId))?.releasedAt).toEqual(released?.releasedAt);
++    expect((await leaseRow(successorLeaseId))?.releasedAt).toBeNull();
++  });
++
++  it.each(["local", "ssh"])("repairs an already capped pending %s workspace lease without an environment row", async (driver) => {
++    const { companyId, agentId } = await seedCompanyAgentAndEnvironment();
++    const runId = await insertHeartbeatRun({ companyId, agentId, status: "failed" });
++    const leaseId = await insertActiveLease({ companyId, environmentId: null, heartbeatRunId: runId, updatedAt: oldEnough(), provider: driver, status: "pending_cleanup" });
++    const existingReceipt = new Date("2026-09-01T00:00:00Z");
++    await db.update(environmentLeases).set({
++      leasePolicy: "ephemeral", cleanupStatus: "failed", releasedAt: existingReceipt,
++      metadata: { driver, pendingCleanupRetryAttempts: 100 },
++    }).where(eq(environmentLeases.id, leaseId));
++
++    const heartbeat = heartbeatService(db);
++    await heartbeat.sweepPendingCleanupLeases();
++    const released = await leaseRow(leaseId);
++    expect(released?.status).toBe("expired");
++    expect(released?.cleanupStatus).toBe("success");
++    expect(released?.releasedAt).toEqual(existingReceipt);
++    await heartbeat.sweepPendingCleanupLeases();
++    expect((await leaseRow(leaseId))?.releasedAt).toEqual(released?.releasedAt);
++  });
++
+   it("test_logs_a_distinct_error_kind_and_no_exception_field_when_the_sweep_fails", async () => {
+     const sentinel = "Bearer sk-SENTINEL-a1b2c3";
+     const realSelect = db.select.bind(db);
+diff --git a/server/src/services/heartbeat.ts b/server/src/services/heartbeat.ts
+index 3efdbbf5c..fbe58342b 100644
+--- a/server/src/services/heartbeat.ts
++++ b/server/src/services/heartbeat.ts
+@@ -18190,6 +18190,32 @@ export function heartbeatService(
+       );
+   }
+ 
++  function isHostWorkspaceLease(lease: typeof environmentLeases.$inferSelect): boolean {
++    // These built-in drivers release only a logical run lease. Their provider
++    // id can name a shared host/workspace, not a sandbox to destroy. Classify
++    // from the recorded driver, never from a provider's potentially local name.
++    return lease.leasePolicy === "ephemeral"
++      && (lease.metadata?.driver === "local" || lease.metadata?.driver === "ssh");
++  }
++
++  async function releaseOrphanedHostWorkspaceLease(
++    lease: typeof environmentLeases.$inferSelect,
++  ): Promise<boolean> {
++    const now = new Date();
++    const released = await db.update(environmentLeases).set({
++      status: "expired",
++      cleanupStatus: "success",
++      failureReason: "orphaned_host_workspace_lease_recovered",
++      releasedAt: sql`coalesce(${environmentLeases.releasedAt}, ${now.toISOString()}::timestamptz)`,
++      lastUsedAt: now,
++      updatedAt: now,
++    }).where(and(
++      eq(environmentLeases.id, lease.id),
++      eq(environmentLeases.status, lease.status),
++    )).returning({ id: environmentLeases.id });
++    return released.length > 0;
++  }
++
+   // An active lease is reachable only while its heartbeat run keeps the
+   // running status. The reaper writes the run status and the lease release as
+   // two separate statements, so a restart between them can leave a terminal
+@@ -18229,6 +18255,10 @@ export function heartbeatService(
+ 
+     let recovered = 0;
+     for (const { lease } of rows) {
++      if (isHostWorkspaceLease(lease)) {
++        if (await releaseOrphanedHostWorkspaceLease(lease)) recovered += 1;
++        continue;
++      }
+       // A provider resource id names one physical sandbox. A different lease
+       // row can still hold that same resource in a live status, so this sweep
+       // must not tear down a sandbox that a different lease still owns.
+@@ -18344,6 +18374,13 @@ export function heartbeatService(
+     let destroyed = 0;
+     let capped = 0;
+     for (const row of rows) {
++      // Repair host leases already sent to sandbox teardown by an earlier
++      // recovery. No provider RPC or retry budget is needed, even when the
++      // environment was deleted or the old teardown attempts reached the cap.
++      if (isHostWorkspaceLease(row)) {
++        if (await releaseOrphanedHostWorkspaceLease(row)) destroyed += 1;
++        continue;
++      }
+       const metadata = { ...(row.metadata ?? {}) } as Record<string, unknown>;
+       const attempts = readPendingCleanupRetryAttempts(metadata);
+ 
+-- 
+2.52.0.windows.1
+

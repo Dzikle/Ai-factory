@@ -16,7 +16,17 @@ Admission results, exact commands, observed image IDs, fault injections, and
 remaining blockers are recorded in
 `docs/implementation/MILESTONE_0_DEPENDENCY_ADMISSION.md` after execution.
 
-The current result is intentionally not a deployable V1 stack: Paperclip is
-blocked at its pinned revision. The LiteLLM server config is retained only as
+The current result is **WAITING FOR UPSTREAM**, intentionally not a deployable V1
+stack. `patches/paperclip/README.md` records two independent proposals and the
+temporary immutable test revision; these are not a production private fork.
+The source-layer image is an admission-only build, not a supported release.
+Milestone 1 is blocked. The LiteLLM server config is retained only as
 evidence of the evaluated proxy profile; the admitted raw-API mechanics probe
 uses the MIT core Router and excludes the proprietary proxy dependency.
+
+Final V1 gateway selection is embedded MIT core Router only; the licensed proxy
+is deferred. CodeGraphContext remains the single selected graph candidate but
+its current image is disabled pending compatible protobuf remediation/re-audit.
+The production-embedding MemPalace profile uses the recorded prewarmed external
+volume/cache and offline embeddinggemma snapshot; it cannot bootstrap from an
+empty offline volume. Its semantic smoke is not a retrieval-quality benchmark.

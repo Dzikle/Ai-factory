@@ -1,0 +1,1000 @@
+From 939a02e96847282da5881a3a30f396c51659b32c Mon Sep 17 00:00:00 2001
+From: Stole Lazarov <72608012+Dzikle@users.noreply.github.com>
+Date: Wed, 16 Sep 2026 06:21:23 +0200
+Subject: [PATCH] feat(plugins): add durable pre-run context enrichment hook
+
+---
+ doc/plugins/PLUGIN_SPEC.md                    |  15 ++
+ packages/plugins/sdk/src/define-plugin.ts     |  12 +
+ packages/plugins/sdk/src/index.ts             |   4 +
+ packages/plugins/sdk/src/protocol.ts          |  46 ++++
+ packages/plugins/sdk/src/worker-rpc-host.ts   |  11 +
+ .../sdk/tests/run-context-enrichment.test.ts  | 140 ++++++++++
+ packages/shared/src/constants.ts              |   4 +
+ .../heartbeat-run-context-enrichment.test.ts  | 218 +++++++++++++++
+ server/src/services/heartbeat.ts              |  92 +++++--
+ server/src/services/run-context-enrichment.ts | 251 ++++++++++++++++++
+ 10 files changed, 767 insertions(+), 26 deletions(-)
+ create mode 100644 packages/plugins/sdk/tests/run-context-enrichment.test.ts
+ create mode 100644 server/src/__tests__/heartbeat-run-context-enrichment.test.ts
+ create mode 100644 server/src/services/run-context-enrichment.ts
+
+diff --git a/doc/plugins/PLUGIN_SPEC.md b/doc/plugins/PLUGIN_SPEC.md
+index 08b859c13..9b8f36ed9 100644
+--- a/doc/plugins/PLUGIN_SPEC.md
++++ b/doc/plugins/PLUGIN_SPEC.md
+@@ -530,6 +530,7 @@ Optional methods:
+ - `getData(input)`
+ - `performAction(input)`
+ - `executeTool(input)`
++- `enrichRunContext(input)`
+ 
+ ### 13.1 `initialize`
+ 
+@@ -640,6 +641,19 @@ The host provides:
+ 
+ The worker executes the tool and returns a typed result (string content, structured data, or error).
+ 
++### 13.11 `enrichRunContext`
++
++Runs after Paperclip has admitted and prepared a run, but before it invokes the selected adapter. This is a narrow enrichment stage, not a nested executor: Paperclip retains the run identity, selected adapter, permission checks, budget checks, and completion semantics.
++
++Only ready, company-enabled plugins that declare `agent.run.enrich` participate. The host invokes them in stable install order and provides:
++
++- company, run, agent, issue, and selected-adapter identity;
++- a read-only task-context snapshot;
++- the resolved execution workspace;
++- only the run-scoped MCP servers already authorized for the selected agent.
++
++Each plugin returns bounded prompt Markdown, a content-addressed artifact descriptor (`ref`, `sha256`, optional media type and byte size), and bounded metadata. The host validates and persists the result on the same run before adapter dispatch. A persisted result is the idempotency marker during same-run restart recovery; the hook is not invoked again. A declared enricher that is unavailable or returns invalid/unbounded data fails the run closed.
++
+ ## 14. SDK Surface
+ 
+ Plugins do not talk to the DB directly.
+@@ -859,6 +873,7 @@ The host enforces capabilities in the SDK layer and refuses calls outside the gr
+ - `http.outbound`
+ - `secrets.read-ref`
+ - `environment.drivers.register`
++- `agent.run.enrich`
+ 
+ ### Agent Tools
+ 
+diff --git a/packages/plugins/sdk/src/define-plugin.ts b/packages/plugins/sdk/src/define-plugin.ts
+index 5d2763f92..75568feb7 100644
+--- a/packages/plugins/sdk/src/define-plugin.ts
++++ b/packages/plugins/sdk/src/define-plugin.ts
+@@ -97,6 +97,8 @@ import type {
+   PluginDuplexChannelStopParams,
+   PluginDuplexChannelCloseParams,
+   PluginDuplexChannelCloseResult,
++  RunContextEnrichmentParams,
++  RunContextEnrichmentResult,
+ } from "./protocol.js";
+ 
+ // ---------------------------------------------------------------------------
+@@ -236,6 +238,16 @@ export interface PluginDefinition {
+    */
+   setup(ctx: PluginContext): Promise<void>;
+ 
++  /**
++   * Optionally enrich an admitted run before Paperclip invokes its selected
++   * adapter. The host persists the returned artifact descriptor and bounded
++   * prompt text on the same run before dispatch. Requires
++   * `agent.run.enrich` in the plugin manifest.
++   */
++  onRunContextEnrich?(
++    params: RunContextEnrichmentParams,
++  ): Promise<RunContextEnrichmentResult>;
++
+   /**
+    * Called when the host wants to know if the plugin is healthy.
+    *
+diff --git a/packages/plugins/sdk/src/index.ts b/packages/plugins/sdk/src/index.ts
+index 1cf5adf0d..adf1bbd7d 100644
+--- a/packages/plugins/sdk/src/index.ts
++++ b/packages/plugins/sdk/src/index.ts
+@@ -162,6 +162,10 @@ export type {
+   PluginPerformActionActorContext,
+   PluginPerformActionContext,
+   ExecuteToolParams,
++  RunContextEnrichmentMcpServer,
++  RunContextEnrichmentParams,
++  RunContextEnrichmentArtifact,
++  RunContextEnrichmentResult,
+   PluginExternalObjectUrlCandidate,
+   PluginExternalObjectSourceContext,
+   DetectExternalObjectsParams,
+diff --git a/packages/plugins/sdk/src/protocol.ts b/packages/plugins/sdk/src/protocol.ts
+index a599a8fc7..1e61e9f34 100644
+--- a/packages/plugins/sdk/src/protocol.ts
++++ b/packages/plugins/sdk/src/protocol.ts
+@@ -465,6 +465,46 @@ export interface ExecuteToolParams {
+   runContext: ToolRunContext;
+ }
+ 
++/** One run-scoped MCP server already authorized for the selected agent. */
++export interface RunContextEnrichmentMcpServer {
++  name: string;
++  url: string;
++  token: string;
++  connectionId: string;
++}
++
++/** Host-owned input for the optional pre-dispatch run-context enrichment hook. */
++export interface RunContextEnrichmentParams {
++  companyId: string;
++  runId: string;
++  agentId: string;
++  issueId: string | null;
++  adapterType: string;
++  taskContext: Readonly<Record<string, unknown>>;
++  workspace: {
++    cwd: string;
++    repoUrl?: string | null;
++    repoRef?: string | null;
++    branchName?: string | null;
++  };
++  runtimeMcpServers: RunContextEnrichmentMcpServer[];
++}
++
++/** Durable, content-addressed context artifact produced by an enricher. */
++export interface RunContextEnrichmentArtifact {
++  ref: string;
++  sha256: string;
++  mediaType?: string | null;
++  byteSize?: number | null;
++}
++
++/** Bounded enrichment returned before Paperclip invokes the selected adapter. */
++export interface RunContextEnrichmentResult {
++  promptMarkdown?: string | null;
++  artifact: RunContextEnrichmentArtifact;
++  metadata?: Record<string, unknown> | null;
++}
++
+ export interface PluginExternalObjectUrlCandidate {
+   sanitizedCanonicalUrl: string;
+   sanitizedDisplayUrl: string;
+@@ -1343,6 +1383,11 @@ export interface HostToWorkerMethods {
+   performAction: [params: PerformActionParams, result: unknown];
+   /** @see PLUGIN_SPEC.md §13.10 */
+   executeTool: [params: ExecuteToolParams, result: ToolResult];
++  /** Optional pre-dispatch, capability-gated run-context enrichment. */
++  enrichRunContext: [
++    params: RunContextEnrichmentParams,
++    result: RunContextEnrichmentResult,
++  ];
+   detectExternalObjects: [
+     params: DetectExternalObjectsParams,
+     result: DetectExternalObjectsResult,
+@@ -1470,6 +1515,7 @@ export const HOST_TO_WORKER_OPTIONAL_METHODS: readonly HostToWorkerMethodName[]
+   "getData",
+   "performAction",
+   "executeTool",
++  "enrichRunContext",
+   "detectExternalObjects",
+   "resolveExternalObject",
+   "refreshExternalObjects",
+diff --git a/packages/plugins/sdk/src/worker-rpc-host.ts b/packages/plugins/sdk/src/worker-rpc-host.ts
+index 5e56ef200..fa2c7a230 100644
+--- a/packages/plugins/sdk/src/worker-rpc-host.ts
++++ b/packages/plugins/sdk/src/worker-rpc-host.ts
+@@ -82,6 +82,7 @@ import type {
+   PluginPerformActionActorContext,
+   PluginPerformActionContext,
+   ExecuteToolParams,
++  RunContextEnrichmentParams,
+   DetectExternalObjectsParams,
+   ResolveExternalObjectParams,
+   RefreshExternalObjectsParams,
+@@ -1615,6 +1616,8 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
+ 
+       case "executeTool":
+         return handleExecuteTool(params as ExecuteToolParams);
++      case "enrichRunContext":
++        return handleEnrichRunContext(params as RunContextEnrichmentParams);
+       case "detectExternalObjects":
+         return handleDetectExternalObjects(params as DetectExternalObjectsParams);
+       case "resolveExternalObject":
+@@ -1729,6 +1732,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
+     if (plugin.definition.onHealth) supportedMethods.push("health");
+     if (plugin.definition.onShutdown) supportedMethods.push("shutdown");
+     if (plugin.definition.onApiRequest) supportedMethods.push("handleApiRequest");
++    if (plugin.definition.onRunContextEnrich) supportedMethods.push("enrichRunContext");
+     if (plugin.definition.onDetectExternalObjects) supportedMethods.push("detectExternalObjects");
+     if (plugin.definition.onResolveExternalObject) supportedMethods.push("resolveExternalObject");
+     if (plugin.definition.onRefreshExternalObjects) supportedMethods.push("refreshExternalObjects");
+@@ -1971,6 +1975,13 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
+     return entry.fn(params.parameters, params.runContext);
+   }
+ 
++  async function handleEnrichRunContext(params: RunContextEnrichmentParams) {
++    if (!plugin.definition.onRunContextEnrich) {
++      throw methodNotImplemented("enrichRunContext");
++    }
++    return plugin.definition.onRunContextEnrich(params);
++  }
++
+   async function handleDetectExternalObjects(params: DetectExternalObjectsParams) {
+     if (!plugin.definition.onDetectExternalObjects) {
+       throw methodNotImplemented("detectExternalObjects");
+diff --git a/packages/plugins/sdk/tests/run-context-enrichment.test.ts b/packages/plugins/sdk/tests/run-context-enrichment.test.ts
+new file mode 100644
+index 000000000..ced3a3251
+--- /dev/null
++++ b/packages/plugins/sdk/tests/run-context-enrichment.test.ts
+@@ -0,0 +1,140 @@
++import { createInterface } from "node:readline";
++import { PassThrough } from "node:stream";
++
++import { describe, expect, it } from "vitest";
++
++import { definePlugin } from "../src/define-plugin.js";
++import {
++  createRequest,
++  isJsonRpcResponse,
++  parseMessage,
++  serializeMessage,
++  type JsonRpcResponse,
++  type RunContextEnrichmentParams,
++} from "../src/protocol.js";
++import { startWorkerRpcHost } from "../src/worker-rpc-host.js";
++
++const MANIFEST = {
++  id: "paperclip.run-context-enrichment-test",
++  apiVersion: 1,
++  version: "1.0.0",
++  displayName: "Run Context Enrichment Test",
++  description: "Test plugin",
++  author: "Paperclip",
++  categories: ["automation"],
++  capabilities: ["agent.run.enrich"],
++  entrypoints: {},
++} as const;
++
++function startTestWorker(plugin: ReturnType<typeof definePlugin>) {
++  const hostToWorker = new PassThrough();
++  const workerToHost = new PassThrough();
++  const hostReadline = createInterface({ input: workerToHost });
++  const pending = new Map<string, (response: JsonRpcResponse) => void>();
++  let nextRequestId = 1;
++
++  hostReadline.on("line", (line) => {
++    const message = parseMessage(line);
++    if (!isJsonRpcResponse(message)) return;
++    pending.get(String(message.id))?.(message);
++    pending.delete(String(message.id));
++  });
++
++  const worker = startWorkerRpcHost({ plugin, stdin: hostToWorker, stdout: workerToHost });
++
++  function callWorker<T = unknown>(method: string, params: unknown): Promise<T> {
++    const id = `host-${nextRequestId++}`;
++    const result = new Promise<T>((resolve, reject) => {
++      pending.set(id, (response) => {
++        if ("error" in response && response.error) {
++          reject(Object.assign(new Error(response.error.message), { code: response.error.code }));
++          return;
++        }
++        resolve((response as { result?: T }).result as T);
++      });
++    });
++    hostToWorker.write(serializeMessage(createRequest(method, params, id)));
++    return result;
++  }
++
++  function stop() {
++    worker.stop();
++    hostReadline.close();
++    hostToWorker.destroy();
++    workerToHost.destroy();
++  }
++
++  return { callWorker, stop };
++}
++
++describe("run context enrichment RPC", () => {
++  it("advertises and routes the optional enrichment hook", async () => {
++    const seen: RunContextEnrichmentParams[] = [];
++    const worker = startTestWorker(
++      definePlugin({
++        async setup() {},
++        async onRunContextEnrich(params) {
++          seen.push(params);
++          return {
++            promptMarkdown: "Use the bounded context artifact.",
++            artifact: {
++              ref: "artifact://context/run-1.json",
++              sha256: "a".repeat(64),
++              mediaType: "application/json",
++              byteSize: 42,
++            },
++            metadata: { source: "test" },
++          };
++        },
++      }),
++    );
++
++    try {
++      const initialized = await worker.callWorker<{ supportedMethods: string[] }>(
++        "initialize",
++        { manifest: MANIFEST, config: {}, databaseNamespace: null },
++      );
++      expect(initialized.supportedMethods).toContain("enrichRunContext");
++
++      const params: RunContextEnrichmentParams = {
++        companyId: "company-1",
++        runId: "run-1",
++        agentId: "agent-1",
++        issueId: "issue-1",
++        adapterType: "process",
++        taskContext: { paperclipTaskMarkdown: "Original task" },
++        workspace: { cwd: "/workspace" },
++        runtimeMcpServers: [
++          {
++            name: "Knowledge",
++            url: "http://gateway.example/mcp",
++            token: "run-scoped-token",
++            connectionId: "knowledge",
++          },
++        ],
++      };
++      const result = await worker.callWorker("enrichRunContext", params);
++
++      expect(seen).toEqual([params]);
++      expect(result).toMatchObject({
++        promptMarkdown: "Use the bounded context artifact.",
++        artifact: { ref: "artifact://context/run-1.json", sha256: "a".repeat(64) },
++      });
++    } finally {
++      worker.stop();
++    }
++  });
++
++  it("does not advertise the hook when it is absent", async () => {
++    const worker = startTestWorker(definePlugin({ async setup() {} }));
++    try {
++      const initialized = await worker.callWorker<{ supportedMethods: string[] }>(
++        "initialize",
++        { manifest: MANIFEST, config: {}, databaseNamespace: null },
++      );
++      expect(initialized.supportedMethods).not.toContain("enrichRunContext");
++    } finally {
++      worker.stop();
++    }
++  });
++});
+diff --git a/packages/shared/src/constants.ts b/packages/shared/src/constants.ts
+index 28e18d3df..f4f5aac9a 100644
+--- a/packages/shared/src/constants.ts
++++ b/packages/shared/src/constants.ts
+@@ -1407,6 +1407,10 @@ export const PLUGIN_CAPABILITIES = [
+   "http.outbound",
+   "secrets.read-ref",
+   "environment.drivers.register",
++  // Participate in the host-controlled, pre-dispatch run-context enrichment
++  // stage. The hook receives only the run's already-governed MCP assignment
++  // and may return bounded prompt text plus an artifact descriptor.
++  "agent.run.enrich",
+   "local.folders",
+   // Agent Tools
+   "agent.tools.register",
+diff --git a/server/src/__tests__/heartbeat-run-context-enrichment.test.ts b/server/src/__tests__/heartbeat-run-context-enrichment.test.ts
+new file mode 100644
+index 000000000..3a93e8a8f
+--- /dev/null
++++ b/server/src/__tests__/heartbeat-run-context-enrichment.test.ts
+@@ -0,0 +1,218 @@
++import { createHash, randomUUID } from "node:crypto";
++import { mkdtemp, readFile, writeFile } from "node:fs/promises";
++import { tmpdir } from "node:os";
++import { join } from "node:path";
++import { eq, sql } from "drizzle-orm";
++import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
++import {
++  agents,
++  companies,
++  createDb,
++  heartbeatRuns,
++  plugins,
++} from "@paperclipai/db";
++import {
++  getEmbeddedPostgresTestSupport,
++  startEmbeddedPostgresTestDatabase,
++} from "./helpers/embedded-postgres.js";
++import { heartbeatService } from "../services/heartbeat.ts";
++import type { PluginWorkerManager } from "../services/plugin-worker-manager.js";
++import { enrichRunContextBeforeDispatch } from "../services/run-context-enrichment.js";
++
++const embeddedPostgresSupport = await getEmbeddedPostgresTestSupport();
++const describeEmbeddedPostgres = embeddedPostgresSupport.supported ? describe : describe.skip;
++
++async function waitForRunToFinish(
++  heartbeat: ReturnType<typeof heartbeatService>,
++  runId: string,
++  timeoutMs = 8_000,
++) {
++  const deadline = Date.now() + timeoutMs;
++  while (Date.now() < deadline) {
++    const run = await heartbeat.getRun(runId);
++    if (run && !["queued", "running"].includes(run.status)) return run;
++    await new Promise((resolve) => setTimeout(resolve, 50));
++  }
++  return heartbeat.getRun(runId);
++}
++
++describeEmbeddedPostgres("heartbeat pre-run context enrichment", () => {
++  let db!: ReturnType<typeof createDb>;
++  let tempDb: Awaited<ReturnType<typeof startEmbeddedPostgresTestDatabase>> | null = null;
++
++  beforeAll(async () => {
++    tempDb = await startEmbeddedPostgresTestDatabase("heartbeat-enrichment-");
++    db = createDb(tempDb.connectionString);
++  }, 45_000);
++
++  afterEach(async () => {
++    await db.execute(sql.raw(`
++      TRUNCATE TABLE
++        "environment_leases",
++        "environments",
++        "activity_log",
++        "heartbeat_run_events",
++        "heartbeat_runs",
++        "agent_wakeup_requests",
++        "agent_runtime_state",
++        "plugins",
++        "company_skills",
++        "agents",
++        "companies"
++      RESTART IDENTITY CASCADE
++    `));
++  });
++
++  afterAll(async () => {
++    await tempDb?.cleanup();
++  });
++
++  it("persists the artifact identity before delegating to the selected adapter", async () => {
++    const companyId = randomUUID();
++    const agentId = randomUUID();
++    const pluginId = randomUUID();
++    const tempDir = await mkdtemp(join(tmpdir(), "paperclip-enrichment-"));
++    const artifactPath = join(tempDir, "context.json");
++    const adapterMarkerPath = join(tempDir, "adapter-executed.json");
++    const artifactBody = JSON.stringify({ bounded: true, run: "same-run" });
++    const artifactSha256 = createHash("sha256").update(artifactBody).digest("hex");
++    const enrich = vi.fn(async (_pluginId: string, method: string, params: any) => {
++      expect(method).toBe("enrichRunContext");
++      expect(params.agentId).toBe(agentId);
++      expect(params.adapterType).toBe("process");
++      await writeFile(artifactPath, artifactBody, "utf8");
++      return {
++        promptMarkdown: "Use the deterministic bounded context artifact.",
++        artifact: {
++          ref: `file://${artifactPath.replaceAll("\\", "/")}`,
++          sha256: artifactSha256,
++          mediaType: "application/json",
++          byteSize: Buffer.byteLength(artifactBody),
++        },
++        metadata: { fixture: "placeholder-v1" },
++      };
++    });
++    const worker = {
++      status: "running",
++      supportedMethods: ["enrichRunContext"],
++    };
++    const workerManager = {
++      getWorker: (id: string) => (id === pluginId ? worker : undefined),
++      call: enrich,
++    } as unknown as PluginWorkerManager;
++    const heartbeat = heartbeatService(db, { pluginWorkerManager: workerManager });
++
++    await db.insert(companies).values({
++      id: companyId,
++      name: "Paperclip",
++      issuePrefix: `E${companyId.replaceAll("-", "").slice(0, 6).toUpperCase()}`,
++      requireBoardApprovalForNewAgents: false,
++      defaultResponsibleUserId: "responsible-user",
++    });
++    await db.insert(plugins).values({
++      id: pluginId,
++      pluginKey: "paperclip.context-enricher-fixture",
++      packageName: "@paperclip/context-enricher-fixture",
++      version: "1.0.0",
++      apiVersion: 1,
++      categories: ["automation"],
++      manifestJson: {
++        id: "paperclip.context-enricher-fixture",
++        apiVersion: 1,
++        version: "1.0.0",
++        displayName: "Context Enricher Fixture",
++        description: "Deterministic pre-run enrichment fixture.",
++        author: "Paperclip",
++        categories: ["automation"],
++        capabilities: ["agent.run.enrich"],
++        entrypoints: { worker: "./dist/worker.js" },
++      },
++      status: "ready",
++      installOrder: 1,
++    });
++    await db.insert(agents).values({
++      id: agentId,
++      companyId,
++      name: "ProcessAgent",
++      role: "engineer",
++      status: "idle",
++      adapterType: "process",
++      adapterConfig: {
++        command: process.execPath,
++        args: [
++          "-e",
++          `require("node:fs").writeFileSync(${JSON.stringify(adapterMarkerPath)}, JSON.stringify({ runId: process.env.PAPERCLIP_RUN_ID }))`,
++        ],
++        cwd: tempDir,
++      },
++      runtimeConfig: {},
++      permissions: {},
++    });
++
++    const queued = await heartbeat.invoke(
++      agentId,
++      "on_demand",
++      { paperclipTaskMarkdown: "Original task" },
++      "manual",
++    );
++    expect(queued).not.toBeNull();
++    const finished = await waitForRunToFinish(heartbeat, queued!.id);
++    await heartbeat.drainActiveRunExecutions();
++
++    expect(finished?.status).toBe("succeeded");
++    expect(enrich).toHaveBeenCalledTimes(1);
++    expect(JSON.parse(await readFile(adapterMarkerPath, "utf8"))).toEqual({
++      runId: queued!.id,
++    });
++    expect(await readFile(artifactPath, "utf8")).toBe(artifactBody);
++
++    const [persisted] = await db
++      .select({ context: heartbeatRuns.contextSnapshot })
++      .from(heartbeatRuns)
++      .where(eq(heartbeatRuns.id, queued!.id));
++    expect(persisted?.context).toMatchObject({
++      paperclipTaskMarkdown: "Use the deterministic bounded context artifact.",
++      paperclipRunContextEnrichment: {
++        version: 1,
++        entries: [
++          {
++            pluginId,
++            pluginKey: "paperclip.context-enricher-fixture",
++            pluginVersion: "1.0.0",
++            promptSha256: createHash("sha256")
++              .update("Use the deterministic bounded context artifact.")
++              .digest("hex"),
++            artifact: {
++              ref: `file://${artifactPath.replaceAll("\\", "/")}`,
++              sha256: artifactSha256,
++              mediaType: "application/json",
++              byteSize: Buffer.byteLength(artifactBody),
++            },
++            metadata: { fixture: "placeholder-v1" },
++          },
++        ],
++      },
++    });
++
++    const restarted = heartbeatService(db, { pluginWorkerManager: workerManager });
++    expect((await restarted.getRun(queued!.id))?.contextSnapshot).toEqual(
++      persisted?.context,
++    );
++    await enrichRunContextBeforeDispatch({
++      db,
++      workerManager,
++      run: {
++        id: queued!.id,
++        companyId,
++        agentId,
++        status: "succeeded",
++      },
++      issueId: null,
++      adapterType: "process",
++      context: persisted!.context!,
++      workspace: { cwd: tempDir },
++      runtimeMcpServers: [],
++    });
++    expect(enrich).toHaveBeenCalledTimes(1);
++  });
++});
+diff --git a/server/src/services/heartbeat.ts b/server/src/services/heartbeat.ts
+index 9321867d3..089a0ce6c 100644
+--- a/server/src/services/heartbeat.ts
++++ b/server/src/services/heartbeat.ts
+@@ -27,6 +27,7 @@ import { executionFailureRetryCount } from "./execution-recovery-attempt.js";
+ import { buildHeartbeatRunStatusLiveEventPayload } from "./heartbeat-run-status-payload.js";
+ export { buildHeartbeatRunStatusLiveEventPayload } from "./heartbeat-run-status-payload.js";
+ import { buildExecutionContinuation } from "./execution-continuation.js";
++import { enrichRunContextBeforeDispatch } from "./run-context-enrichment.js";
+ import { renderPaperclipWakePrompt } from "@paperclipai/adapter-utils/server-utils";
+ import { PROJECT_REPOSITORIES_DIR, readGitWorkspaceSnapshot } from "@paperclipai/adapter-utils/git-workspace-sync";
+ import { isWorkspaceGitScanError, WorkspaceGitScanError, WORKSPACE_GIT_SCAN_ERROR_CODES } from "./workspace-git-operation-scheduler.js";
+@@ -22654,6 +22655,7 @@ export function heartbeatService(
+         });
+         let nativeExecution: NativeExecutionInput | null = null;
+         let nativeRunnerInstanceId: string | null = null;
++        let preDispatchRuntimeMcpServers: AdapterRuntimeMcpServer[] | null = null;
+         if (nativeRuntimeResolution.kind === "native") {
+           if (!issueRef) {
+             throw new Error("native_runtime_ineligible: issue is required");
+@@ -23039,6 +23041,27 @@ export function heartbeatService(
+               runtimeConfig,
+               runtimeSkillEntries,
+             });
++            preDispatchRuntimeMcpServers = await buildPaperclipRuntimeMcpServers({
++              db,
++              agent,
++              runId: run.id,
++              expectedAssignmentDigest: nativeRuntimeContext.mcp.digest,
++            });
++            await enrichRunContextBeforeDispatch({
++              db,
++              workerManager: options.pluginWorkerManager,
++              run,
++              issueId: issueRef.id,
++              adapterType: agent.adapterType,
++              context,
++              workspace: {
++                cwd: executionWorkspace.cwd,
++                repoUrl: executionWorkspace.repoUrl,
++                repoRef: executionWorkspace.repoRef,
++                branchName: executionWorkspace.branchName,
++              },
++              runtimeMcpServers: preDispatchRuntimeMcpServers,
++            });
+             const nativeExecutionWithCheckpoint =
+               buildNativeExecutionWithCheckpoint({
+                 previousRun: previousNativeRun,
+@@ -23599,21 +23622,23 @@ export function heartbeatService(
+               nativeExecution.runtimeContext.mcp.bindingId
+                 ? nativeExecution.runtimeContext.mcp.digest
+                 : null;
+-            const nativeMcpServers = await buildPaperclipRuntimeMcpServers({
+-              db,
+-              agent,
+-              runId: run.id,
+-              expectedAssignmentDigest: expectedNativeMcpDigest,
+-              onUnavailableAssignedConnections: async (connections) => {
+-                const names = connections
+-                  .map((connection) => connection.name)
+-                  .join(", ");
+-                await onLog(
+-                  "stderr",
+-                  `[paperclip] App connection${connections.length === 1 ? "" : "s"} unavailable: ${names}. Continuing this run without ${connections.length === 1 ? "it" : "them"}; reconnect from Apps to restore access.\n`,
+-                );
+-              },
+-            });
++            const nativeMcpServers =
++              preDispatchRuntimeMcpServers ??
++              (await buildPaperclipRuntimeMcpServers({
++                db,
++                agent,
++                runId: run.id,
++                expectedAssignmentDigest: expectedNativeMcpDigest,
++                onUnavailableAssignedConnections: async (connections) => {
++                  const names = connections
++                    .map((connection) => connection.name)
++                    .join(", ");
++                  await onLog(
++                    "stderr",
++                    `[paperclip] App connection${connections.length === 1 ? "" : "s"} unavailable: ${names}. Continuing this run without ${connections.length === 1 ? "it" : "them"}; reconnect from Apps to restore access.\n`,
++                  );
++                },
++              }));
+             if ("runtimeContext" in nativeExecution) {
+               if (nativeMcpServers.length > 1)
+                 throw new Error(
+@@ -23847,17 +23872,6 @@ export function heartbeatService(
+             // adapters need it in their prompt, but the authoritative answers
+             // remain on the interaction instead of being duplicated in the
+             // heartbeat run snapshot.
+-            const adapterContext: Record<string, unknown> = {
+-              ...context,
+-              ...(legacyQuestionResponse
+-                ? {
+-                    [PAPERCLIP_WAKE_PAYLOAD_KEY]: {
+-                      ...parseObject(context[PAPERCLIP_WAKE_PAYLOAD_KEY]),
+-                      questionResponse: legacyQuestionResponse,
+-                    },
+-                  }
+-                : {}),
+-            };
+             const runtimeTools = createAdapterRuntimeToolAccess({
+               agentId: agent.id,
+               companyId: agent.companyId,
+@@ -23879,6 +23893,32 @@ export function heartbeatService(
+               agent,
+               runId: run.id,
+             });
++            await enrichRunContextBeforeDispatch({
++              db,
++              workerManager: options.pluginWorkerManager,
++              run,
++              issueId: issueRef?.id ?? null,
++              adapterType: agent.adapterType,
++              context,
++              workspace: {
++                cwd: executionWorkspace.cwd,
++                repoUrl: executionWorkspace.repoUrl,
++                repoRef: executionWorkspace.repoRef,
++                branchName: executionWorkspace.branchName,
++              },
++              runtimeMcpServers,
++            });
++            const adapterContext: Record<string, unknown> = {
++              ...context,
++              ...(legacyQuestionResponse
++                ? {
++                    [PAPERCLIP_WAKE_PAYLOAD_KEY]: {
++                      ...parseObject(context[PAPERCLIP_WAKE_PAYLOAD_KEY]),
++                      questionResponse: legacyQuestionResponse,
++                    },
++                  }
++                : {}),
++            };
+             const runtimeToolDelivery =
+               adapter.runtimeToolDelivery ?? "invocation_context";
+             if (runtimeTools && runtimeToolDelivery === "native_mcp") {
+diff --git a/server/src/services/run-context-enrichment.ts b/server/src/services/run-context-enrichment.ts
+new file mode 100644
+index 000000000..97c21aa59
+--- /dev/null
++++ b/server/src/services/run-context-enrichment.ts
+@@ -0,0 +1,251 @@
++import { createHash } from "node:crypto";
++import { and, asc, eq, isNull, or } from "drizzle-orm";
++import type { Db } from "@paperclipai/db";
++import {
++  heartbeatRuns,
++  pluginCompanySettings,
++  plugins,
++} from "@paperclipai/db";
++import type {
++  RunContextEnrichmentArtifact,
++  RunContextEnrichmentResult,
++} from "@paperclipai/plugin-sdk";
++import type { AdapterRuntimeMcpServer } from "@paperclipai/adapter-utils";
++import type { PluginWorkerManager } from "./plugin-worker-manager.js";
++
++export const RUN_CONTEXT_ENRICHMENT_KEY = "paperclipRunContextEnrichment";
++
++const MAX_ENRICHERS = 8;
++const MAX_PROMPT_BYTES_PER_ENRICHER = 64 * 1024;
++const MAX_METADATA_BYTES_PER_ENRICHER = 16 * 1024;
++const MAX_ARTIFACT_REF_CHARS = 2_048;
++const MAX_MEDIA_TYPE_CHARS = 255;
++
++interface DurableRunContextEnrichmentEntry {
++  pluginId: string;
++  pluginKey: string;
++  pluginVersion: string;
++  promptSha256: string | null;
++  artifact: RunContextEnrichmentArtifact;
++  metadata: Record<string, unknown> | null;
++}
++
++interface DurableRunContextEnrichment {
++  version: 1;
++  entries: DurableRunContextEnrichmentEntry[];
++}
++
++function byteLength(value: string): number {
++  return Buffer.byteLength(value, "utf8");
++}
++
++function plainObject(value: unknown): value is Record<string, unknown> {
++  return typeof value === "object" && value !== null && !Array.isArray(value);
++}
++
++function validateArtifact(value: unknown): RunContextEnrichmentArtifact {
++  if (!plainObject(value)) throw new Error("run_context_enrichment_artifact_invalid");
++  const ref = typeof value.ref === "string" ? value.ref.trim() : "";
++  const sha256 = typeof value.sha256 === "string" ? value.sha256.toLowerCase() : "";
++  const mediaType = value.mediaType == null ? null : String(value.mediaType).trim();
++  const byteSize = value.byteSize == null ? null : Number(value.byteSize);
++  if (!ref || ref.length > MAX_ARTIFACT_REF_CHARS) {
++    throw new Error("run_context_enrichment_artifact_ref_invalid");
++  }
++  if (!/^[a-f0-9]{64}$/.test(sha256)) {
++    throw new Error("run_context_enrichment_artifact_sha256_invalid");
++  }
++  if (mediaType !== null && (!mediaType || mediaType.length > MAX_MEDIA_TYPE_CHARS)) {
++    throw new Error("run_context_enrichment_artifact_media_type_invalid");
++  }
++  if (
++    byteSize !== null &&
++    (!Number.isSafeInteger(byteSize) || byteSize < 0)
++  ) {
++    throw new Error("run_context_enrichment_artifact_byte_size_invalid");
++  }
++  return {
++    ref,
++    sha256,
++    ...(mediaType === null ? {} : { mediaType }),
++    ...(byteSize === null ? {} : { byteSize }),
++  };
++}
++
++function validateResult(value: unknown): RunContextEnrichmentResult {
++  if (!plainObject(value)) throw new Error("run_context_enrichment_result_invalid");
++  const promptMarkdown =
++    value.promptMarkdown == null ? null : String(value.promptMarkdown);
++  if (
++    promptMarkdown !== null &&
++    byteLength(promptMarkdown) > MAX_PROMPT_BYTES_PER_ENRICHER
++  ) {
++    throw new Error("run_context_enrichment_prompt_too_large");
++  }
++  const metadata = value.metadata == null ? null : value.metadata;
++  if (metadata !== null && !plainObject(metadata)) {
++    throw new Error("run_context_enrichment_metadata_invalid");
++  }
++  if (
++    metadata !== null &&
++    byteLength(JSON.stringify(metadata)) > MAX_METADATA_BYTES_PER_ENRICHER
++  ) {
++    throw new Error("run_context_enrichment_metadata_too_large");
++  }
++  return {
++    artifact: validateArtifact(value.artifact),
++    ...(promptMarkdown === null ? {} : { promptMarkdown }),
++    ...(metadata === null ? {} : { metadata }),
++  };
++}
++
++function existingEnrichment(
++  context: Record<string, unknown>,
++): DurableRunContextEnrichment | null {
++  const value = context[RUN_CONTEXT_ENRICHMENT_KEY];
++  if (!plainObject(value) || value.version !== 1 || !Array.isArray(value.entries)) {
++    return null;
++  }
++  return value as unknown as DurableRunContextEnrichment;
++}
++
++/**
++ * Invoke explicitly capability-bearing, company-enabled enrichers in stable
++ * install order. Results are validated and durably attached to the same run
++ * before the selected adapter is allowed to execute. A persisted snapshot is
++ * an idempotency marker during same-run restart recovery.
++ */
++export async function enrichRunContextBeforeDispatch(input: {
++  db: Db;
++  workerManager?: PluginWorkerManager;
++  run: {
++    id: string;
++    companyId: string;
++    agentId: string;
++    status: string;
++  };
++  issueId: string | null;
++  adapterType: string;
++  context: Record<string, unknown>;
++  workspace: {
++    cwd: string;
++    repoUrl?: string | null;
++    repoRef?: string | null;
++    branchName?: string | null;
++  };
++  runtimeMcpServers: AdapterRuntimeMcpServer[];
++}): Promise<DurableRunContextEnrichment | null> {
++  const persisted = existingEnrichment(input.context);
++  if (persisted) return persisted;
++  if (!input.workerManager) return null;
++
++  const candidates = (
++    await input.db
++      .select({
++        id: plugins.id,
++        pluginKey: plugins.pluginKey,
++        version: plugins.version,
++        manifest: plugins.manifestJson,
++        companyEnabled: pluginCompanySettings.enabled,
++      })
++      .from(plugins)
++      .leftJoin(
++        pluginCompanySettings,
++        and(
++          eq(pluginCompanySettings.pluginId, plugins.id),
++          eq(pluginCompanySettings.companyId, input.run.companyId),
++        ),
++      )
++      .where(
++        and(
++          eq(plugins.status, "ready"),
++          or(
++            isNull(pluginCompanySettings.enabled),
++            eq(pluginCompanySettings.enabled, true),
++          ),
++        ),
++      )
++      .orderBy(asc(plugins.installOrder), asc(plugins.id))
++  ).filter((plugin) =>
++    plugin.manifest.capabilities.includes("agent.run.enrich"),
++  );
++
++  if (candidates.length === 0) return null;
++  if (candidates.length > MAX_ENRICHERS) {
++    throw new Error("run_context_enrichment_plugin_limit_exceeded");
++  }
++
++  const entries: DurableRunContextEnrichmentEntry[] = [];
++  const promptParts: string[] = [];
++  for (const plugin of candidates) {
++    const worker = input.workerManager.getWorker(plugin.id);
++    if (
++      !worker ||
++      worker.status !== "running" ||
++      !worker.supportedMethods.includes("enrichRunContext")
++    ) {
++      throw new Error(
++        `run_context_enrichment_plugin_unavailable:${plugin.pluginKey}`,
++      );
++    }
++    const raw = await input.workerManager.call(
++      plugin.id,
++      "enrichRunContext",
++      {
++        companyId: input.run.companyId,
++        runId: input.run.id,
++        agentId: input.run.agentId,
++        issueId: input.issueId,
++        adapterType: input.adapterType,
++        taskContext: { ...input.context },
++        workspace: input.workspace,
++        runtimeMcpServers: input.runtimeMcpServers.map((server) => ({ ...server })),
++      },
++    );
++    const result = validateResult(raw);
++    const promptMarkdown = result.promptMarkdown?.trim() || null;
++    if (promptMarkdown) promptParts.push(promptMarkdown);
++    entries.push({
++      pluginId: plugin.id,
++      pluginKey: plugin.pluginKey,
++      pluginVersion: plugin.version,
++      promptSha256: promptMarkdown
++        ? createHash("sha256").update(promptMarkdown).digest("hex")
++        : null,
++      artifact: result.artifact,
++      metadata: result.metadata ?? null,
++    });
++  }
++
++  const durable: DurableRunContextEnrichment = { version: 1, entries };
++  if (promptParts.length > 0) {
++    const existingTask =
++      typeof input.context.paperclipTaskMarkdown === "string"
++        ? input.context.paperclipTaskMarkdown.trim()
++        : "";
++    input.context.paperclipTaskMarkdown = [
++      promptParts.join("\n\n"),
++      existingTask,
++    ]
++      .filter(Boolean)
++      .join("\n\n");
++  }
++  input.context[RUN_CONTEXT_ENRICHMENT_KEY] = durable;
++
++  const updated = await input.db
++    .update(heartbeatRuns)
++    .set({ contextSnapshot: input.context, updatedAt: new Date() })
++    .where(
++      and(
++        eq(heartbeatRuns.id, input.run.id),
++        eq(heartbeatRuns.companyId, input.run.companyId),
++        eq(heartbeatRuns.agentId, input.run.agentId),
++        eq(heartbeatRuns.status, "running"),
++      ),
++    )
++    .returning({ id: heartbeatRuns.id });
++  if (updated.length !== 1) {
++    throw new Error("run_context_enrichment_persist_race");
++  }
++  return durable;
++}
