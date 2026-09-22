@@ -12,7 +12,7 @@ Both changes were independently rebased/adapted to upstream
 | Proposal | Pull request | Exact head | Status at capture |
 | --- | --- | --- | --- |
 | SSH ephemeral host-workspace lease recovery | [#13772](https://github.com/paperclipai/paperclip/pull/13772) | `e319a7e8ddeba95274616d042d143c2343fc6031` | Open; CI passed |
-| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `de8b22d7fb1a29bf6fd9a1c3c8a4d823d37df428` | Open; new-head CI/review pending |
+| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `79c7479d7d275a01addfc0c7965ff6be254137ce` | Open; new-head CI/review pending |
 
 Upstream #13717 added local bookkeeping-lease cleanup while these proposals were
 being prepared. The submitted lease contribution therefore reuses that behavior
@@ -20,10 +20,12 @@ and adds only the missing SSH driver retry/guard treatment plus stronger local
 and SSH regression coverage. The enrichment proposal remains independent.
 
 Focused validation: lease tests 58/58; enrichment, SDK, plugin-route authz, and
-MCP policy tests 53/53 on the source-equivalent updated tree. Both proposals
-passed monorepo typecheck and the normal production build. The updated
+MCP policy tests 54/54 on the source-equivalent updated tree. Both proposals
+passed monorepo typecheck and the normal production build through the preceding
+enrichment revision; the final route guard passed its suite and server tsc. The updated
 enrichment PR requires explicit instance-admin approval per plugin/company;
-an ordinary settings row no longer enables the hook. The preceding enrichment
+an ordinary settings row no longer enables the hook, and cross-company approval
+is denied. The preceding enrichment
 head had unrelated Runner Codex and chat-ordering CI failures; CI for the new
 head is running. The historical 0B patches and bundle below preserve the exact
 admission image evidence; the real PR heads

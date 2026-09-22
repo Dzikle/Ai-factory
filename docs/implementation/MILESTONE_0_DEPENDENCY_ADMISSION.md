@@ -97,7 +97,7 @@ repair removed no repository, image, persistent volume, or unrelated container.
 | Upstream PR #1 | [paperclipai/paperclip#13772](https://github.com/paperclipai/paperclip/pull/13772) — SSH logical lease recovery; open; required CI passed at capture. |
 | Upstream PR #2 | [paperclipai/paperclip#13773](https://github.com/paperclipai/paperclip/pull/13773) — optional pre-run run-context enrichment; open/mergeable; new-head CI running at capture. |
 | Upstream base revision | `8326e33adad63e26c918edf6adf6db114997eced` for both PRs. |
-| Proposal revisions | Lease `e319a7e8ddeba95274616d042d143c2343fc6031`; enrichment `de8b22d7fb1a29bf6fd9a1c3c8a4d823d37df428`. |
+| Proposal revisions | Lease `e319a7e8ddeba95274616d042d143c2343fc6031`; enrichment `79c7479d7d275a01addfc0c7965ff6be254137ce`. |
 | Upstream revision/release tested | No supported merged release contains both changes. Proposal source branches only; not production admission. |
 | Migration result | **NOT RUN** in 0C: no supported target release exists. The preserved baseline database/storage remain the future upgrade fixture. |
 | Re-admission result | **WAITING**: release Docker/PostgreSQL fault, capability, enrichment, restart, and restore gates are deliberately deferred until a supported merged revision exists. |
@@ -109,11 +109,12 @@ coverage; it does not duplicate the local implementation. Current upstream has
 no equivalent synchronous durable enrichment hook.
 
 Post-rebase focused validation passes: lease recovery 58/58 tests (21 orphaned
-active-lease plus 37 pending-cleanup cases) and enrichment 53/53 tests (two SDK,
-six enrichment, forty plugin-route authorization and five MCP policy). Both
+active-lease plus 37 pending-cleanup cases) and enrichment 54/54 tests (two SDK,
+six enrichment, forty-one plugin-route authorization and five MCP policy). Both
 proposal source trees passed `pnpm -r typecheck` and normal `pnpm build` with
-the release Rust runner; the enrichment tests/build used a source-equivalent
-Linux test tree (its build stamp still names the preceding commit).
+the release Rust runner through `de8b22d7f`; the final `79c7479d7` route guard
+additionally passed its 41/41 route tests and server `tsc --noEmit`. The Linux
+test tree was source-equivalent but its build stamp names the preceding commit.
 A broad comparison found 16 environment-dependent failures identically on
 pristine upstream among 163 tests
 in eight compared suites (`jq`, Cursor executable, and WSL symlink assumptions),
@@ -136,7 +137,9 @@ second plugin invocation.
 Security review then identified that an ordinary company-settings row could
 implicitly enable an enricher receiving a short-lived MCP bearer. Revision
 `de8b22d7f` requires a separate instance-admin approval per plugin/company;
-local-folder setup cannot opt in. The plugin must still declare
+local-folder setup cannot opt in. Review of that new route found a missing
+company-boundary check, corrected with a failing cross-company regression in
+`79c7479d7`. The plugin must still declare
 `agent.run.enrich`, be ready, and inherit only the agent's effective run-scoped
 MCP profile. The five-minute token is revoked after the callback and is not
 shared with native dispatch. This is a **trusted-plugin** contract, not a
@@ -147,7 +150,7 @@ PR #13772 has completed upstream CI successfully. The previous #13773 head
 `c844f87e7` failed two untouched CI test shards (Runner Codex protocol
 integrity and chat edit/delete ordering); the author requested a maintainer
 rerun but lacks repository-admin permission. New-head CI for `de8b22d7f` is
-running. Neither CI result is supported release evidence.
+running on the latest head. Neither CI result is supported release evidence.
 
 #### Milestone 0B immutable identity and compatibility
 
