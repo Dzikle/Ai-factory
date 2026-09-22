@@ -14,7 +14,7 @@ durable pre-run run-context enrichment. Both target upstream
 `8326e33adad63e26c918edf6adf6db114997eced` and remain open. Exact heads
 are respectively
 `e319a7e8ddeba95274616d042d143c2343fc6031` and
-`c844f87e77cde72a875519cf063a3c72c2cfddee`.
+`de8b22d7fb1a29bf6fd9a1c3c8a4d823d37df428`.
 
 Upstream #13717 landed local bookkeeping-lease recovery during preparation, so
 #13772 was narrowed to the missing SSH equivalent while retaining local/SSH
@@ -22,10 +22,14 @@ regression coverage. This preserves upstream architecture instead of carrying a
 redundant private implementation. The enrichment proposal remains a separate,
 generic plugin contract. Review drove a narrower credential lifecycle: one
 five-minute, run-scoped MCP token per enricher callback, immediate revocation,
-and a separate native-adapter token. Focused tests pass 58/58 and 13/13;
+and a separate native-adapter token. A further security review led to explicit
+instance-admin approval per plugin/company; ordinary company settings cannot
+activate enrichment. Plugin workers remain trusted installed code, not an
+untrusted-code sandbox. Focused tests pass 58/58 and 53/53;
 recovery also reapplies persisted bounded prompt text when the task prompt is
 rebuilt. Both exact proposal heads pass monorepo typecheck and the normal
-production build. Upstream review and final-head CI remain merge gates.
+production build on the proposal source trees. Upstream review and final-head
+CI remain merge gates.
 
 The decision remains conditional. No supported merged revision/release contains
 both requirements, so no baseline-database migration or release re-admission was

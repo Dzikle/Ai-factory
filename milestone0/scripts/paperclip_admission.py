@@ -1282,6 +1282,12 @@ def pre_run_enrichment() -> None:
         )
     if not isinstance(installed_plugin, dict) or installed_plugin.get("status") != "ready":
         raise RuntimeError(f"context enricher plugin is not ready: {installed_plugin}")
+    client.request(
+        "PUT",
+        f"/api/plugins/{installed_plugin['id']}/companies/{company_id}/run-context-enrichment",
+        {"enabled": True},
+        expected=(200,),
+    )
 
     _, effective = client.request(
         "GET", f"/api/companies/{company_id}/tools/profiles/effective/agents/{developer_id}"

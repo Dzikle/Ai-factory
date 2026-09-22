@@ -12,18 +12,20 @@ Both changes were independently rebased/adapted to upstream
 | Proposal | Pull request | Exact head | Status at capture |
 | --- | --- | --- | --- |
 | SSH ephemeral host-workspace lease recovery | [#13772](https://github.com/paperclipai/paperclip/pull/13772) | `e319a7e8ddeba95274616d042d143c2343fc6031` | Open; CI passed |
-| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `c844f87e77cde72a875519cf063a3c72c2cfddee` | Open; CI/review pending |
+| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `de8b22d7fb1a29bf6fd9a1c3c8a4d823d37df428` | Open; new-head CI/review pending |
 
 Upstream #13717 added local bookkeeping-lease cleanup while these proposals were
 being prepared. The submitted lease contribution therefore reuses that behavior
 and adds only the missing SSH driver retry/guard treatment plus stronger local
 and SSH regression coverage. The enrichment proposal remains independent.
 
-Focused validation on the exact proposal heads: lease tests 58/58; enrichment,
-SDK, and MCP policy tests 13/13. Both passed monorepo typecheck and the normal
-production build. Upstream CI on the final enrichment head is still running;
-one untouched Runner Codex protocol test failed in its shard and awaits
-resolution/retry. The historical 0B patches and bundle below preserve the exact
+Focused validation: lease tests 58/58; enrichment, SDK, plugin-route authz, and
+MCP policy tests 53/53 on the source-equivalent updated tree. Both proposals
+passed monorepo typecheck and the normal production build. The updated
+enrichment PR requires explicit instance-admin approval per plugin/company;
+an ordinary settings row no longer enables the hook. The preceding enrichment
+head had unrelated Runner Codex and chat-ordering CI failures; CI for the new
+head is running. The historical 0B patches and bundle below preserve the exact
 admission image evidence; the real PR heads
 and GitHub diffs are the canonical 0C submission artifacts.
 
