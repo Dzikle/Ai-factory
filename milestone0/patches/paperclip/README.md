@@ -1,17 +1,40 @@
-# Paperclip Milestone 0B upstream remediation
+# Paperclip Milestone 0B/0C upstream remediation
 
-Temporary evaluation material only. These changes are **not** an admitted
-production fork. Milestone 1 waits for supported upstream acceptance/release and
-release-image re-admission. No PR was opened or pushed by this work.
+Temporary evaluation and upstream-contribution material only. These changes are
+**not** an admitted production fork. Milestone 1 waits for supported upstream
+acceptance/release, migration proof, and release-image re-admission.
+
+## Milestone 0C submitted proposals
+
+Both changes were independently rebased/adapted to upstream
+`8326e33adad63e26c918edf6adf6db114997eced` and submitted:
+
+| Proposal | Pull request | Exact head | Status at capture |
+| --- | --- | --- | --- |
+| SSH ephemeral host-workspace lease recovery | [#13772](https://github.com/paperclipai/paperclip/pull/13772) | `e319a7e8ddeba95274616d042d143c2343fc6031` | Open; CI passed |
+| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `c844f87e77cde72a875519cf063a3c72c2cfddee` | Open; CI/review pending |
+
+Upstream #13717 added local bookkeeping-lease cleanup while these proposals were
+being prepared. The submitted lease contribution therefore reuses that behavior
+and adds only the missing SSH driver retry/guard treatment plus stronger local
+and SSH regression coverage. The enrichment proposal remains independent.
+
+Focused validation on the exact proposal heads: lease tests 58/58; enrichment,
+SDK, and MCP policy tests 13/13. Both passed monorepo typecheck and the normal
+production build. Upstream CI on the final enrichment head is still running;
+one untouched Runner Codex protocol test failed in its shard and awaits
+resolution/retry. The historical 0B patches and bundle below preserve the exact
+admission image evidence; the real PR heads
+and GitHub diffs are the canonical 0C submission artifacts.
 
 ## Revisions and patch ownership
 
 Upstream base: `e1f245a6607f3920d1618409ee0d5b90c822d81e`, MIT,
 [merged PR #13515](https://github.com/paperclipai/paperclip/pull/13515).
 Its lease sweep is reused; the superseded three PR-head patches are not carried.
-Latest upstream inspected on 2026-09-17:
-`165b10bd98f842d5a3f1b1f8bd1cf731271b4a4e`. No equivalent host-lease
-correction or pre-run enrichment hook was found in its relevant source changes.
+Latest upstream inspected on 2026-09-22:
+`8326e33adad63e26c918edf6adf6db114997eced`. It contains local-only logical
+lease cleanup but no SSH equivalent or pre-run enrichment hook.
 
 | Patch | Standalone commit / base | Scope |
 | --- | --- | --- |

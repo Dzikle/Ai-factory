@@ -1,5 +1,5 @@
 schema_version: 1
-recorded_at: "2026-09-17"
+recorded_at: "2026-09-22"
 platform:
   host: "Windows 11"
   containers: "linux/amd64"
@@ -12,7 +12,13 @@ dependencies:
     admission_status: "WAITING FOR UPSTREAM; Milestone 1 BLOCKED"
     upstream_base: "e1f245a6607f3920d1618409ee0d5b90c822d81e"
     upstream_lease_fix: "https://github.com/paperclipai/paperclip/pull/13515"
-    latest_upstream_inspected: "165b10bd98f842d5a3f1b1f8bd1cf731271b4a4e"
+    latest_upstream_inspected: "8326e33adad63e26c918edf6adf6db114997eced"
+    milestone0c_upstream_base: "8326e33adad63e26c918edf6adf6db114997eced"
+    upstream_ssh_lease_pr: "https://github.com/paperclipai/paperclip/pull/13772"
+    upstream_ssh_lease_commit: "e319a7e8ddeba95274616d042d143c2343fc6031"
+    upstream_enrichment_pr: "https://github.com/paperclipai/paperclip/pull/13773"
+    upstream_enrichment_commit: "c844f87e77cde72a875519cf063a3c72c2cfddee"
+    milestone0c_validation: "Focused lease 58/58 and enrichment/SDK/MCP 13/13 PASS; both exact proposal heads pass monorepo typecheck and normal production build. Lease PR CI pass; enrichment PR CI/review pending, with one untouched Runner Codex protocol test failure in the current run. No supported merged release or migration/re-admission yet."
     test_tree: "8414940ca75347bd85f6b1be58af40697c82c03c"
     seam_test_commit: "d69a384ab1f8e2d68ec1bb16b4aa4874a720b054"
     seam_standalone_commit: "939a02e96847282da5881a3a30f396c51659b32c"
@@ -21,7 +27,7 @@ dependencies:
     image_platform_manifest: "sha256:97e08a86247823eba27851706e9af268f9ce20ed5315f2db187933255c9de0b5"
     baseline_commit: "5282cabde84624320e63bd942f6ed5124952f2a2"
     baseline_image: "ghcr.io/paperclipai/paperclip@sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83"
-    note: "Admission-only SDK/server source layer over baseline native-runner/CLI layer, not a normal supported release. Full build/typecheck and old-database migration compatibility remain gates. Exact temporary commits are preserved in patches/paperclip/paperclip-m0b-test.bundle; patches are upstream proposals, not a private production fork."
+    note: "Historical admission-only SDK/server source layer over baseline native-runner/CLI layer, not a normal supported release. Exact 0B commits remain in patches/paperclip/paperclip-m0b-test.bundle. The two independent 0C proposals are real upstream PRs, not a private production fork. A supported merged release, old-database migration and full release re-admission remain gates."
   postgres:
     version: "17.11 (17-alpine image line)"
     license: "PostgreSQL"

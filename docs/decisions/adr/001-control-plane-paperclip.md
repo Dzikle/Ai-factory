@@ -4,6 +4,34 @@
 
 **Date:** 2026-09-15
 
+## Milestone 0C amendment — 2026-09-22
+
+The two independent, upstream-compatible remediations are now real Paperclip
+contributions: [PR #13772](https://github.com/paperclipai/paperclip/pull/13772)
+for SSH host-workspace lease recovery and
+[PR #13773](https://github.com/paperclipai/paperclip/pull/13773) for optional
+durable pre-run run-context enrichment. Both target upstream
+`8326e33adad63e26c918edf6adf6db114997eced` and remain open. Exact heads
+are respectively
+`e319a7e8ddeba95274616d042d143c2343fc6031` and
+`c844f87e77cde72a875519cf063a3c72c2cfddee`.
+
+Upstream #13717 landed local bookkeeping-lease recovery during preparation, so
+#13772 was narrowed to the missing SSH equivalent while retaining local/SSH
+regression coverage. This preserves upstream architecture instead of carrying a
+redundant private implementation. The enrichment proposal remains a separate,
+generic plugin contract. Review drove a narrower credential lifecycle: one
+five-minute, run-scoped MCP token per enricher callback, immediate revocation,
+and a separate native-adapter token. Focused tests pass 58/58 and 13/13;
+recovery also reapplies persisted bounded prompt text when the task prompt is
+rebuilt. Both exact proposal heads pass monorepo typecheck and the normal
+production build. Upstream review and final-head CI remain merge gates.
+
+The decision remains conditional. No supported merged revision/release contains
+both requirements, so no baseline-database migration or release re-admission was
+performed. Paperclip is **WAITING FOR UPSTREAM**, Milestone 1 remains blocked,
+and neither fork branch is an authorized production distribution.
+
 ## Milestone 0B amendment — 2026-09-17
 
 Reuse upstream [PR #13515](https://github.com/paperclipai/paperclip/pull/13515),

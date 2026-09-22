@@ -2,7 +2,7 @@
 
 **Status:** WAITING FOR UPSTREAM — Milestone 1 remains BLOCKED
 
-**Executed:** 2026-09-15 (baseline); 2026-09-16–17 (Milestone 0B)
+**Executed:** 2026-09-15 (baseline); 2026-09-16–17 (Milestone 0B); 2026-09-21–22 (Milestone 0C)
 
 **Architecture baseline:** `71b5a5d50e7bf0e25aa1d643895779654a1522ca`
 
@@ -11,22 +11,22 @@ fault tests only. No Context Resolver or production workflow was implemented.
 
 ## 1. Executive verdict
 
-Milestone 0B produced minimal upstream-compatible Paperclip proposals for both
-blockers and an immutable local test image. The sandbox ordering fix landed
-upstream during this work; real re-admission exposed a remaining local/SSH lease
-cleanup defect, now covered by a separate correction. A general optional plugin
-enrichment hook preserves the original adapter and run identity and durably
-records the context artifact. **Neither local proposal is upstream-accepted.**
+Milestone 0C adapted the two independent Paperclip proposals to current upstream
+and submitted them as [PR #13772](https://github.com/paperclipai/paperclip/pull/13772)
+(SSH host-workspace lease recovery) and
+[PR #13773](https://github.com/paperclipai/paperclip/pull/13773) (optional durable
+pre-run enrichment). Both are open; upstream review and final-head CI remain
+in progress for the enrichment proposal.
+Neither proposal is upstream-accepted or present in a supported release.
 
-Outcome B: **UPSTREAM REMEDIATION READY, WAITING**. These patches are test/PR
-material, not a private production fork. Milestone 0 does not exit and Milestone
-1 is not authorized. A supported release build/image and tested migration path
-are also required; the admission source-layer image is not that release.
-Next: Milestone 0C upstream release and release-image re-admission.
+Outcome B remains **UPSTREAM REMEDIATION READY, WAITING**. The fork branches are
+contribution branches, not a private production distribution. Milestone 0 does
+not exit and Milestone 1 is not authorized. A supported merged release,
+baseline-data migration, and release-image re-admission are still required.
 
 | Dependency boundary | Verdict | Admission result |
 | --- | --- | --- |
-| Paperclip control plane | **WAITING FOR UPSTREAM** | Local remediation and same-run native enrichment tested; require upstream merge/release and supported-image re-admission. Section 3.0 is current evidence. |
+| Paperclip control plane | **WAITING FOR UPSTREAM** | PRs #13772 and #13773 are open; require upstream merge/release, migration proof, and supported-image re-admission. Section 3.0 is current evidence. |
 | PostgreSQL durability | **PASS** | Persistent restart and `pg_dump`/restore counts match. |
 | Agent Skills format | **PASS** | Both skills validate and lazily load in metadata and prompt-catalog styles. |
 | OpenSearch 3.8.0 | **PASS** | Role isolation, filtered/multi-search, alias rebuild, persistence and loss recovery pass. |
@@ -88,9 +88,56 @@ repair removed no repository, image, persistent volume, or unrelated container.
 
 ## 3. Paperclip admission
 
-### 3.0 Milestone 0B current remediation / re-admission
+### 3.0 Milestone 0C upstream submission / current status
 
-#### Immutable identity and compatibility
+#### Upstream submission record — 2026-09-22
+
+| Required record | Result |
+| --- | --- |
+| Upstream PR #1 | [paperclipai/paperclip#13772](https://github.com/paperclipai/paperclip/pull/13772) — SSH logical lease recovery; open; required CI passed at capture. |
+| Upstream PR #2 | [paperclipai/paperclip#13773](https://github.com/paperclipai/paperclip/pull/13773) — optional pre-run run-context enrichment; open/mergeable; CI running at capture. |
+| Upstream base revision | `8326e33adad63e26c918edf6adf6db114997eced` for both PRs. |
+| Proposal revisions | Lease `e319a7e8ddeba95274616d042d143c2343fc6031`; enrichment `c844f87e77cde72a875519cf063a3c72c2cfddee`. |
+| Upstream revision/release tested | No supported merged release contains both changes. Proposal source branches only; not production admission. |
+| Migration result | **NOT RUN** in 0C: no supported target release exists. The preserved baseline database/storage remain the future upgrade fixture. |
+| Re-admission result | **WAITING**: release Docker/PostgreSQL fault, capability, enrichment, restart, and restore gates are deliberately deferred until a supported merged revision exists. |
+| Milestone 0 final status | **WAITING FOR UPSTREAM — Milestone 1 BLOCKED**. |
+
+Current upstream already contains local bookkeeping-lease cleanup introduced in
+#13717, so PR #13772 was narrowed to the missing SSH equivalent and regression
+coverage; it does not duplicate the local implementation. Current upstream has
+no equivalent synchronous durable enrichment hook.
+
+Post-rebase focused validation passes: lease recovery 58/58 tests (21 orphaned
+active-lease plus 37 pending-cleanup cases) and enrichment 13/13 tests (two SDK,
+six enrichment and five MCP policy). Both exact proposal heads passed
+`pnpm -r typecheck` and normal `pnpm build` with the release Rust runner; the final
+enrichment build stamp is `c844f87e77cde72a875519cf063a3c72c2cfddee`.
+A broad comparison found 16 environment-dependent failures identically on
+pristine upstream among 163 tests
+in eight compared suites (`jq`, Cursor executable, and WSL symlink assumptions),
+with no proposal-specific failure. The large chat-channel suite was not counted
+after sustained fixture-only warning output.
+
+Upstream review found that the initial enrichment proposal reused the native
+adapter's live MCP token. The 2026-09-22 revision gives each enricher a distinct
+run-scoped token (five-minute maximum expiry), revokes it after the callback,
+and mints a separate native-adapter token. The exact effective permission profile
+and Paperclip budget/run authority remain unchanged. This is proposal validation,
+not supported release admission.
+
+A subsequent upstream review found that restart can rebuild task text after
+the enrichment marker was persisted. The same proposal now retains the bounded
+prompt separately in the run snapshot and reapplies it idempotently to rebuilt
+full/compact task text; the regression covers repeated recovery without a
+second plugin invocation.
+
+PR #13772 has completed upstream CI successfully. PR #13773's final-head CI
+is still running; one untouched Paperclip Runner Codex protocol test failed in
+its shard while local focused tests and full build/typecheck passed. This CI
+failure is tracked as an upstream review/merge gate and is not release evidence.
+
+#### Milestone 0B immutable identity and compatibility
 
 - Official base: `e1f245a6607f3920d1618409ee0d5b90c822d81e`, merged
   [lease PR #13515](https://github.com/paperclipai/paperclip/pull/13515) on
@@ -668,12 +715,11 @@ repository artifacts.
 
 ## 11. Required next milestone
 
-**Milestone 0C — supported upstream release re-admission**, not Milestone 1:
+**Supported upstream release re-admission**, not Milestone 1:
 
-1. Submit/review the prepared independent host-lease correction and optional
-   plugin enrichment proposals; record real upstream issue/PR references when
-   created. None is currently fabricated or implied to be submitted.
-2. Obtain upstream acceptance and a supported normal source/release build, pin
+1. Complete upstream review for Paperclip PRs #13772 and #13773 without carrying
+   either contribution as an AI Factory production fork.
+2. After both are accepted, obtain a supported normal source/release build, pin
    its immutable revision/image, and prove the baseline database/storage upgrade
    or an explicitly approved export/import path. Do not maintain a private fork.
 3. Repeat the live kill/orphan/lease/resume/locking/profile/backup/enrichment/
