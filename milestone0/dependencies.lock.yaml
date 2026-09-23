@@ -6,12 +6,12 @@ platform:
 
 dependencies:
   paperclip:
-    version: "owner-maintained fork candidate a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f; NOT ADMITTED"
+    version: "owner-maintained fork candidate 62760ac9fc69572866c8eed5ad714ab1ddd6cc23; NOT ADMITTED"
     source: "https://github.com/Dzikle/paperclip.git"
     license: "MIT"
-    admission_status: "FORK RE-ADMISSION PENDING; Milestone 1 BLOCKED"
+    admission_status: "HOST-DISK BLOCKED / FORK RE-ADMISSION PENDING; Milestone 1 BLOCKED"
     fork_branch: "ai-factory/milestone0-maintained"
-    fork_commit: "a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f"
+    fork_commit: "62760ac9fc69572866c8eed5ad714ab1ddd6cc23"
     fork_image: null
     fork_schema_identity: null
     upstream_tracking: "read-only; no upstream PRs without explicit owner approval"
@@ -24,7 +24,7 @@ dependencies:
     upstream_enrichment_pr: "https://github.com/paperclipai/paperclip/pull/13773"
     upstream_enrichment_commit: "0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10"
     upstream_pr_status: "#13772 and #13773 CLOSED at owner request on 2026-09-23; historical provenance only"
-    milestone0c_validation: "At combined fork source a0225e8, source-equivalent Linux tree passed 121/121 focused server tests, 2/2 plugin SDK tests, pnpm -r typecheck and normal pnpm build. Build stamp still names older test-tree Git commit; exact fork image, baseline migration, and live re-admission remain pending. Former upstream PRs #13772/#13773 closed at owner request; both individual PR CI suites passed."
+    milestone0c_validation: "Combined fork source a0225e8 passed 121/121 focused server tests, 2/2 plugin SDK tests, pnpm -r typecheck and pnpm build. Current head 62760ac fixes frozen lockfile and caches pnpm downloads. Exact Git-blob archive SHA-256 5BECC12868C829A9A10934511ED54DA0236841373DC51EB8C56654775E70BC7B passed generated-contract checks; normal Docker build passed frozen install, Rust runner, UI, SDK and server stages but default-cloud image export failed with Docker EOF when C: fell to 0.53 GB free. No image, migration or live re-admission. Former upstream PRs #13772/#13773 closed at owner request."
     test_tree: "8414940ca75347bd85f6b1be58af40697c82c03c"
     seam_test_commit: "d69a384ab1f8e2d68ec1bb16b4aa4874a720b054"
     seam_standalone_commit: "939a02e96847282da5881a3a30f396c51659b32c"
@@ -33,7 +33,7 @@ dependencies:
     historical_0b_image_platform_manifest: "sha256:97e08a86247823eba27851706e9af268f9ce20ed5315f2db187933255c9de0b5"
     baseline_commit: "5282cabde84624320e63bd942f6ed5124952f2a2"
     baseline_image: "ghcr.io/paperclipai/paperclip@sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83"
-    note: "historical_0b_image fields are admission-only hybrid image digests, NOT the fork candidate. Exact 0B commits remain in patches/paperclip/paperclip-m0b-test.bundle. The owner now maintains both fixes in Dzikle/paperclip; no immutable fork image is admitted. Exact-commit build, old-database migration and full real re-admission remain gates."
+    note: "historical_0b_image fields are admission-only hybrid image digests, NOT the fork candidate; the disposable old test image/container were removed after preserving paired backups and baseline volumes. Exact 0B commits remain in patches/paperclip/paperclip-m0b-test.bundle. The owner maintains both fixes in Dzikle/paperclip. Free host disk, export the supported self-hosted production target at exact commit, migrate the old database, and rerun full real re-admission before admission."
   postgres:
     version: "17.11 (17-alpine image line)"
     license: "PostgreSQL"
@@ -87,4 +87,4 @@ dependencies:
 rollback_policy:
   rule: "Rollback means restoring the recorded volume/database backup and starting the last admitted immutable digest; never retag a mutable image."
   current_admitted_set: null
-  reason: "Milestone 0 waits for exact owner-fork Paperclip image, baseline migration, and full real re-admission. No Milestone 1 yet. Restore preserved baseline database+volume together; the temporary newer migration journal is not an in-place downgrade path."
+  reason: "Milestone 0 is blocked by host disk exhaustion during exact owner-fork Paperclip image export. Free disk, export the production target, validate baseline migration and full real re-admission. No Milestone 1 yet. Restore preserved baseline database+volume together; the temporary newer migration journal is not an in-place downgrade path."
