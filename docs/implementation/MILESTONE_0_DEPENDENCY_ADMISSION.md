@@ -95,9 +95,9 @@ repair removed no repository, image, persistent volume, or unrelated container.
 | Required record | Result |
 | --- | --- |
 | Upstream PR #1 | [paperclipai/paperclip#13772](https://github.com/paperclipai/paperclip/pull/13772) — SSH logical lease recovery; open; required CI passed at capture. |
-| Upstream PR #2 | [paperclipai/paperclip#13773](https://github.com/paperclipai/paperclip/pull/13773) — optional pre-run run-context enrichment; open/mergeable; new-head CI running at capture. |
+| Upstream PR #2 | [paperclipai/paperclip#13773](https://github.com/paperclipai/paperclip/pull/13773) — optional pre-run run-context enrichment; open/mergeable; corrected-head CI running at capture. |
 | Upstream base revision | `8326e33adad63e26c918edf6adf6db114997eced` for both PRs. |
-| Proposal revisions | Lease `e319a7e8ddeba95274616d042d143c2343fc6031`; enrichment `79c7479d7d275a01addfc0c7965ff6be254137ce`. |
+| Proposal revisions | Lease `e319a7e8ddeba95274616d042d143c2343fc6031`; enrichment `0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10`. |
 | Upstream revision/release tested | No supported merged release contains both changes. Proposal source branches only; not production admission. |
 | Migration result | **NOT RUN** in 0C: no supported target release exists. The preserved baseline database/storage remain the future upgrade fixture. |
 | Re-admission result | **WAITING**: release Docker/PostgreSQL fault, capability, enrichment, restart, and restore gates are deliberately deferred until a supported merged revision exists. |
@@ -113,7 +113,9 @@ active-lease plus 37 pending-cleanup cases) and enrichment 54/54 tests (two SDK,
 six enrichment, forty-one plugin-route authorization and five MCP policy). Both
 proposal source trees passed `pnpm -r typecheck` and normal `pnpm build` with
 the release Rust runner through `de8b22d7f`; the final `79c7479d7` route guard
-additionally passed its 41/41 route tests and server `tsc --noEmit`. The Linux
+additionally passed its 41/41 route tests and server `tsc --noEmit`. The
+`0b455c84c` OpenAPI correction passed 52/52 contract and route-authorization
+tests plus server `tsc --noEmit`. The Linux
 test tree was source-equivalent but its build stamp names the preceding commit.
 A broad comparison found 16 environment-dependent failures identically on
 pristine upstream among 163 tests
@@ -146,11 +148,14 @@ shared with native dispatch. This is a **trusted-plugin** contract, not a
 guarantee that arbitrary plugin code cannot exfiltrate its temporary token;
 maintainer security review remains open.
 
-PR #13772 has completed upstream CI successfully. The previous #13773 head
-`c844f87e7` failed two untouched CI test shards (Runner Codex protocol
-integrity and chat edit/delete ordering); the author requested a maintainer
-rerun but lacks repository-admin permission. New-head CI for `de8b22d7f` is
-running on the latest head. Neither CI result is supported release evidence.
+PR #13772 has completed upstream CI successfully. On #13773, an earlier head
+`c844f87e7` failed two untouched CI shards (Runner Codex protocol integrity
+and chat edit/delete ordering). The later `79c7479d7` run exposed one
+proposal-specific failure: the new instance-admin approval route was missing
+from Paperclip's OpenAPI contract. This was reproduced locally, then fixed in
+`0b455c84c` with an explicit schema, authorization metadata, and regression
+test; the affected suites pass 52/52. Corrected-head upstream CI is running.
+No proposal CI result is supported release evidence.
 
 #### Milestone 0B immutable identity and compatibility
 

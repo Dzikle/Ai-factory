@@ -14,7 +14,7 @@ durable pre-run run-context enrichment. Both target upstream
 `8326e33adad63e26c918edf6adf6db114997eced` and remain open. Exact heads
 are respectively
 `e319a7e8ddeba95274616d042d143c2343fc6031` and
-`79c7479d7d275a01addfc0c7965ff6be254137ce`.
+`0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10`.
 
 Upstream #13717 landed local bookkeeping-lease recovery during preparation, so
 #13772 was narrowed to the missing SSH equivalent while retaining local/SSH
@@ -30,7 +30,10 @@ tests pass 58/58 and 54/54;
 recovery also reapplies persisted bounded prompt text when the task prompt is
 rebuilt. Monorepo typecheck and normal production build passed through the
 preceding enrichment revision; the final company-access guard passed its route
-suite and server TypeScript check. Upstream review and final-head CI remain
+suite and server TypeScript check. The next CI run identified a missing OpenAPI
+entry for the approval endpoint; `0b455c84c` adds the contract and regression
+test (52/52 affected tests and server TypeScript check pass). Upstream review
+and corrected-head CI remain
 merge gates.
 
 The decision remains conditional. No supported merged revision/release contains

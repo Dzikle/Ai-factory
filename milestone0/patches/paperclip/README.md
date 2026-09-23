@@ -12,7 +12,7 @@ Both changes were independently rebased/adapted to upstream
 | Proposal | Pull request | Exact head | Status at capture |
 | --- | --- | --- | --- |
 | SSH ephemeral host-workspace lease recovery | [#13772](https://github.com/paperclipai/paperclip/pull/13772) | `e319a7e8ddeba95274616d042d143c2343fc6031` | Open; CI passed |
-| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `79c7479d7d275a01addfc0c7965ff6be254137ce` | Open; new-head CI/review pending |
+| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10` | Open; corrected-head CI/review pending |
 
 Upstream #13717 added local bookkeeping-lease cleanup while these proposals were
 being prepared. The submitted lease contribution therefore reuses that behavior
@@ -26,8 +26,11 @@ enrichment revision; the final route guard passed its suite and server tsc. The 
 enrichment PR requires explicit instance-admin approval per plugin/company;
 an ordinary settings row no longer enables the hook, and cross-company approval
 is denied. The preceding enrichment
-head had unrelated Runner Codex and chat-ordering CI failures; CI for the new
-head is running. The historical 0B patches and bundle below preserve the exact
+head had unrelated Runner Codex and chat-ordering CI failures. The subsequent
+head exposed a missing OpenAPI entry for the approval route; `0b455c84c` adds
+the schema and authorization contract with regression coverage (52/52 affected
+tests and server TypeScript check pass). Corrected-head CI is running. The
+historical 0B patches and bundle below preserve the exact
 admission image evidence; the real PR heads
 and GitHub diffs are the canonical 0C submission artifacts.
 
