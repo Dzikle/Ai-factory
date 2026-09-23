@@ -107,6 +107,11 @@ repair removed no repository, image, persistent volume, or unrelated container.
 | Re-admission result | **PENDING**: real controller/child loss, orphan/lease/lock, resume/successor, effective MCP capabilities, same-run enrichment, restart, and paired backup/restore gates must run on an exact fork image. |
 | Milestone 0 final status | **FORK RE-ADMISSION PENDING — Milestone 1 BLOCKED**. |
 
+The host Docker Desktop service is stopped and its Linux engine pipe is absent;
+starting the Windows service from this session was denied. The owner must open
+Docker Desktop before the exact-image and live PostgreSQL fault gates can run.
+No Docker gate was inferred from source tests.
+
 Maintaining this fork is an explicit owner decision and transfers security
 updates, upstream rebases, regression testing, and release-image provenance to
 AI Factory. Track upstream read-only; do not make the fork a second workflow
