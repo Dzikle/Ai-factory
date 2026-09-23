@@ -1,8 +1,8 @@
 # AI Factory — Milestone 0 Dependency Admission
 
-**Status:** WAITING FOR UPSTREAM — Milestone 1 remains BLOCKED
+**Status:** OWNER-MAINTAINED FORK — RE-ADMISSION PENDING; Milestone 1 remains BLOCKED
 
-**Executed:** 2026-09-15 (baseline); 2026-09-16–17 (Milestone 0B); 2026-09-21–22 (Milestone 0C)
+**Executed:** 2026-09-15 (baseline); 2026-09-16–17 (Milestone 0B); 2026-09-21–23 (Milestone 0C/fork decision)
 
 **Architecture baseline:** `71b5a5d50e7bf0e25aa1d643895779654a1522ca`
 
@@ -11,22 +11,27 @@ fault tests only. No Context Resolver or production workflow was implemented.
 
 ## 1. Executive verdict
 
-Milestone 0C adapted the two independent Paperclip proposals to current upstream
-and submitted them as [PR #13772](https://github.com/paperclipai/paperclip/pull/13772)
-(SSH host-workspace lease recovery) and
-[PR #13773](https://github.com/paperclipai/paperclip/pull/13773) (optional durable
-pre-run enrichment). Both are open; upstream review and final-head CI remain
-in progress for the enrichment proposal.
-Neither proposal is upstream-accepted or present in a supported release.
+On 2026-09-23 the owner changed the Paperclip distribution decision: maintain
+the fixes in the account-owned [Dzikle/paperclip](https://github.com/Dzikle/paperclip)
+fork, not via upstream pull requests. Both previously submitted PRs were closed
+at the owner's direction; their public history remains, but neither is an open
+merge request. The two fixes are combined at immutable fork commit
+`a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f` on
+`ai-factory/milestone0-maintained`. This changes the distribution/maintenance
+boundary, not Paperclip's intended sole operational authority. No Context
+Resolver or V1 workflow was implemented.
 
-Outcome B remains **UPSTREAM REMEDIATION READY, WAITING**. The fork branches are
-contribution branches, not a private production distribution. Milestone 0 does
-not exit and Milestone 1 is not authorized. A supported merged release,
-baseline-data migration, and release-image re-admission are still required.
+The combined source-equivalent Linux tree passed 121/121 focused server tests,
+2/2 plugin SDK tests, monorepo typecheck, and normal `pnpm build`. Its build
+stamp still names the earlier test-tree Git commit, so this is **not** an
+immutable fork image or production admission. The preserved baseline database
+has not been migrated to this fork revision and the full Docker/PostgreSQL
+fault, capability, enrichment, restart, and backup/restore gates have not been
+rerun. Milestone 1 remains blocked until those gates pass on an exact fork build.
 
 | Dependency boundary | Verdict | Admission result |
 | --- | --- | --- |
-| Paperclip control plane | **WAITING FOR UPSTREAM** | PRs #13772 and #13773 are open; require upstream merge/release, migration proof, and supported-image re-admission. Section 3.0 is current evidence. |
+| Paperclip control plane | **FORK CANDIDATE — NOT ADMITTED** | Owner-maintained `Dzikle/paperclip` commit `a0225e8`; requires exact-commit build/image, baseline migration, and real re-admission. Section 3.0 is current evidence. |
 | PostgreSQL durability | **PASS** | Persistent restart and `pg_dump`/restore counts match. |
 | Agent Skills format | **PASS** | Both skills validate and lazily load in metadata and prompt-catalog styles. |
 | OpenSearch 3.8.0 | **PASS** | Role isolation, filtered/multi-search, alias rebuild, persistence and loss recovery pass. |
@@ -43,7 +48,7 @@ blocking gates pass.
 ## 2. Reproducible environment and pins
 
 Sections 2 and 3.1–8 retain the **Milestone 0A baseline** pins/failure evidence.
-Section 3.0, secondary amendments, and the current lock supersede them for 0B;
+Section 3.0, secondary amendments, and the current lock supersede them for 0B/0C;
 do not deploy the old Paperclip revision as an admitted fallback.
 
 Host observations:
@@ -88,14 +93,33 @@ repair removed no repository, image, persistent volume, or unrelated container.
 
 ## 3. Paperclip admission
 
-### 3.0 Milestone 0C upstream submission / current status
+### 3.0 Milestone 0C fork decision / current status
 
-#### Upstream submission record — 2026-09-22
+#### Owner-maintained fork decision — 2026-09-23 (current)
 
 | Required record | Result |
 | --- | --- |
-| Upstream PR #1 | [paperclipai/paperclip#13772](https://github.com/paperclipai/paperclip/pull/13772) — SSH logical lease recovery; open; required CI passed at capture. |
-| Upstream PR #2 | [paperclipai/paperclip#13773](https://github.com/paperclipai/paperclip/pull/13773) — optional pre-run run-context enrichment; open/mergeable; corrected-head CI running at capture. |
+| Fork | [Dzikle/paperclip](https://github.com/Dzikle/paperclip), branch `ai-factory/milestone0-maintained`, commit `a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f`; merge parents `0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10` (enrichment) and `e319a7e8ddeba95274616d042d143c2343fc6031` (SSH lease). |
+| Upstream PRs | [#13772](https://github.com/paperclipai/paperclip/pull/13772) and [#13773](https://github.com/paperclipai/paperclip/pull/13773) **CLOSED** at owner request; do not reopen or submit future upstream PRs without explicit approval. |
+| Normal source validation | Source-equivalent Linux tree: 121/121 focused server tests, 2/2 plugin SDK tests, `pnpm -r typecheck` PASS, `pnpm build` PASS. Build stamp names the older test-tree Git commit, so it is not an exact-commit release artifact. |
+| Immutable fork image | **NOT BUILT/PINNED**. The old 0B hybrid source-layer image is historical only. |
+| Migration result | **NOT RUN** against the fork revision. Preserve paired baseline database/storage backup; no journal rewriting. |
+| Re-admission result | **PENDING**: real controller/child loss, orphan/lease/lock, resume/successor, effective MCP capabilities, same-run enrichment, restart, and paired backup/restore gates must run on an exact fork image. |
+| Milestone 0 final status | **FORK RE-ADMISSION PENDING — Milestone 1 BLOCKED**. |
+
+Maintaining this fork is an explicit owner decision and transfers security
+updates, upstream rebases, regression testing, and release-image provenance to
+AI Factory. Track upstream read-only; do not make the fork a second workflow
+authority. The fork can be replaced by upstream later only after the same
+migration/re-admission gates pass. The 2026-09-22 submission record below is
+historical and superseded.
+
+#### Historical upstream submission record — 2026-09-22
+
+| Required record | Result |
+| --- | --- |
+| Upstream PR #1 | [paperclipai/paperclip#13772](https://github.com/paperclipai/paperclip/pull/13772) — SSH logical lease recovery; open and CI passed at the 2026-09-22 capture; subsequently closed. |
+| Upstream PR #2 | [paperclipai/paperclip#13773](https://github.com/paperclipai/paperclip/pull/13773) — optional pre-run run-context enrichment; open/mergeable and corrected-head CI running at the 2026-09-22 capture; CI subsequently passed and PR closed. |
 | Upstream base revision | `8326e33adad63e26c918edf6adf6db114997eced` for both PRs. |
 | Proposal revisions | Lease `e319a7e8ddeba95274616d042d143c2343fc6031`; enrichment `0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10`. |
 | Upstream revision/release tested | No supported merged release contains both changes. Proposal source branches only; not production admission. |
@@ -154,7 +178,7 @@ and chat edit/delete ordering). The later `79c7479d7` run exposed one
 proposal-specific failure: the new instance-admin approval route was missing
 from Paperclip's OpenAPI contract. This was reproduced locally, then fixed in
 `0b455c84c` with an explicit schema, authorization metadata, and regression
-test; the affected suites pass 52/52. Corrected-head upstream CI is running.
+test; the affected suites pass 52/52. Corrected-head upstream CI later passed.
 No proposal CI result is supported release evidence.
 
 #### Milestone 0B immutable identity and compatibility
@@ -410,8 +434,8 @@ remain recoverable.
 | Paired database/storage backup and restore | PASS | Counts and durable/actual artifact identity match. |
 | Supported upstream fixes / normal release build / migration | **WAITING** | Prepared independent proposals are not merged; hybrid image and fresh DB are insufficient. |
 
-Therefore the local technical remediation gates pass, but the **overall
-Paperclip admission gate remains WAITING FOR UPSTREAM**, not PASS.
+Therefore the local technical remediation gates passed, but the **historical
+0B overall Paperclip admission gate remained WAITING FOR UPSTREAM**, not PASS.
 
 Failed fixture attempts (duplicate issue titles/idempotency, an external adapter
 artifact-path collision, unfinished probe-task re-wakes, and the initial native
@@ -704,7 +728,7 @@ harnesses remain outside both paths.
 | Injected loss | Observed failure | Recovery | Authority effect |
 | --- | --- | --- | --- |
 | Agent child process | Durable failed run and explicit reconciliation | Successor run succeeded; locks/leases released | No task loss or duplicate writer |
-| Paperclip controller container | Orphan terminalized; uncertain effects require explicit disposition | Local 0B fast restart/resume and eventual original lease cleanup pass | Sole operational-owner design retained; production admission waits for upstream release |
+| Paperclip controller container | Orphan terminalized; uncertain effects require explicit disposition | Local 0B fast restart/resume and eventual original lease cleanup pass | Sole operational-owner design retained; production admission waits for exact fork-image re-admission |
 | OpenSearch under live MCP | Client timeout at 5.178 s | Same MCP recovered after cluster restart; 12 docs persisted | Paperclip/Git truth unaffected |
 | MemPalace service | Connection refused | Same drawer recovered after restart | Task/canonical truth unaffected; memory context degrades |
 | CodeGraph volume | Empty graph | Rebuilt from Git in 113.63 s | Git truth unaffected |
@@ -735,15 +759,16 @@ repository artifacts.
 
 ## 11. Required next milestone
 
-**Supported upstream release re-admission**, not Milestone 1:
+**Exact owner-fork revision re-admission**, not Milestone 1:
 
-1. Complete upstream review for Paperclip PRs #13772 and #13773 without carrying
-   either contribution as an AI Factory production fork.
-2. After both are accepted, obtain a supported normal source/release build, pin
-   its immutable revision/image, and prove the baseline database/storage upgrade
-   or an explicitly approved export/import path. Do not maintain a private fork.
+1. Build the pinned `Dzikle/paperclip` fork commit with the normal source and
+   container build path; record image digest and schema identity. Do not reuse
+   the historical 0B hybrid image or a mutable tag.
+2. Back up the preserved baseline database and Paperclip storage together, then
+   prove a supported in-place upgrade or documented export/import preserving
+   task/run/workspace identities. Do not rewrite migration journals.
 3. Repeat the live kill/orphan/lease/resume/locking/profile/backup/enrichment/
-   delegation/digest gates on that release. Only a committed **ADMITTED** result
+   delegation/digest gates on that exact fork image. Only a committed **ADMITTED** result
    unblocks Milestone 1 contracts/policies/projections.
 4. Before graph enablement, require upstream-compatible regenerated SCIP
    bindings/fixed protobuf, a trimmed audited image, and functional re-admission.

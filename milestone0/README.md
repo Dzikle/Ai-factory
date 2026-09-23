@@ -3,7 +3,7 @@
 This directory contains only reproducible dependency-admission configuration,
 fixtures, and evidence. It is not an AI Factory runtime implementation.
 
-Every selected upstream is pinned in `dependencies.lock.yaml`. Container
+Every selected dependency is pinned in `dependencies.lock.yaml`. Container
 profiles bind only to loopback and use project-specific names, ports, networks,
 and volumes so they do not alter unrelated host services. Supply high-entropy
 values through the named `AIF_M0_*` environment variables; never commit them.
@@ -16,10 +16,11 @@ Admission results, exact commands, observed image IDs, fault injections, and
 remaining blockers are recorded in
 `docs/implementation/MILESTONE_0_DEPENDENCY_ADMISSION.md` after execution.
 
-The current result is **WAITING FOR UPSTREAM**, intentionally not a deployable V1
-stack. `patches/paperclip/README.md` records two independent proposals and the
-temporary immutable test revision; these are not a production private fork.
-The source-layer image is an admission-only build, not a supported release.
+The current result is **OWNER-FORK RE-ADMISSION PENDING**, intentionally not a
+deployable V1 stack. The owner-maintained Paperclip fork revision is pinned in
+the lock; `patches/paperclip/README.md` preserves the historical proposals and
+temporary test revision. The old source-layer image is admission-only, not an
+admitted fork release image.
 Milestone 1 is blocked. The LiteLLM server config is retained only as
 evidence of the evaluated proxy profile; the admitted raw-API mechanics probe
 uses the MIT core Router and excludes the proprietary proxy dependency.

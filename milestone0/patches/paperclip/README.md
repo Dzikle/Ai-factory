@@ -1,18 +1,25 @@
-# Paperclip Milestone 0B/0C upstream remediation
+# Paperclip Milestone 0B/0C remediation and owner fork
 
-Temporary evaluation and upstream-contribution material only. These changes are
-**not** an admitted production fork. Milestone 1 waits for supported upstream
-acceptance/release, migration proof, and release-image re-admission.
+The owner chose to maintain the two narrow fixes in
+[Dzikle/paperclip](https://github.com/Dzikle/paperclip) on 2026-09-23. The
+combined branch is `ai-factory/milestone0-maintained` at
+`a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f` (parents: enrichment
+`0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10`, SSH lease
+`e319a7e8ddeba95274616d042d143c2343fc6031`). It is a candidate, **not**
+an admitted production image. Milestone 1 waits for exact fork build, baseline
+migration and full real re-admission. Upstream PRs were closed at owner request;
+do not submit/reopen upstream work without separate approval. The rest of this
+file preserves historical 0B/0C test and contribution evidence.
 
-## Milestone 0C submitted proposals
+## Historical Milestone 0C submitted proposals
 
 Both changes were independently rebased/adapted to upstream
 `8326e33adad63e26c918edf6adf6db114997eced` and submitted:
 
 | Proposal | Pull request | Exact head | Status at capture |
 | --- | --- | --- | --- |
-| SSH ephemeral host-workspace lease recovery | [#13772](https://github.com/paperclipai/paperclip/pull/13772) | `e319a7e8ddeba95274616d042d143c2343fc6031` | Open; CI passed |
-| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10` | Open; corrected-head CI/review pending |
+| SSH ephemeral host-workspace lease recovery | [#13772](https://github.com/paperclipai/paperclip/pull/13772) | `e319a7e8ddeba95274616d042d143c2343fc6031` | CI passed; now closed |
+| Optional durable pre-run run-context enrichment | [#13773](https://github.com/paperclipai/paperclip/pull/13773) | `0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10` | Corrected-head CI passed; now closed |
 
 Upstream #13717 added local bookkeeping-lease cleanup while these proposals were
 being prepared. The submitted lease contribution therefore reuses that behavior
@@ -29,7 +36,7 @@ is denied. The preceding enrichment
 head had unrelated Runner Codex and chat-ordering CI failures. The subsequent
 head exposed a missing OpenAPI entry for the approval route; `0b455c84c` adds
 the schema and authorization contract with regression coverage (52/52 affected
-tests and server TypeScript check pass). Corrected-head CI is running. The
+tests and server TypeScript check pass). Corrected-head CI later passed. The
 historical 0B patches and bundle below preserve the exact
 admission image evidence; the real PR heads
 and GitHub diffs are the canonical 0C submission artifacts.

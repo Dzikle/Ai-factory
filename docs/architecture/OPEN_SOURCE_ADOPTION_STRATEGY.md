@@ -295,6 +295,13 @@ configure existing project
 
 Forking transfers long-term maintenance cost to AI Factory and must be justified explicitly.
 
+**Paperclip exception (owner decision, 2026-09-23):** Maintain the two narrow
+lease/enrichment fixes in the account-owned `Dzikle/paperclip` fork. The former
+upstream PRs are closed; future upstream submissions require separate owner
+approval. Keep the fork delta auditable, track upstream read-only, and require
+exact-image migration and fault/security re-admission before V1 use. This
+exception does not authorize forks of other dependencies or a second task engine.
+
 ## 7. Reuse is part of self-improvement
 
 Open-source discovery is not only a one-time bootstrap step.

@@ -6,7 +6,16 @@
 
 **Scope:** Phase 0.5 open-source adoption spike; this is not a V1 implementation
 
-> **Current admission amendment (2026-09-17): WAITING FOR UPSTREAM.** Milestone
+> **Current owner decision (2026-09-23): FORK RE-ADMISSION PENDING.** Paperclip's
+> narrow lease/enrichment fixes are combined in the account-owned
+> [Dzikle/paperclip](https://github.com/Dzikle/paperclip) fork at
+> `a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f`. Upstream PRs #13772/#13773
+> were closed at the owner's direction. AI Factory owns this fork's maintenance,
+> security updates and release provenance. The earlier no-fork/upstream-release
+> hold below is historical and superseded. **Milestone 1 remains blocked** until
+> the exact fork image passes baseline migration and full real re-admission.
+
+> **Historical admission amendment (2026-09-17): WAITING FOR UPSTREAM.** Milestone
 > 0B prepared and locally tested Paperclip host-lease and plugin enrichment
 > proposals; no private production fork or Milestone 1 is admitted. Require a
 > supported upstream release/build/migration path and release-image re-admission.
@@ -44,13 +53,14 @@ view into OpenSearch.
 
 This is a conditional adoption, not a blank cheque. Paperclip, MemPalace, and
 CodeGraphContext are young or fast-moving and have explicit acceptance gates in
-section 12. No selected dependency may require a long-lived fork.
+section 12. The owner-maintained Paperclip fork is the explicit exception to the
+original no-long-lived-fork preference; it is not admitted merely by existing.
 
 ## 2. Selected V1 stack
 
 | Concern | V1 selection | Decision and boundary |
 | --- | --- | --- |
-| Control plane | Paperclip upstream base `e1f245a`; temporary 0B test `b75cbb5fa` | **ADAPT; WAITING FOR UPSTREAM.** Local fixes pass; no production fork admitted. Intended sole operational owner after supported upstream release/build/migration and release-image re-admission. |
+| Control plane | `Dzikle/paperclip` fork `a0225e8`; historical 0B test `b75cbb5fa` | **ADAPT; FORK RE-ADMISSION PENDING.** Combined fixes pass focused source tests/build; no fork image is admitted. Intended sole operational owner after exact-image baseline migration and full real re-admission. |
 | Durable workflow | Paperclip wake queue, heartbeat scheduler, execution locks, and recovery services | No DBOS beside Paperclip. DBOS is the mutually exclusive fallback if Paperclip fails its adoption gates. |
 | Skills | Agent Skills specification; canonical packages in Git | **ADOPT.** Paperclip skill records/installations are runtime projections. Namespaced metadata and `ai-factory.yaml` sidecars carry AI Factory policy. |
 | Knowledge fabric | Dedicated OpenSearch 3.8.x cluster | Rebuildable projection only. Use filtered lexical/vector hybrid retrieval, multi-search, aliases, and Search Relevance Workbench. |
@@ -315,9 +325,9 @@ The original wrapper/launcher proposal is explicitly superseded: the existing
 external-adapter contract cannot delegate to another registered native adapter
 or durably enrich the host snapshot. Milestone 0B instead proves the optional
 `agent.run.enrich` plugin contract, with snapshot persistence before unchanged
-native dispatch in the same run. It remains an upstream proposal, not a released
-contract. Milestone 1 may implement the Resolver plugin only after that seam is
-upstream-accepted and Paperclip re-admitted. Never copy native CLI adapters or
+native dispatch in the same run. The owner-approved fork now contains this
+contract, but Milestone 1 may implement the Resolver plugin only after the exact
+fork image is re-admitted. Never copy native CLI adapters or
 introduce nested execution to bridge this gap.
 
 ## 7. Crash, restart, and model-change sequence
@@ -427,7 +437,7 @@ unless measured scaling or isolation demands one.
 
 | Integration | Thin work required |
 | --- | --- |
-| Paperclip pre-run | Future plugin on upstream-accepted optional enrichment hook; persist bounded context artifact/digest before unchanged same-run native dispatch. Wrapper/launcher duplication rejected; Resolver not implemented. |
+| Paperclip pre-run | Future plugin on the owner-fork optional enrichment hook after fork admission; persist bounded context artifact/digest before unchanged same-run native dispatch. Wrapper/launcher duplication rejected; Resolver not implemented. |
 | Paperclip → OpenSearch | Idempotent event/activity consumer with per-entity ordering keys, replay cursor, and polling/reconciliation fallback because plugin events are at-least-once and plugin runtime is alpha. |
 | Git/docs/skills → OpenSearch/Paperclip | Commit-aware document projector; Agent Skills validator and Paperclip skill sync. |
 | Capability policy → Paperclip MCP | Compile role/project/task/skill intersections into profiles and grants; verify denied tools are absent. |
@@ -476,8 +486,9 @@ session expiry [#13298](https://github.com/paperclipai/paperclip/issues/13298),
 checkout mutation [#13220](https://github.com/paperclipai/paperclip/issues/13220),
 review replacement [#13176](https://github.com/paperclipai/paperclip/issues/13176),
 and workspace teardown [#13154](https://github.com/paperclipai/paperclip/issues/13154).
-Any reproducible correctness defect is a release blocker or must be fixed
-upstream; no private fork is authorized.
+Any reproducible correctness defect is an admission blocker or must be fixed
+and regression-tested in the owner-maintained fork. Upstream remains a read-only
+source of future updates unless the owner separately authorizes contribution.
 
 The source install also failed on this Windows host first from long paths, then
 on symlink privilege/native optional build requirements. Containerized/server

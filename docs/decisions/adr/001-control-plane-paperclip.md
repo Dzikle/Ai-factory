@@ -1,10 +1,37 @@
 # ADR 001: Adopt Paperclip as the operational control plane
 
-**Status:** Preferred candidate; WAITING FOR UPSTREAM — Milestone 1 blocked
+**Status:** Owner-maintained fork candidate; re-admission pending — Milestone 1 blocked
 
 **Date:** 2026-09-15
 
-## Milestone 0C amendment — 2026-09-22
+## Owner fork amendment — 2026-09-23 (current)
+
+The owner explicitly chose to keep the required Paperclip changes in the
+account-owned [Dzikle/paperclip](https://github.com/Dzikle/paperclip) fork rather
+than seek upstream merge. The two upstream PRs were closed at the owner's
+direction. The maintained branch `ai-factory/milestone0-maintained` combines
+the SSH lease fix and optional pre-run enrichment at immutable commit
+`a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f` (upstream base
+`8326e33adad63e26c918edf6adf6db114997eced`). No future upstream PR or
+direct upstream push is authorized without separate owner approval.
+
+This changes **distribution and maintenance ownership**, not execution
+authority: Paperclip remains the intended sole task/run/workspace/MCP-policy
+authority; AI Factory does not add DBOS or a second task engine. AI Factory now
+owns rebases, security updates, release provenance, regression tests, and an
+exit path back to upstream or another control plane. Prefer a small auditable
+fork delta; track upstream read-only. The combined source-equivalent Linux tree
+passed 121/121 focused server tests, 2/2 plugin SDK tests, monorepo typecheck,
+and normal build. This is **not admission**: the build stamp is not the exact
+fork revision, and baseline database migration plus live Docker/PostgreSQL
+recovery/capability/enrichment/restore gates remain unrun. Milestone 1 stays
+blocked until the [admission report](../../implementation/MILESTONE_0_DEPENDENCY_ADMISSION.md)
+records an immutable fork image and all gates PASS.
+
+The 2026-09-22 and earlier amendments below are historical evidence; their
+upstream-release and no-fork requirements are superseded by this owner decision.
+
+## Historical Milestone 0C amendment — 2026-09-22
 
 The two independent, upstream-compatible remediations are now real Paperclip
 contributions: [PR #13772](https://github.com/paperclipai/paperclip/pull/13772)
@@ -164,7 +191,7 @@ ToolHive and SWE-ReX authorities.
 | --- | --- | --- |
 | Logical identity independent of provider/model/runtime | PASS | Separate agent identity and adapter/runtime configuration. |
 | Durable task/run/session state | PASS | Persistent issue, heartbeat run, wakeup, task-session, and context rows. |
-| Atomic claim/locking/recovery | ADAPT — WAITING | Claim/CAS and host-lease remediation pass locally; supported upstream release re-admission required. |
+| Atomic claim/locking/recovery | ADAPT — FORK RE-ADMISSION PENDING | Claim/CAS and host-lease remediation pass source tests; exact fork-image live re-admission required. |
 | Heartbeats/recurring execution | PASS | Durable wake queue, timers/routines, leases, retry scheduling. |
 | Budgets/cost accounting | PASS | Agent budgets and run-linked cost events. |
 | Native CLI/provider adapters | PASS | Codex/Claude/OpenCode/Gemini/Cursor/ACP and launcher surfaces. |
@@ -173,11 +200,11 @@ ToolHive and SWE-ReX authorities.
 | Portable AI Factory skills | ADAPT | Sync Git-owned Agent Skills packages; do not make Paperclip rows canonical. |
 | Secrets/artifacts/storage | PASS | Encrypted secrets and local/S3 storage provider interfaces. |
 | Plugin/events/OpenSearch projection | ADAPT | At-least-once events require idempotency/reconciliation; runtime is alpha. |
-| Context Resolver before a run | ADAPT — WAITING | Optional plugin enrichment proposal persists bounded same-run context before original dispatch; upstream acceptance required. |
+| Context Resolver before a run | ADAPT — FORK RE-ADMISSION PENDING | Optional plugin enrichment contract persists bounded same-run context before original dispatch; exact fork-image live re-admission required. |
 | Independent Reviewer and QA | PASS | Separate agents and execution-policy participants with distinct grants. |
 | Resume without original conversation/model | PASS | Reattach session when safe or reinvoke from durable task/context/workspace. |
 | Operational truth without canonical project ownership | PASS | Git/memory/OpenSearch remain external authorities/projections. |
-| Avoid a long-term fork | BLOCKER — UPSTREAM ACCEPTANCE | Clean independent proposals are prepared; no production private patch/fork is admitted. |
+| Owner-maintained fork discipline | ADAPT — PENDING | Explicit owner decision authorizes a narrow fork; track upstream read-only, maintain security/rebase provenance, and admit only after exact-image migration and live gates. |
 
 ## Authority boundary
 

@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0B WAITING FOR UPSTREAM; do not start V1 implementation
+**Status:** Paperclip owner-fork re-admission pending; do not start V1 implementation
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -9,8 +9,10 @@
 The open-source adoption spike is complete, but the selected stack is not
 admitted. Milestone 0 found blocking Paperclip lease-recovery and pre-run seam
 failures. V1 remains an integration project rather than a greenfield
-orchestration project, but implementation cannot start until Paperclip is fixed
-upstream and re-admitted. See
+orchestration project, but implementation cannot start until the pinned
+`Dzikle/paperclip` fork passes baseline migration and real re-admission. The
+owner chose a maintained account fork on 2026-09-23 and closed the former
+upstream PRs; do not submit upstream work without separate approval. See
 [`MILESTONE_0_DEPENDENCY_ADMISSION.md`](MILESTONE_0_DEPENDENCY_ADMISSION.md).
 
 ## 1. Non-negotiable implementation boundaries
@@ -61,13 +63,14 @@ layout differs.
 
 Do this before production feature code.
 
-**Execution result (2026-09-15): BLOCKED.** Paperclip `5282cab` leaked an active
+**Historical execution result (2026-09-15): BLOCKED.** Paperclip `5282cab` leaked an active
 ephemeral environment lease after controller loss, and the public external
 adapter could not enrich and then delegate to a registered native adapter in the
-same run. Milestone 0B (2026-09-17) prepared/tested minimal upstream proposals
-for recorded host leases and an optional plugin enrichment hook. It is **WAITING
-FOR UPSTREAM**, not an admitted private fork. Next: Milestone 0C supported
-upstream release/image and migration-path re-admission. Do not begin sections 4–8.
+same run. Milestone 0B (2026-09-17) prepared/tested minimal fixes for recorded
+host leases and an optional plugin enrichment hook. On 2026-09-23 the owner
+chose to maintain both in `Dzikle/paperclip`. Next: exact fork image,
+baseline-database migration, and full real re-admission. Do not begin sections
+4–8 until that admission passes.
 
 ### 0.1 Pin and deploy Paperclip
 
@@ -99,16 +102,15 @@ Paperclip creates/claims run
 → persist result
 ```
 
-It passes only if no Paperclip core fork or duplicate run state is needed. If the
-existing adapter context is insufficient, propose a small general upstream
-pre-run enrichment hook and hold V1 feature implementation until accepted or an
-upgrade-safe wrapper is proven.
+It passes only if no duplicate run state is needed. The owner-approved narrow
+Paperclip fork carries the general pre-run hook; hold V1 feature implementation
+until the exact fork image passes re-admission.
 
 Baseline external wrapper failed. Milestone 0B's plugin hook persists a bounded
 artifact reference/digest before the original selected native adapter dispatch
 in the same run. The placeholder native process consumes those bytes; restart
-checks the same durable digest. Wait for upstream acceptance/release; do not
-implement the real Context Resolver against a private patch.
+checks the same durable digest. Do not implement the real Context Resolver
+until the owner-fork revision is admitted.
 
 ### 0.3 Admit the data providers
 

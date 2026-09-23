@@ -6,10 +6,15 @@ platform:
 
 dependencies:
   paperclip:
-    version: "temporary test commit b75cbb5fa6ee408c516e04544365cdcd2ff1a383; NOT ADMITTED"
-    source: "https://github.com/paperclipai/paperclip.git"
+    version: "owner-maintained fork candidate a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f; NOT ADMITTED"
+    source: "https://github.com/Dzikle/paperclip.git"
     license: "MIT"
-    admission_status: "WAITING FOR UPSTREAM; Milestone 1 BLOCKED"
+    admission_status: "FORK RE-ADMISSION PENDING; Milestone 1 BLOCKED"
+    fork_branch: "ai-factory/milestone0-maintained"
+    fork_commit: "a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f"
+    fork_image: null
+    fork_schema_identity: null
+    upstream_tracking: "read-only; no upstream PRs without explicit owner approval"
     upstream_base: "e1f245a6607f3920d1618409ee0d5b90c822d81e"
     upstream_lease_fix: "https://github.com/paperclipai/paperclip/pull/13515"
     latest_upstream_inspected: "8326e33adad63e26c918edf6adf6db114997eced"
@@ -18,16 +23,17 @@ dependencies:
     upstream_ssh_lease_commit: "e319a7e8ddeba95274616d042d143c2343fc6031"
     upstream_enrichment_pr: "https://github.com/paperclipai/paperclip/pull/13773"
     upstream_enrichment_commit: "0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10"
-    milestone0c_validation: "Focused lease 58/58 and enrichment/SDK/plugin-route/MCP 54/54 PASS; corrected OpenAPI and route-authorization suites 52/52 PASS plus server tsc --noEmit. Proposal source trees passed monorepo typecheck and normal production build through an earlier enrichment revision. Lease PR CI pass; enrichment approval-route OpenAPI failure fixed at 0b455c84c, corrected-head CI pending. No supported merged release or migration/re-admission yet."
+    upstream_pr_status: "#13772 and #13773 CLOSED at owner request on 2026-09-23; historical provenance only"
+    milestone0c_validation: "At combined fork source a0225e8, source-equivalent Linux tree passed 121/121 focused server tests, 2/2 plugin SDK tests, pnpm -r typecheck and normal pnpm build. Build stamp still names older test-tree Git commit; exact fork image, baseline migration, and live re-admission remain pending. Former upstream PRs #13772/#13773 closed at owner request; both individual PR CI suites passed."
     test_tree: "8414940ca75347bd85f6b1be58af40697c82c03c"
     seam_test_commit: "d69a384ab1f8e2d68ec1bb16b4aa4874a720b054"
     seam_standalone_commit: "939a02e96847282da5881a3a30f396c51659b32c"
     host_lease_standalone_commit: "0453a773a59403f57f978ecf68359282a025f7ef"
-    image: "aif-paperclip-m0b@sha256:3b4d342b8262f5d6ccc97d0dd6307034c5f3d644e5b52e5a92da33e9527f7943"
-    image_platform_manifest: "sha256:97e08a86247823eba27851706e9af268f9ce20ed5315f2db187933255c9de0b5"
+    historical_0b_image: "aif-paperclip-m0b@sha256:3b4d342b8262f5d6ccc97d0dd6307034c5f3d644e5b52e5a92da33e9527f7943"
+    historical_0b_image_platform_manifest: "sha256:97e08a86247823eba27851706e9af268f9ce20ed5315f2db187933255c9de0b5"
     baseline_commit: "5282cabde84624320e63bd942f6ed5124952f2a2"
     baseline_image: "ghcr.io/paperclipai/paperclip@sha256:99f4de5e419e0292db9912753adb800cca2d761cb839f21c7c1f1096f689fa83"
-    note: "Historical admission-only SDK/server source layer over baseline native-runner/CLI layer, not a normal supported release. Exact 0B commits remain in patches/paperclip/paperclip-m0b-test.bundle. The two independent 0C proposals are real upstream PRs, not a private production fork. A supported merged release, old-database migration and full release re-admission remain gates."
+    note: "historical_0b_image fields are admission-only hybrid image digests, NOT the fork candidate. Exact 0B commits remain in patches/paperclip/paperclip-m0b-test.bundle. The owner now maintains both fixes in Dzikle/paperclip; no immutable fork image is admitted. Exact-commit build, old-database migration and full real re-admission remain gates."
   postgres:
     version: "17.11 (17-alpine image line)"
     license: "PostgreSQL"
@@ -81,4 +87,4 @@ dependencies:
 rollback_policy:
   rule: "Rollback means restoring the recorded volume/database backup and starting the last admitted immutable digest; never retag a mutable image."
   current_admitted_set: null
-  reason: "Milestone 0 waits for upstream Paperclip remediation/release and supported-image re-admission. No private fork or Milestone 1. Restore preserved baseline database+volume together; the temporary newer migration journal is not an in-place downgrade path."
+  reason: "Milestone 0 waits for exact owner-fork Paperclip image, baseline migration, and full real re-admission. No Milestone 1 yet. Restore preserved baseline database+volume together; the temporary newer migration journal is not an in-place downgrade path."
