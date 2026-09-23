@@ -20,8 +20,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-STATE_PATH = ROOT / ".milestone0" / "paperclip-state.json"
+STATE_PATH = Path(
+    os.environ.get("AIF_M0_PAPERCLIP_STATE_PATH", ROOT / ".milestone0" / "paperclip-state.json")
+)
 TEST_ROUND = os.environ.get("AIF_M0_PAPERCLIP_TEST_ROUND", "m0b-host-lease-v3")
+CONTAINER_NAME = os.environ.get("AIF_M0_PAPERCLIP_CONTAINER", "aif-m0-paperclip-paperclip-1")
 
 
 class ApiError(RuntimeError):
@@ -75,7 +78,10 @@ class Client:
 def load_state() -> dict:
     if not STATE_PATH.exists():
         return {}
-    return json.loads(STATE_PATH.read_text(encoding="utf-8"))
+    state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+    if override_url := os.environ.get("AIF_M0_PAPERCLIP_BASE_URL"):
+        state["baseUrl"] = override_url
+    return state
 
 
 def save_state(state: dict) -> None:
@@ -337,7 +343,7 @@ def read_container_bytes(path: str) -> bytes:
     if not path.startswith("/paperclip/"):
         raise RuntimeError(f"refusing to read an unexpected container path: {path}")
     return subprocess.check_output(
-        ["docker", "exec", "aif-m0-paperclip-paperclip-1", "cat", path]
+        ["docker", "exec", CONTAINER_NAME, "cat", path]
     )
 
 
@@ -467,7 +473,7 @@ def process_crash() -> None:
         [
             "docker",
             "exec",
-            "aif-m0-paperclip-paperclip-1",
+            CONTAINER_NAME,
             "sh",
             "-lc",
             f"kill -9 {pid}",

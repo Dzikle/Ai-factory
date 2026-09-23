@@ -1,0 +1,50 @@
+name: aif-m0-paperclip-fork
+
+# Admission-only controller. It connects to a restored copy of the baseline DB
+# and storage; the original Paperclip database and volume are never mounted.
+services:
+  paperclip-fork:
+    image: aif-paperclip-fork:62760ac
+    environment:
+      DATABASE_URL: postgresql://paperclip:${AIF_M0_POSTGRES_PASSWORD:?set AIF_M0_POSTGRES_PASSWORD}@aif-m0-paperclip-postgres-1:5432/paperclip_fork_m0
+      PAPERCLIP_MIGRATION_AUTO_APPLY: "true"
+      PORT: "3100"
+      PAPERCLIP_BIND: custom
+      PAPERCLIP_BIND_HOST: 0.0.0.0
+      PAPERCLIP_ALLOWED_HOSTNAMES: localhost,127.0.0.1,paperclip-fork
+      PAPERCLIP_PUBLIC_URL: http://localhost:13101
+      PAPERCLIP_API_URL: http://paperclip-fork:3100
+      PAPERCLIP_DEPLOYMENT_MODE: authenticated
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: private
+      BETTER_AUTH_SECRET: ${AIF_M0_BETTER_AUTH_SECRET:?set AIF_M0_BETTER_AUTH_SECRET}
+      PAPERCLIP_AGENT_JWT_SECRET: ${AIF_M0_AGENT_JWT_SECRET:?set AIF_M0_AGENT_JWT_SECRET}
+      PAPERCLIP_SECRETS_MASTER_KEY: ${AIF_M0_SECRETS_MASTER_KEY:?set AIF_M0_SECRETS_MASTER_KEY}
+      PAPERCLIP_SECRETS_STRICT_MODE: "true"
+    ports:
+      - "127.0.0.1:13101:3100"
+    volumes:
+      - fork-restored-data:/paperclip
+      - type: bind
+        source: ../fixtures/paperclip
+        target: /milestone0
+        read_only: true
+    networks:
+      - baseline-postgres
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:3100/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    pids_limit: 512
+    restart: "no"
+
+volumes:
+  fork-restored-data:
+    external: true
+    name: aif-m0-fork-restore-data
+
+networks:
+  baseline-postgres:
+    external: true
+    name: aif-m0-paperclip_default
