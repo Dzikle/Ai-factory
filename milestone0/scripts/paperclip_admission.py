@@ -327,7 +327,7 @@ def configure_process_agent(client: Client, agent_id: str, sleep_ms: int) -> Non
                 "command": "node",
                 "args": ["/milestone0/finite-agent.mjs"],
                 "cwd": "/paperclip",
-                "timeoutSec": 180,
+                "timeoutSec": max(180, (sleep_ms + 999) // 1_000 + 300),
                 "graceSec": 2,
                 "env": {
                     "AIF_M0_OUTPUT_DIR": "/paperclip/milestone0-runs",
@@ -623,7 +623,7 @@ def orphan_prepare() -> None:
     state, client = state_client()
     company_id = state["companyId"]
     agent_id = state["agents"]["developer"]
-    configure_process_agent(client, agent_id, 300_000)
+    configure_process_agent(client, agent_id, 900_000)
     client.request("POST", f"/api/agents/{agent_id}/pause", expected=(200,))
     _, issue = client.request(
         "POST",
@@ -656,7 +656,7 @@ def orphan_prepare() -> None:
     if not isinstance(run_id, str):
         raise RuntimeError(f"orphan wake returned no run id: {wake}")
     run = wait_run_process(client, run_id)
-    # The already-spawned child keeps its captured five-minute delay. A recovered
+    # The already-spawned child keeps its captured fifteen-minute delay. A recovered
     # successor reads this 1s configuration after the controller restarts.
     configure_process_agent(client, agent_id, 1_000)
     state.pop("orphanSuccessorRunId", None)
