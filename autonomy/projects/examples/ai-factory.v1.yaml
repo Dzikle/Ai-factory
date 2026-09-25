@@ -1,0 +1,26 @@
+schema_version: 1
+project_id: ai-factory
+repositories:
+  - id: ai-factory
+    remote: https://github.com/Dzikle/Ai-factory
+    canonical_paths:
+      - AGENTS.md
+      - autonomy/
+      - docs/architecture/
+      - docs/decisions/
+allowed_skills:
+  - repository-discovery
+  - code-review
+allowed_capabilities:
+  - repo.read
+  - repo.search
+  - git.read
+  - git.diff.read
+  - validation.run
+  - knowledge.search
+  - artifact.write
+denied_capabilities:
+  - repo.merge
+  - production.deploy
+memory_namespace: ai-factory
+knowledge_project_filter: ai-factory

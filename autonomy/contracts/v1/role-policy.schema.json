@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Dzikle/Ai-factory/blob/main/autonomy/contracts/v1/role-policy.schema.json",
+  "title": "AI Factory logical role capability policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "default", "roles"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "default": {"const": "deny"},
+    "roles": {
+      "type": "object", "minProperties": 1,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object", "additionalProperties": false,
+          "required": ["allowed_capabilities", "denied_capabilities"],
+          "properties": {
+            "allowed_capabilities": {"$ref": "#/$defs/capabilities"},
+            "denied_capabilities": {"$ref": "#/$defs/capabilities"}
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "capabilities": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$"}}
+  }
+}

@@ -1,0 +1,76 @@
+schema_version: 1
+default: deny
+roles:
+  orchestrator:
+    allowed_capabilities:
+      - repo.read
+      - knowledge.search
+      - knowledge.msearch
+      - memory.search
+    denied_capabilities:
+      - repo.write
+      - repo.merge
+      - production.deploy
+  researcher:
+    allowed_capabilities:
+      - repo.read
+      - repo.search
+      - git.read
+      - knowledge.search
+      - memory.search
+      - artifact.write
+    denied_capabilities:
+      - repo.merge
+      - production.deploy
+  architect:
+    allowed_capabilities:
+      - repo.read
+      - repo.search
+      - git.read
+      - knowledge.search
+      - knowledge.msearch
+      - memory.search
+      - artifact.write
+    denied_capabilities:
+      - repo.merge
+      - production.deploy
+  developer:
+    allowed_capabilities:
+      - repo.read
+      - repo.search
+      - git.read
+      - git.diff.read
+      - repo.write
+      - validation.run
+      - knowledge.search
+      - memory.search
+      - artifact.write
+    denied_capabilities:
+      - repo.merge
+      - production.deploy
+  reviewer:
+    allowed_capabilities:
+      - repo.read
+      - repo.search
+      - git.read
+      - git.diff.read
+      - validation.run
+      - knowledge.search
+      - memory.search
+      - artifact.write
+    denied_capabilities:
+      - repo.write
+      - repo.merge
+      - production.deploy
+  qa:
+    allowed_capabilities:
+      - repo.read
+      - repo.search
+      - git.read
+      - knowledge.search
+      - memory.search
+      - artifact.write
+    denied_capabilities:
+      - repo.write
+      - repo.merge
+      - production.deploy

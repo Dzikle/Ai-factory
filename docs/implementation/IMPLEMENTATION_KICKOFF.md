@@ -152,6 +152,13 @@ before deployment beyond the validated local host.
 projection boundaries; do not infer permission to implement all later V1
 workflows at once.
 
+**In progress (2026-09-25):** The first 1.1 Git contract slice now defines
+versioned project-overlay, Agent Skills sidecar, capability-vocabulary, and
+deny-default role-policy schemas, with an offline consistency check against
+the existing skill specimens. These are not active Paperclip grants. The
+remaining 1.1 schemas, 1.2 policy materialization, and 1.3 projections remain
+unimplemented; Milestone 1 is not yet complete.
+
 ### 1.1 Canonical Git contracts
 
 Commit versioned schemas for:

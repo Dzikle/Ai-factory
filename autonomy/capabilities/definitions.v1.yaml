@@ -1,0 +1,66 @@
+schema_version: 1
+capabilities:
+  - id: repo.read
+    description: Read files in the assigned repository scope.
+    effect: read
+    lifecycle: active
+  - id: repo.search
+    description: Search text and paths within the assigned repository scope.
+    effect: read
+    lifecycle: active
+  - id: git.read
+    description: Read Git metadata and revisions without mutation.
+    effect: read
+    lifecycle: active
+  - id: git.diff.read
+    description: Read Git diffs without mutation.
+    effect: read
+    lifecycle: active
+  - id: repo.write
+    description: Modify files only inside an assigned task workspace.
+    effect: write
+    lifecycle: active
+  - id: repo.merge
+    description: Integrate a task branch into a protected branch.
+    effect: write
+    lifecycle: experimental
+  - id: validation.run
+    description: Execute approved build and test commands in the task workspace.
+    effect: write
+    lifecycle: active
+  - id: knowledge.search
+    description: Run bounded, filtered retrieval against the knowledge projection.
+    effect: read
+    lifecycle: active
+  - id: knowledge.msearch
+    description: Run bounded multi-domain retrieval against the knowledge projection.
+    effect: read
+    lifecycle: active
+  - id: memory.search
+    description: Retrieve scoped historical experience, not current policy.
+    effect: read
+    lifecycle: active
+  - id: memory.write
+    description: Record provenance-bearing experience in the memory authority.
+    effect: write
+    lifecycle: experimental
+  - id: code.graph.search
+    description: Query a revision-stamped derived code graph.
+    effect: read
+    lifecycle: disabled
+  - id: artifact.read
+    description: Read permitted task artifacts through the authoritative storage provider.
+    effect: read
+    lifecycle: active
+  - id: artifact.write
+    description: Write task artifacts through the authoritative storage provider.
+    effect: write
+    lifecycle: active
+  - id: browser.navigate
+    description: Navigate an approved browser session for QA.
+    effect: write
+    lifecycle: experimental
+  - id: production.deploy
+    description: Deploy to a production environment.
+    effect: admin
+    lifecycle: disabled

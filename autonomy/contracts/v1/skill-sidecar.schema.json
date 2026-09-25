@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Dzikle/Ai-factory/blob/main/autonomy/contracts/v1/skill-sidecar.schema.json",
+  "title": "AI Factory Agent Skills sidecar v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "skill", "skill_version", "lifecycle", "risk", "roles", "required_capabilities"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "skill": {"$ref": "#/$defs/identifier"},
+    "skill_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "lifecycle": {"enum": ["experimental", "active", "deprecated"]},
+    "risk": {"enum": ["low", "medium", "high"]},
+    "roles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}},
+    "required_capabilities": {"$ref": "#/$defs/capabilities"},
+    "optional_capabilities": {"$ref": "#/$defs/capabilities"},
+    "denied_capabilities": {"$ref": "#/$defs/capabilities"},
+    "eval_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^evals/[a-z0-9][a-z0-9._/-]*$"}}
+  },
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "capabilities": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$"}}
+  }
+}

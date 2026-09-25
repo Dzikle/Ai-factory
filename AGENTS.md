@@ -53,8 +53,9 @@ Before implementing a substantial subsystem:
 **Current Paperclip exception:** The owner chose an account-maintained fork on
 2026-09-23. Develop Paperclip fixes only in `Dzikle/paperclip`, pinned by exact
 commit in `milestone0/dependencies.lock.yaml`; upstream is read-only unless the
-owner explicitly approves a new submission. The fork is not admitted until the
-Milestone 0 report records migration and full real fault/security/restore gates.
+owner explicitly approves a new submission. The fork is admitted at the exact
+revision/image/schema recorded in the Milestone 0 report after migration and
+real fault/security/restore gates.
 This exception supersedes historical no-fork language in older admission notes.
 
 The Phase 0.5 decisions are recorded in the adoption matrix and ADRs. Do not

@@ -35,12 +35,13 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 - Policies → `policies/README.md`
 - Evaluation framework → `evals/README.md`
 - Project overlays → `projects/README.md`
+- Versioned Git contracts → [`contracts/README.md`](contracts/README.md)
 
 ## Current phase rule
 
-Phase 0.5 is complete. During Phase 1, agents must follow the selected
-integration boundaries and pass Milestone 0 dependency gates before substantial
-V1 feature implementation.
+Phase 0.5 and the Paperclip Milestone 0 dependency gate are complete. During
+Phase 1, agents must follow the selected integration boundaries. The first
+Milestone 1 contract slice does not activate runtime permissions or workflows.
 
 Changes that introduce a second task/workflow, MCP policy, memory, sandbox
 lifecycle, or graph authority require a new ADR and evidence that the existing

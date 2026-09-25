@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Dzikle/Ai-factory/blob/main/autonomy/contracts/v1/project-overlay.schema.json",
+  "title": "AI Factory project overlay v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project_id", "repositories", "allowed_skills", "allowed_capabilities", "denied_capabilities", "memory_namespace", "knowledge_project_filter"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "project_id": {"$ref": "#/$defs/identifier"},
+    "repositories": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "remote", "canonical_paths"],
+        "properties": {
+          "id": {"$ref": "#/$defs/identifier"},
+          "remote": {"type": "string", "minLength": 1},
+          "canonical_paths": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "allowed_skills": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}},
+    "allowed_capabilities": {"$ref": "#/$defs/capabilities"},
+    "denied_capabilities": {"$ref": "#/$defs/capabilities"},
+    "memory_namespace": {"$ref": "#/$defs/identifier"},
+    "knowledge_project_filter": {"$ref": "#/$defs/identifier"}
+  },
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "capabilities": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$"}}
+  }
+}
