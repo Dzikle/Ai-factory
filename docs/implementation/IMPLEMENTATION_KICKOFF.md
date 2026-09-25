@@ -263,13 +263,23 @@ pinned local OpenSearch 3.8.0 cluster indexed the committed overlay documents,
 then observed zero writes on replay and verified a retrieved Git revision and
 content digest. A guarded delete/recreate/rebuild of only the verified
 `ai_factory_docs_v1` test index restored the same document count from Git.
-The live smoke used the local test admin credential; it is **not**
-the final least-privilege deployment credential gate. Git full scans are the
-replay/reconciliation mechanism for this slice, not a second authoritative
-cursor. No Context Resolver or workflow was implemented.
+The first live smoke used the local test admin credential. A subsequent live
+OpenSearch Security probe used temporary independent reader/writer principals
+from `milestone1/opensearch_security.py`: allowed bulk indexing and filtered
+search worked through the aliases, unchanged replay issued zero writes, and
+forbidden read/write/admin/delete actions returned 403 (including writes to an
+out-of-scope index and bulk delete). The reader has search only; the writer
+has bulk/index only. Security checks require the underlying physical index in
+each role even when the client
+uses an alias, and the `_bulk` entry point requires its cluster action. The
+test did not alter the Milestone 0 principals and cleaned up its temporary
+users, roles and out-of-scope probe index. This proves effective local
+permissions, **not** production credential provisioning or scheduling. Git
+full scans are the replay/reconciliation mechanism for this slice, not a
+second authoritative cursor. No Context Resolver or workflow was implemented.
 
-**Still required before 1.3 exit:** dedicated read/write credentials and
-role-denial proof and one-writer scheduling for the new aliases; capability/skill,
+**Still required before 1.3 exit:** provision dedicated production read/write
+credentials and enforce one-writer scheduling for the new aliases; capability/skill,
 Paperclip task/run/event/telemetry, MemPalace and artifact projections; durable
 Paperclip event cursor/dead-letter and source reconciliation; CodeGraph symbol
 pointers only after its separate security admission. The 1.3 exit condition
