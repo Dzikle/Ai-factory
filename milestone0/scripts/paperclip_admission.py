@@ -623,7 +623,7 @@ def orphan_prepare() -> None:
     state, client = state_client()
     company_id = state["companyId"]
     agent_id = state["agents"]["developer"]
-    configure_process_agent(client, agent_id, 60_000)
+    configure_process_agent(client, agent_id, 300_000)
     client.request("POST", f"/api/agents/{agent_id}/pause", expected=(200,))
     _, issue = client.request(
         "POST",
@@ -656,7 +656,7 @@ def orphan_prepare() -> None:
     if not isinstance(run_id, str):
         raise RuntimeError(f"orphan wake returned no run id: {wake}")
     run = wait_run_process(client, run_id)
-    # The already-spawned child keeps its captured 60s delay. A recovered
+    # The already-spawned child keeps its captured five-minute delay. A recovered
     # successor reads this 1s configuration after the controller restarts.
     configure_process_agent(client, agent_id, 1_000)
     state.pop("orphanSuccessorRunId", None)
