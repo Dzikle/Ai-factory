@@ -1,0 +1,10 @@
+{
+  "name": "@ai-factory/milestone1-git-context-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "paperclipPlugin": {
+    "manifest": "./dist/manifest.mjs",
+    "worker": "./dist/worker.mjs"
+  }
+}

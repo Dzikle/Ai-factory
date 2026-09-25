@@ -8,6 +8,7 @@ from jsonschema import Draft202012Validator, ValidationError
 import yaml
 
 from milestone1.validate_contracts import check_consistency
+from milestone1.git_projection import collect_snapshot
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,6 +22,17 @@ def validate(name: str, document: dict) -> None:
 
 
 class CanonicalContractTests(unittest.TestCase):
+    def test_first_task_plan_is_in_project_canonical_projection_scope(self) -> None:
+        overlay = yaml.safe_load(
+            (ROOT / "autonomy" / "projects" / "examples" / "ai-factory.v1.yaml").read_text(encoding="utf-8")
+        )
+        repository = overlay["repositories"][0]
+        snapshot = collect_snapshot(
+            ROOT, project_id=overlay["project_id"], repository_id=repository["id"],
+            remote=repository["remote"], canonical_paths=repository["canonical_paths"],
+        )
+        self.assertIn("docs/implementation/IMPLEMENTATION_KICKOFF.md", {item["path"] for item in snapshot})
+
     def test_existing_agent_skills_sidecars_are_compatible(self) -> None:
         base = ROOT / "docs" / "implementation" / "pocs" / "agent-skills" / ".agents" / "skills"
         for skill in ("repository-discovery", "code-review"):

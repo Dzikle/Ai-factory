@@ -8,6 +8,7 @@ repositories:
       - autonomy/
       - docs/architecture/
       - docs/decisions/
+      - docs/implementation/IMPLEMENTATION_KICKOFF.md
 allowed_skills:
   - repository-discovery
   - code-review
