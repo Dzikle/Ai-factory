@@ -2,6 +2,13 @@
 
 Workflows are durable state-machine paths, not conversational scripts.
 
+The stages below describe engineering semantics. In V1, Paperclip is the sole
+runtime state owner: Developer is the issue assignee; deterministic validation,
+Reviewer, optional QA/UX, and human integration approval map to ordered native
+`IssueExecutionPolicy` review/approval participants. See the live Milestone 1.2
+policy probe in `docs/implementation/IMPLEMENTATION_KICKOFF.md`. This document
+does not authorize a second implementation state machine.
+
 ## Baseline V1 state machine
 
 ```text

@@ -160,8 +160,8 @@ budgets, normalized events, memory/promotion, model policy, and validation/
 review outcomes. Offline cross-field checks reject unavailable capabilities,
 cross-project context, and self-review claims. These are not active Paperclip
 grants or a real Context Resolver, and provider event-shape compatibility is
-not yet proven. Sections 1.2 and 1.3 remain unimplemented; Milestone 1 is not
-complete.
+not yet proven. Section 1.2's policy mapping has since been live-probed below;
+1.3 remains unimplemented. Milestone 1 is not complete.
 
 ### 1.1 Canonical Git contracts
 
@@ -193,6 +193,60 @@ Developer implementation
 
 Use distinct logical agent IDs, read-oriented Reviewer/QA profiles, explicit
 return-to-implementation transitions, and no-self-approval checks.
+
+**1.2 policy mapping verified (2026-09-25, fork `62760ac`):**
+`milestone1/paperclip_policy.py` creates one native `IssueExecutionPolicy` at
+issue creation. Developer is the issue assignee, not a review stage. The first
+`review` participant is a deterministic validator process, the next is a
+separate Reviewer, optional QA/UX is another `review` participant, and the
+last `approval` participant is a board user. The template rejects shared
+Developer/validator/Reviewer/QA IDs and caps unattended changes-requested
+rounds at three. Paperclip alone owns assignment, stage state, decisions,
+comments, retries and human escalation; AI Factory stores no duplicate task
+state. Do not reapply a freshly generated policy in the middle of a review:
+Paperclip generates stage IDs at creation and a mid-flow edit can change them.
+
+Live policy probes against the admitted Docker/PostgreSQL fork image:
+
+| Gate | Evidence | Result |
+| --- | --- | --- |
+| Validation → Reviewer → QA → board approval stage | Issue `d0d3b3b3-e5ea-4a3c-b103-65a8094f0fe9` | Four distinct issue-bound agent runs in policy order; held at the board-user stage, then a **simulated board-key approval** completed it. No physical human approval was performed. |
+| QA omitted | Issue `8c977c53-bf47-4ac1-88ac-fef30145073c` | Three distinct issue-bound runs; no QA stage or agent; final approval simulated with a board key. |
+| Failed deterministic check | Issue `9628e0e4-f2b9-4b2b-a30e-5534755249f2` | Three failed checks returned to Developer (two resubmissions), then Paperclip escalated to a board user; Reviewer/QA received no issue-bound runs. Disposable issue cancelled after proof. |
+| Reviewer/QA external access | Passing issue probe | Fresh agents had no external MCP grants. This safe routing probe does not alter the shared Milestone 0 connection/install list. A separate earlier exploratory run successfully configured `SearchIndexTool`-only effective profiles, but native Reviewer/QA runtime delivery remains for the real vertical slice. |
+| Evidence integrity | Passing issue probe | Validation comment linked to its run and `file:///paperclip/...` artifact; container bytes matched SHA-256 and artifact fields matched issue, run, agent, target hash, exit code, and verdict. |
+
+The two process-fixture scripts are **not** a production engineering workflow
+pack. The validator only runs `node --check` on a mounted fixture; Reviewer/QA
+fixtures make synthetic approvals rather than reviewing code. Artifact bytes
+live in the disposable Paperclip test volume and are referenced by comments;
+production artifact registration, real checks and real independent judgment
+belong to the later vertical slice. Paperclip can mark a run `cancelled` when
+that run's own issue update reassigns the issue; the durable execution decision
+and issue state, not a simplistic run-success count, prove a stage advanced.
+The process adapter's connection-intent broker is **not** the native named MCP
+gateway. The repeatable probes assert deny-default effective profiles; the
+exact native search-only gateway allow/deny behavior was separately proved in
+Milestone 0, not by the process fixture. Reviewer/QA native-adapter runtime
+grants need rechecking in the real Milestone 2 slice. All probe agents are
+paused in a `finally` block; failed fixtures are cancelled when possible and
+cleanup errors are recorded. The probe checks the running image ID against
+the admitted dependency lock before mutating test state. It does not repeat
+the Milestone 0 database migration/schema admission.
+
+Repeat focused checks:
+
+```powershell
+node --test milestone0/fixtures/paperclip/validation-agent.test.mjs
+uv run --no-project --with 'jsonschema[format]==4.25.1' --with 'PyYAML==6.0.2' python -m unittest discover -s tests -q
+python -m milestone1.paperclip_policy_probe
+$env:AIF_M1_INCLUDE_QA='0'; python -m milestone1.paperclip_policy_probe
+python -m milestone1.paperclip_policy_failure_probe
+```
+
+The live probes require the ignored local Milestone 0 readmission state file,
+the exact admitted Paperclip image, and its disposable Docker/PostgreSQL
+environment; they are not CI tests.
 
 ### 1.3 OpenSearch projection foundation
 

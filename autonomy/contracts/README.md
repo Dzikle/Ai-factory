@@ -45,5 +45,7 @@ uv run --no-project --with 'jsonschema[format]==4.25.1' --with 'PyYAML==6.0.2' p
 
 These are initial versioned contracts and synthetic fixtures. They have not
 yet been exercised against real Paperclip/MemPalace event streams or a live
-Context Resolver. Milestone 1.2 Paperclip policy materialization and Milestone
-1.3 OpenSearch projectors are not implemented here.
+Context Resolver. The separate Milestone 1.2 native Paperclip issue-policy
+mapping is documented in `docs/implementation/IMPLEMENTATION_KICKOFF.md`;
+these schemas do not become Paperclip workflow state. Milestone 1.3 OpenSearch
+projectors are not implemented here.
