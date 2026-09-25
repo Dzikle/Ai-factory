@@ -1,6 +1,6 @@
 # AI Factory — Milestone 0 Dependency Admission
 
-**Status:** OWNER-MAINTAINED FORK — PARTIAL RE-ADMISSION PASS / LIVE CONTROLLER-LOSS GATE PENDING; Milestone 1 remains BLOCKED
+**Status:** ADMITTED — owner-maintained Paperclip fork; Milestone 1 unblocked (CodeGraphContext remains disabled)
 
 **Executed:** 2026-09-15 (baseline); 2026-09-16–17 (Milestone 0B); 2026-09-21–23 (Milestone 0C/fork decision); 2026-09-25 (fork re-admission)
 
@@ -32,17 +32,17 @@ not results for this tar-streamed production build.
 The earlier combined source-equivalent Linux tree passed 121/121 focused server
 tests, 2/2 plugin SDK tests, monorepo typecheck, and normal `pnpm build`. That
 tree's build stamp named an older test-tree Git commit. The exact fork image
-passed 66/66 focused tests. An isolated restored baseline migrated in place,
-and child-loss, locking, effective capability, enrichment/restart, and paired
-restore gates passed. This is **not** admission: abrupt controller loss before
-and after lease expiry, orphan reconciliation, explicit resume, and repeated
-source/successor lease-receipt checks remain unproven on this image. The original
-baseline database/storage were not migrated or overwritten. Milestone 1 remains
-blocked until the remaining real Docker/PostgreSQL fault gates pass.
+passed 66/66 focused tests. An isolated restored baseline migrated in place.
+Child loss, locking, effective capability, same-run enrichment/restart, both
+live controller-loss timings, orphan reconciliation, explicit resume, repeated
+lease-receipt checks, and paired DB/storage restore passed on that image. The
+original baseline database/storage were not migrated or overwritten. Paperclip
+is admitted as the sole operational authority; Milestone 1 may begin within
+the boundaries of the implementation plan.
 
 | Dependency boundary | Verdict | Admission result |
 | --- | --- | --- |
-| Paperclip control plane | **FORK CANDIDATE — NOT ADMITTED** | Exact owner-fork image and isolated baseline migration pass; live abrupt-controller recovery remains pending. Section 3.0 is current evidence. |
+| Paperclip control plane | **ADMITTED — OWNER-MAINTAINED FORK** | Exact owner-fork image, isolated baseline migration, both live controller-loss timings, capability/enrichment and post-recovery restore pass. Section 3.0 is current evidence. |
 | PostgreSQL durability | **PASS** | Persistent restart and `pg_dump`/restore counts match. |
 | Agent Skills format | **PASS** | Both skills validate and lazily load in metadata and prompt-catalog styles. |
 | OpenSearch 3.8.0 | **PASS** | Role isolation, filtered/multi-search, alias rebuild, persistence and loss recovery pass. |
@@ -113,10 +113,38 @@ repair removed no repository, image, persistent volume, or unrelated container.
 | Fork | [Dzikle/paperclip](https://github.com/Dzikle/paperclip), branch `ai-factory/milestone0-maintained`, current commit `62760ac9fc69572866c8eed5ad714ab1ddd6cc23`; fixes combined at `a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f` (merge parents `0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10` enrichment and `e319a7e8ddeba95274616d042d143c2343fc6031` SSH lease). |
 | Upstream PRs | [#13772](https://github.com/paperclipai/paperclip/pull/13772) and [#13773](https://github.com/paperclipai/paperclip/pull/13773) **CLOSED** at owner request; do not reopen or submit future upstream PRs without explicit approval. |
 | Normal source validation | Source-equivalent Linux tree: 121/121 focused server tests, 2/2 plugin SDK tests, `pnpm -r typecheck` PASS, `pnpm build` PASS. Build stamp names the older test-tree Git commit, so it is not an exact-commit release artifact. |
-| Immutable fork image | **BUILT, NOT ADMITTED**. Exact Git-blob tar SHA-256 `5BECC12868C829A9A10934511ED54DA0236841373DC51EB8C56654775E70BC7B`; normal `--target production` build exited 0. Local `aif-paperclip-fork:62760ac` image ID `sha256:2c574c948ce21a22cf6e8bbcf136b99b8e55bd2d460042ec69fa62bbbc224455`, linux/amd64; platform manifest `sha256:5a663d9396e6461ecaf55ac5fed005fc4ca423da87fe6ce4c1292efc56987ab7`. `/app/server/dist/build-info.json` records the full fork commit. Exact-image focused regressions: 66/66. The old 0B hybrid image remains historical only. |
+| Immutable fork image | **ADMITTED**. Exact Git-blob tar SHA-256 `5BECC12868C829A9A10934511ED54DA0236841373DC51EB8C56654775E70BC7B`; normal `--target production` build exited 0. Local `aif-paperclip-fork:62760ac` image ID `sha256:2c574c948ce21a22cf6e8bbcf136b99b8e55bd2d460042ec69fa62bbbc224455`, linux/amd64; platform manifest `sha256:5a663d9396e6461ecaf55ac5fed005fc4ca423da87fe6ce4c1292efc56987ab7`. `/app/server/dist/build-info.json` records the full fork commit. Exact-image focused regressions: 66/66. This is a local immutable image, not a registry-published release; preserve the source pin and rebuild receipt. The old 0B hybrid image remains historical only. |
 | Migration result | **PASS on isolated restored baseline**. PostgreSQL 17.11 database `paperclip_fork_m0` migrated in place from 279 to 283 Drizzle rows (latest journal timestamp `1790018362070`) with no manual journal/schema editing. A fresh pre-upgrade dump restored separately; all issue/run/lease/workspace ID hashes matched afterward (6/22/21/0). Paired pre-upgrade DB/storage backups are under ignored `.milestone0/fork-readmission-20260923/pre-migration-20260925/`; original baseline untouched. |
-| Re-admission result | **PARTIAL PASS**. Child kill → explicit reconciliation → successful successor; both leases terminal and issue locks clear. Atomic checkout 200/409. Read-only `aif_agent` OpenSearch MCP effective catalog: one external search tool; search succeeds, msearch is deny-default. Optional enricher persisted one artifact ref/digest, the original `process` adapter consumed it under the same run ID, and it survived ordinary restart. Paired DB/storage restore reproduced 1 company, 4 agents, 10 issues, 28 runs, 26 leases and identical row fingerprints; restored artifact bytes matched the recorded SHA-256. Abrupt controller loss before/after lease expiry, orphan reconciliation/resume, no duplicate writer, and repeated receipts remain pending. |
-| Milestone 0 final status | **LIVE CONTROLLER-LOSS GATE PENDING — NOT ADMITTED; Milestone 1 BLOCKED**. |
+| Re-admission result | **PASS**. Child kill/reconciliation/successor and atomic checkout 200/409 passed. Controller exit 137 while source run+lease were active was tested with restart both before and after controller-lease expiry. Startup/orphan recovery, explicit reconciliation and resume produced terminal source/successor leases, stable repeated cleanup receipts, clear issue locks and non-overlapping execution intervals. The effective external MCP catalog remained exactly one search tool; allowed search succeeded and denied msearch returned 403 `deny_default` after broad grants were removed. The optional enricher persisted one ref/digest consumed by the original `process` adapter under the same run ID; it survived multiple restarts and restored bytes verified its SHA-256. Post-recovery paired DB/storage restore matched all source identities/statuses. |
+| Milestone 0 final status | **ADMITTED — Paperclip gate PASS; Milestone 1 unblocked.** CodeGraphContext stays disabled pending its separate security gate. |
+
+Live fork-image fault evidence (2026-09-25): fast controller kill at
+`10:10:16Z` interrupted run `c21df6b9-991e-4b8f-b6c6-fbd2181517a7`;
+restart preceded its refreshed controller-lease expiry. The source lease
+converged to `expired` at `10:14:34Z`; explicit resume run
+`0135da35-0748-4558-bfc3-8a7802118696` succeeded and released its lease.
+The second kill at `10:52:51Z` stopped live run
+`964637e2-9bf7-465e-ba70-41e69cc4a2ea`; restart occurred after its
+`10:53:44Z` lease expiry. Startup marked the lost process failed, required
+explicit effect reconciliation, then successful successor runs released their
+leases. A competing queued run was cancelled during `preparing` before any
+environment lease existed (zero matching DB rows). The admission driver's
+repeat-check regression now handles that narrow case without excusing a missing
+lease from a run that acquired one. Repeated reports found eight tracked runs,
+all acquired leases terminal, unchanged release receipts, clear locks, no live
+writer and no overlapping task intervals.
+
+The post-recovery quiesced snapshot restored to separate database
+`paperclip_fork_postrecovery_restore` and volume
+`aif-m0-fork-postrecovery-restore`. Source/restored fingerprints matched for
+1 company, 4 agents, 17 issues, 46 runs, 43 leases and 0 workspaces. Both
+volumes' artifact bytes hash to
+`d18224e97e0931f8a26b62e99ed0c6f65ea5f231a83e91442926fb0747a4a35c`,
+matching both run snapshots. Ignored paired backup SHA-256 receipts are
+`DEC52D6AD323C166380A537CF94482867553698ABBD211AB585D8BDF9EC115FB`
+(DB) and `27A473F9FB5FA2F4BC4390B7537C464E48751AE8B67DCCB7EBE67918F2B5AB6E`
+(storage). The source controller restarted healthy; a further recovery report
+kept all receipts stable. The admission-driver regression suite passes 2/2.
 
 The owner started Docker Desktop for this attempt. The normal default-cloud
 source build passed compilation but exhausted host disk during image export;
@@ -129,8 +157,8 @@ restarted the host, freeing about 25 GB. The first retry accidentally used an
 older extracted context whose lockfile lacked the pinned `@lezer/common`
 override; the verified archive contained it. Streaming that exact tar directly
 to Docker avoided the stale copy and Windows symlink extraction errors. The
-production export then completed normally. Admission is still withheld pending
-the live controller-loss gates, not disk space or migration.
+production export then completed normally. The subsequent live controller-loss
+gates above passed; the earlier disk and extraction failures are historical.
 
 Maintaining this fork is an explicit owner decision and transfers security
 updates, upstream rebases, regression testing, and release-image provenance to
@@ -782,26 +810,20 @@ Generated secrets, database dumps, board state, cloned upstream sources, graph
 databases, and runtime logs are deliberately ignored and are not canonical
 repository artifacts.
 
-## 11. Required next milestone
+## 11. Next implementation milestone
 
-**Exact owner-fork revision re-admission**, not Milestone 1:
-
-1. Build the pinned `Dzikle/paperclip` fork commit with the normal source and
-   container build path; record image digest and schema identity. Do not reuse
-   the historical 0B hybrid image or a mutable tag.
-2. Back up the preserved baseline database and Paperclip storage together, then
-   prove a supported in-place upgrade or documented export/import preserving
-   task/run/workspace identities. Do not rewrite migration journals.
-3. Repeat the live kill/orphan/lease/resume/locking/profile/backup/enrichment/
-   delegation/digest gates on that exact fork image. Only a committed **ADMITTED** result
-   unblocks Milestone 1 contracts/policies/projections.
-4. Before graph enablement, require upstream-compatible regenerated SCIP
-   bindings/fixed protobuf, a trimmed audited image, and functional re-admission.
-   Current graph integration remains disabled rather than adding another graph.
-5. Carry forward the final MIT-core-only LiteLLM decision and verified offline
-   MemPalace cache/readiness profile; retain explicit retrieval-quality evals.
+**Milestone 1 is unblocked, but was not implemented by this admission work.**
+Start with the canonical Git contracts, project overlays and source-of-truth
+schemas in the [integration-first kickoff](IMPLEMENTATION_KICKOFF.md). Then
+implement the bounded Context Resolver against the admitted pre-run hook and
+governed MCP surface, followed by idempotent OpenSearch projections and
+role/capability policy templates. Do not add a second task engine or MCP
+authority. Keep CodeGraphContext disabled until compatible SCIP/protobuf
+remediation, trimmed audited runtime and functional re-admission pass; carry
+forward MIT-core-only LiteLLM and the pinned MemPalace embedding cache.
 
 No actual Context Resolver, projection worker, capability compiler, engineering
-workflow, model selection, self-healing or self-improvement was implemented or
-authorized. Paperclip remains the intended sole operational authority after
-admission; DBOS/custom control plane are not silent fallbacks.
+workflow, model selection, self-healing or self-improvement was implemented in
+Milestone 0. The local admitted image is not registry-published; publish an
+owner-controlled immutable artifact before deploying beyond this host, without
+changing the recorded admission result or silently retagging it.

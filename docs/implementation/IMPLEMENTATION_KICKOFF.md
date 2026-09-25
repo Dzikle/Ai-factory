@@ -1,24 +1,23 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Paperclip owner-fork re-admission pending; do not start V1 implementation
+**Status:** Milestone 0 Paperclip gate ADMITTED; Milestone 1 may start (no V1 workflow implemented yet)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
 **Matrix:** [`../decisions/ADOPTION_MATRIX.md`](../decisions/ADOPTION_MATRIX.md)
 
-The open-source adoption spike is complete, but the selected stack is not
-admitted. Milestone 0 found blocking Paperclip lease-recovery and pre-run seam
-failures. V1 remains an integration project rather than a greenfield
-orchestration project, but implementation cannot start until the pinned
-`Dzikle/paperclip` fork passes baseline migration and real re-admission. The
-owner chose a maintained account fork on 2026-09-23 and closed the former
-upstream PRs; do not submit upstream work without separate approval. See
+The open-source adoption spike and Milestone 0 dependency admission are
+complete. The owner-maintained `Dzikle/paperclip` fork at `62760ac9` passed
+exact-image baseline migration and real Docker/PostgreSQL re-admission on
+2026-09-25. V1 remains an integration project, not a greenfield orchestration
+project. The owner closed the former upstream PRs; do not submit upstream work
+without separate approval. See
 [`MILESTONE_0_DEPENDENCY_ADMISSION.md`](MILESTONE_0_DEPENDENCY_ADMISSION.md).
 
 ## 1. Non-negotiable implementation boundaries
 
-- Once admitted, Paperclip is the only operational task/run/workspace/MCP-policy
-  authority. The pinned revision is not admitted.
+- Admitted Paperclip is the only operational task/run/workspace/MCP-policy
+  authority. Pin the exact owner-fork revision, image ID and schema in the lock.
 - Do not add DBOS or an AI Factory task database beside Paperclip.
 - Git owns canonical docs, policy definitions, project overlays, evals, and Agent
   Skills packages.
@@ -61,16 +60,16 @@ layout differs.
 
 ## 3. Milestone 0 — dependency admission gates
 
-Do this before production feature code.
+This gate passed before production feature code began.
 
 **Historical execution result (2026-09-15): BLOCKED.** Paperclip `5282cab` leaked an active
 ephemeral environment lease after controller loss, and the public external
 adapter could not enrich and then delegate to a registered native adapter in the
 same run. Milestone 0B (2026-09-17) prepared/tested minimal fixes for recorded
 host leases and an optional plugin enrichment hook. On 2026-09-23 the owner
-chose to maintain both in `Dzikle/paperclip`. Next: exact fork image,
-baseline-database migration, and full real re-admission. Do not begin sections
-4–8 until that admission passes.
+chose to maintain both in `Dzikle/paperclip`. The exact fork image,
+baseline-database migration, and full real re-admission passed on 2026-09-25;
+sections 4–8 are now eligible to begin. This report did not implement them.
 
 ### 0.1 Pin and deploy Paperclip
 
@@ -132,8 +131,8 @@ until the owner-fork revision is admitted.
 
 Data-provider result: OpenSearch/MCP, MemPalace, CodeGraphContext, Agent Skills,
 and LiteLLM core passed their bounded mechanics tests with the exact caveats in
-the Milestone 0 report. Those partial passes do not override the control-plane
-blocker.
+the Milestone 0 report. CodeGraphContext's V1 enablement remains deferred by
+its security gate; this does not reinstate the resolved Paperclip blocker.
 
 Milestone 0B narrows that result: real offline MemPalace embedding readiness now
 passes; LiteLLM's final V1 shape is embedded MIT core Router only (licensed proxy
@@ -141,15 +140,17 @@ DEFERRED); CodeGraphContext's current image is disabled until its mandatory
 protobuf/bindings and runtime dependency security gates pass. No additional
 memory, graph, gateway, scheduler, or workflow authority is introduced.
 
-Milestone 0 exits only when the pinned dependency manifest, license inventory,
-POC results, unresolved issue disposition, and rollback versions are committed.
-It also requires every mandatory Paperclip correctness and seam gate to pass;
-that condition is currently unmet.
+Milestone 0 exit evidence is committed in the pinned dependency manifest,
+license/adoption decisions, POC/admission report, issue disposition, and
+rollback record. Mandatory Paperclip correctness and seam gates passed on the
+exact owner-fork image. Owner-controlled registry publication is required
+before deployment beyond the validated local host.
 
 ## 4. Milestone 1 — contracts, policy, and projections
 
-**Hold:** this section is not authorized until the Milestone 0 status above is
-changed by a committed re-admission result.
+**Ready:** Milestone 0 status is ADMITTED. Begin with contracts/policy and
+projection boundaries; do not infer permission to implement all later V1
+workflows at once.
 
 ### 1.1 Canonical Git contracts
 

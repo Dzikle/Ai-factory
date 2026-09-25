@@ -878,7 +878,12 @@ def recovery_report() -> None:
         context = run.get("contextSnapshot", {})
         lease_id = context.get("paperclipEnvironment", {}).get("leaseId")
         if not isinstance(lease_id, str):
-            if run_id not in tracked_ids and run.get("status") == "cancelled":
+            cancelled_before_lease = (
+                run.get("status") == "cancelled"
+                and run.get("executionStage") == "preparing"
+                and isinstance((run.get("resultJson") or {}).get("startupCancellation"), dict)
+            )
+            if cancelled_before_lease or (run_id not in tracked_ids and run.get("status") == "cancelled"):
                 report.append({"runId": run_id, "runStatus": "cancelled", "noLeaseAcquired": True})
                 continue
             raise RuntimeError(f"run {run_id} has no durable environment lease identity")

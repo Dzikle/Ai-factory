@@ -1,10 +1,39 @@
 # ADR 001: Adopt Paperclip as the operational control plane
 
-**Status:** Owner-maintained fork candidate; re-admission pending — Milestone 1 blocked
+**Status:** Admitted owner-maintained fork `62760ac9fc69572866c8eed5ad714ab1ddd6cc23`; Milestone 1 unblocked
 
 **Date:** 2026-09-15
 
-## Owner fork amendment — 2026-09-23 (current)
+## Milestone 0 final admission — 2026-09-25 (current)
+
+The owner-maintained fork is admitted as the **sole task/run/workspace and active
+MCP-policy authority** at commit
+`62760ac9fc69572866c8eed5ad714ab1ddd6cc23`, local production-image ID
+`sha256:2c574c948ce21a22cf6e8bbcf136b99b8e55bd2d460042ec69fa62bbbc224455`
+and PostgreSQL 17.11/283-row Drizzle journal. The exact image's 66 focused
+regressions passed; an isolated 279→283-row in-place migration preserved all
+baseline issue/run/lease/workspace identities without journal edits.
+
+Real Docker kills of active controller runs were repeated with restart before
+and after the controller lease expired. Startup/orphan recovery and explicit
+effect reconciliation/resume produced terminal source and successor leases,
+stable cleanup receipts on repeated checks, cleared locks and non-overlapping
+writers. The exact effective external MCP catalog was search-only after broad
+generated grants were removed; disallowed msearch remained deny-default. The
+optional pre-run hook persisted a verified artifact ref/SHA-256 in the same
+run, then the original native `process` adapter consumed it. The record
+survived restarts and a paired DB/storage restore; restored counts and artifact
+bytes matched. Full receipts are in the [admission report](../../implementation/MILESTONE_0_DEPENDENCY_ADMISSION.md).
+
+This changes admission status, **not** the authority split or selected OSS
+stack. AI Factory still owns the narrow fork delta, upstream tracking,
+security rebases and build provenance. The admitted image is local, not a
+registry-published release; publish an owner-controlled immutable artifact
+before remote deployment. Git, MemPalace and OpenSearch keep their separate
+canonical/projection roles. CodeGraphContext remains disabled under its own
+security gate. The older pending/waiting statements below are historical.
+
+## Owner fork amendment — 2026-09-23 (historical pending state)
 
 The owner explicitly chose to keep the required Paperclip changes in the
 account-owned [Dzikle/paperclip](https://github.com/Dzikle/paperclip) fork rather
@@ -191,7 +220,7 @@ ToolHive and SWE-ReX authorities.
 | --- | --- | --- |
 | Logical identity independent of provider/model/runtime | PASS | Separate agent identity and adapter/runtime configuration. |
 | Durable task/run/session state | PASS | Persistent issue, heartbeat run, wakeup, task-session, and context rows. |
-| Atomic claim/locking/recovery | ADAPT — FORK RE-ADMISSION PENDING | Claim/CAS and host-lease remediation pass source tests; exact fork-image live re-admission required. |
+| Atomic claim/locking/recovery | ADAPT — ADMITTED | Claim/CAS, child loss, both live controller-loss timings, source/successor lease convergence and repeated receipts pass on the exact fork image. |
 | Heartbeats/recurring execution | PASS | Durable wake queue, timers/routines, leases, retry scheduling. |
 | Budgets/cost accounting | PASS | Agent budgets and run-linked cost events. |
 | Native CLI/provider adapters | PASS | Codex/Claude/OpenCode/Gemini/Cursor/ACP and launcher surfaces. |
@@ -200,11 +229,11 @@ ToolHive and SWE-ReX authorities.
 | Portable AI Factory skills | ADAPT | Sync Git-owned Agent Skills packages; do not make Paperclip rows canonical. |
 | Secrets/artifacts/storage | PASS | Encrypted secrets and local/S3 storage provider interfaces. |
 | Plugin/events/OpenSearch projection | ADAPT | At-least-once events require idempotency/reconciliation; runtime is alpha. |
-| Context Resolver before a run | ADAPT — FORK RE-ADMISSION PENDING | Optional plugin enrichment contract persists bounded same-run context before original dispatch; exact fork-image live re-admission required. |
+| Context Resolver before a run | ADAPT — ADMITTED SEAM | Optional plugin enrichment persists bounded same-run artifact/digest before original adapter dispatch; the actual AI Factory Resolver remains Milestone 1 work. |
 | Independent Reviewer and QA | PASS | Separate agents and execution-policy participants with distinct grants. |
 | Resume without original conversation/model | PASS | Reattach session when safe or reinvoke from durable task/context/workspace. |
 | Operational truth without canonical project ownership | PASS | Git/memory/OpenSearch remain external authorities/projections. |
-| Owner-maintained fork discipline | ADAPT — PENDING | Explicit owner decision authorizes a narrow fork; track upstream read-only, maintain security/rebase provenance, and admit only after exact-image migration and live gates. |
+| Owner-maintained fork discipline | ADAPT — ADMITTED | Exact-image migration and live gates passed. Track upstream read-only, maintain security/rebase provenance, and publish an immutable owner-controlled artifact before remote deployment. |
 
 ## Authority boundary
 

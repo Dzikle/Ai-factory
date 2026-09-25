@@ -1,19 +1,19 @@
 # AI Factory — V1 Adoption Architecture
 
-**Status:** Target architecture selected; integration kickoff blocked by Milestone 0
+**Status:** Target architecture selected; Milestone 0 Paperclip gate ADMITTED and Milestone 1 unblocked
 
 **Decision date:** 2026-09-15
 
 **Scope:** Phase 0.5 open-source adoption spike; this is not a V1 implementation
 
-> **Current owner decision (2026-09-23): FORK RE-ADMISSION PENDING.** Paperclip's
-> narrow lease/enrichment fixes are combined in the account-owned
+> **Current owner decision (2026-09-25): ADMITTED FORK.** The account-owned
 > [Dzikle/paperclip](https://github.com/Dzikle/paperclip) fork at
-> `a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f`. Upstream PRs #13772/#13773
-> were closed at the owner's direction. AI Factory owns this fork's maintenance,
-> security updates and release provenance. The earlier no-fork/upstream-release
-> hold below is historical and superseded. **Milestone 1 remains blocked** until
-> the exact fork image passes baseline migration and full real re-admission.
+> `62760ac9fc69572866c8eed5ad714ab1ddd6cc23` passed exact-image baseline
+> migration and real re-admission. Upstream PRs #13772/#13773 remain closed at
+> the owner's direction. AI Factory owns fork maintenance, security updates and
+> release provenance. The earlier no-fork/upstream-release and pending holds
+> below are historical. **Milestone 1 is unblocked**; CodeGraphContext remains
+> disabled under its separate security gate.
 
 > **Historical admission amendment (2026-09-17): WAITING FOR UPSTREAM.** Milestone
 > 0B prepared and locally tested Paperclip host-lease and plugin enrichment
@@ -40,7 +40,7 @@ of mature commodity components. It will not build a second task engine, workflow
 engine, MCP supervisor, sandbox lifecycle, skill specification, code graph,
 provider gateway, or memory framework in V1.
 
-Once admitted, Paperclip is the authoritative operational control plane. Agent Skills is the
+Paperclip is the admitted authoritative operational control plane. Agent Skills is the
 canonical portable skill format. OpenSearch 3.x remains the rebuildable
 knowledge fabric and its official Python MCP server is the retrieval provider.
 Paperclip's governed MCP gateway and execution-workspace/sandbox-provider
@@ -54,13 +54,14 @@ view into OpenSearch.
 This is a conditional adoption, not a blank cheque. Paperclip, MemPalace, and
 CodeGraphContext are young or fast-moving and have explicit acceptance gates in
 section 12. The owner-maintained Paperclip fork is the explicit exception to the
-original no-long-lived-fork preference; it is not admitted merely by existing.
+original no-long-lived-fork preference; its admission is limited to the exact
+revision/image/schema and gates in the Milestone 0 report.
 
 ## 2. Selected V1 stack
 
 | Concern | V1 selection | Decision and boundary |
 | --- | --- | --- |
-| Control plane | `Dzikle/paperclip` fork `a0225e8`; historical 0B test `b75cbb5fa` | **ADAPT; FORK RE-ADMISSION PENDING.** Combined fixes pass focused source tests/build; no fork image is admitted. Intended sole operational owner after exact-image baseline migration and full real re-admission. |
+| Control plane | `Dzikle/paperclip` fork `62760ac`; local image `sha256:2c574c948ce21a22cf6e8bbcf136b99b8e55bd2d460042ec69fa62bbbc224455` | **ADAPT; ADMITTED.** Exact-image baseline migration and real recovery/capability/enrichment/restore gates passed. Sole operational owner. |
 | Durable workflow | Paperclip wake queue, heartbeat scheduler, execution locks, and recovery services | No DBOS beside Paperclip. DBOS is the mutually exclusive fallback if Paperclip fails its adoption gates. |
 | Skills | Agent Skills specification; canonical packages in Git | **ADOPT.** Paperclip skill records/installations are runtime projections. Namespaced metadata and `ai-factory.yaml` sidecars carry AI Factory policy. |
 | Knowledge fabric | Dedicated OpenSearch 3.8.x cluster | Rebuildable projection only. Use filtered lexical/vector hybrid retrieval, multi-search, aliases, and Search Relevance Workbench. |
