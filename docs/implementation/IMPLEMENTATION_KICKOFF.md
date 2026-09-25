@@ -250,6 +250,31 @@ environment; they are not CI tests.
 
 ### 1.3 OpenSearch projection foundation
 
+**First Git-documents slice implemented (2026-09-25; Milestone 1.3 still in
+progress):** `milestone1/git_projection.py` reads only committed blobs from a
+project overlay's canonical paths. It emits stable per-path IDs, Git commit and
+blob versions, SHA-256, status and source provenance. Full-snapshot
+reconciliation upserts changes and marks removed paths stale; replay of an
+unchanged snapshot issues no writes. `milestone1/opensearch_projection.py`
+installs a strict `ai_factory_docs_v1` mapping with stable read/write aliases,
+uses separate read/write clients, filters reconciliation to one project/repo,
+and fails on malformed reads or failed bulk items. The live smoke against the
+pinned local OpenSearch 3.8.0 cluster indexed the committed overlay documents,
+then observed zero writes on replay and verified a retrieved Git revision and
+content digest. A guarded delete/recreate/rebuild of only the verified
+`ai_factory_docs_v1` test index restored the same document count from Git.
+The live smoke used the local test admin credential; it is **not**
+the final least-privilege deployment credential gate. Git full scans are the
+replay/reconciliation mechanism for this slice, not a second authoritative
+cursor. No Context Resolver or workflow was implemented.
+
+**Still required before 1.3 exit:** dedicated read/write credentials and
+role-denial proof and one-writer scheduling for the new aliases; capability/skill,
+Paperclip task/run/event/telemetry, MemPalace and artifact projections; durable
+Paperclip event cursor/dead-letter and source reconciliation; CodeGraph symbol
+pointers only after its separate security admission. The 1.3 exit condition
+below is not yet met.
+
 Implement versioned mappings/aliases and idempotent projectors for:
 
 ```text

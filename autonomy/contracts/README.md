@@ -47,5 +47,6 @@ These are initial versioned contracts and synthetic fixtures. They have not
 yet been exercised against real Paperclip/MemPalace event streams or a live
 Context Resolver. The separate Milestone 1.2 native Paperclip issue-policy
 mapping is documented in `docs/implementation/IMPLEMENTATION_KICKOFF.md`;
-these schemas do not become Paperclip workflow state. Milestone 1.3 OpenSearch
-projectors are not implemented here.
+these schemas do not become Paperclip workflow state. Milestone 1.3 now has a
+first Git-document OpenSearch projector, documented in the implementation
+kickoff; the other source projectors and full rebuild gate remain open.
