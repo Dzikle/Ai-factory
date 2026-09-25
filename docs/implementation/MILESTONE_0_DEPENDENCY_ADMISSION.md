@@ -1,8 +1,8 @@
 # AI Factory — Milestone 0 Dependency Admission
 
-**Status:** OWNER-MAINTAINED FORK — HOST-DISK BLOCKED / RE-ADMISSION PENDING; Milestone 1 remains BLOCKED
+**Status:** OWNER-MAINTAINED FORK — PARTIAL RE-ADMISSION PASS / LIVE CONTROLLER-LOSS GATE PENDING; Milestone 1 remains BLOCKED
 
-**Executed:** 2026-09-15 (baseline); 2026-09-16–17 (Milestone 0B); 2026-09-21–23 (Milestone 0C/fork decision)
+**Executed:** 2026-09-15 (baseline); 2026-09-16–17 (Milestone 0B); 2026-09-21–23 (Milestone 0C/fork decision); 2026-09-25 (fork re-admission)
 
 **Architecture baseline:** `71b5a5d50e7bf0e25aa1d643895779654a1522ca`
 
@@ -21,26 +21,28 @@ merge request. The two fixes are combined at immutable fork commit
 boundary, not Paperclip's intended sole operational authority. No Context
 Resolver or V1 workflow was implemented.
 
-The current fork head is `62760ac9fc69572866c8eed5ad714ab1ddd6cc23`,
-adding a frozen-lockfile correction and Docker pnpm cache mount. A byte-verified
-archive of that commit passed generated-contract checks. The normal Docker build
-passed the runner, UI, plugin SDK, and server stages, but Docker returned `EOF`
-while exporting the default cloud image after C: fell to 0.53 GB free. No image
-was produced. The self-hosted `production` target, baseline migration, and live
-re-admission therefore remain outstanding.
+The current fork head is `62760ac9fc69572866c8eed5ad714ab1ddd6cc23`.
+After host disk recovery, the exact Git-blob archive built with the normal
+self-hosted `production` target. Docker exported local image ID
+`sha256:2c574c948ce21a22cf6e8bbcf136b99b8e55bd2d460042ec69fa62bbbc224455`;
+its embedded build information names that exact commit. The earlier failed
+default-cloud export and a stale extracted-context lockfile error are historical,
+not results for this tar-streamed production build.
 
 The earlier combined source-equivalent Linux tree passed 121/121 focused server
 tests, 2/2 plugin SDK tests, monorepo typecheck, and normal `pnpm build`. That
-tree's build stamp named an older test-tree commit; the newer exact-source
-Docker attempt also produced no exportable image. This is **not** production
-admission. The preserved baseline database
-has not been migrated to this fork revision and the full Docker/PostgreSQL
-fault, capability, enrichment, restart, and backup/restore gates have not been
-rerun. Milestone 1 remains blocked until those gates pass on an exact fork build.
+tree's build stamp named an older test-tree Git commit. The exact fork image
+passed 66/66 focused tests. An isolated restored baseline migrated in place,
+and child-loss, locking, effective capability, enrichment/restart, and paired
+restore gates passed. This is **not** admission: abrupt controller loss before
+and after lease expiry, orphan reconciliation, explicit resume, and repeated
+source/successor lease-receipt checks remain unproven on this image. The original
+baseline database/storage were not migrated or overwritten. Milestone 1 remains
+blocked until the remaining real Docker/PostgreSQL fault gates pass.
 
 | Dependency boundary | Verdict | Admission result |
 | --- | --- | --- |
-| Paperclip control plane | **FORK CANDIDATE — NOT ADMITTED** | Owner-maintained `Dzikle/paperclip` commit `62760ac`; image export blocked by host disk exhaustion. Requires exact-commit self-hosted image, baseline migration, and real re-admission. Section 3.0 is current evidence. |
+| Paperclip control plane | **FORK CANDIDATE — NOT ADMITTED** | Exact owner-fork image and isolated baseline migration pass; live abrupt-controller recovery remains pending. Section 3.0 is current evidence. |
 | PostgreSQL durability | **PASS** | Persistent restart and `pg_dump`/restore counts match. |
 | Agent Skills format | **PASS** | Both skills validate and lazily load in metadata and prompt-catalog styles. |
 | OpenSearch 3.8.0 | **PASS** | Role isolation, filtered/multi-search, alias rebuild, persistence and loss recovery pass. |
@@ -111,10 +113,10 @@ repair removed no repository, image, persistent volume, or unrelated container.
 | Fork | [Dzikle/paperclip](https://github.com/Dzikle/paperclip), branch `ai-factory/milestone0-maintained`, current commit `62760ac9fc69572866c8eed5ad714ab1ddd6cc23`; fixes combined at `a0225e8f8ae7ce16d9f52ac25e64702d7ddb173f` (merge parents `0b455c84c0c4b52a7bd6b6b99e16863cd4a16c10` enrichment and `e319a7e8ddeba95274616d042d143c2343fc6031` SSH lease). |
 | Upstream PRs | [#13772](https://github.com/paperclipai/paperclip/pull/13772) and [#13773](https://github.com/paperclipai/paperclip/pull/13773) **CLOSED** at owner request; do not reopen or submit future upstream PRs without explicit approval. |
 | Normal source validation | Source-equivalent Linux tree: 121/121 focused server tests, 2/2 plugin SDK tests, `pnpm -r typecheck` PASS, `pnpm build` PASS. Build stamp names the older test-tree Git commit, so it is not an exact-commit release artifact. |
-| Immutable fork image | **NOT BUILT/PINNED**. At `62760ac`, exact Git-blob archive SHA-256 `5BECC12868C829A9A10934511ED54DA0236841373DC51EB8C56654775E70BC7B` passed protocol manifest/schema/ACPX checks. Frozen dependency install, Rust runner, UI, SDK and server Docker stages passed; default cloud image export failed with Docker `EOF` as C: fell to 0.53 GB. The explicit self-hosted `production` target has not been exported. The old 0B hybrid test image is historical only. |
-| Migration result | **NOT RUN** against the fork revision. Isolated restored baseline `paperclip_fork_m0` retains 6 issues, 22 runs and 21 leases; paired baseline database/storage backup is valid, original baseline untouched, no journal rewriting. |
-| Re-admission result | **PENDING**: real controller/child loss, orphan/lease/lock, resume/successor, effective MCP capabilities, same-run enrichment, restart, and paired backup/restore gates must run on an exact fork image. |
-| Milestone 0 final status | **BLOCKED ON HOST DISK / FORK RE-ADMISSION PENDING — Milestone 1 BLOCKED**. |
+| Immutable fork image | **BUILT, NOT ADMITTED**. Exact Git-blob tar SHA-256 `5BECC12868C829A9A10934511ED54DA0236841373DC51EB8C56654775E70BC7B`; normal `--target production` build exited 0. Local `aif-paperclip-fork:62760ac` image ID `sha256:2c574c948ce21a22cf6e8bbcf136b99b8e55bd2d460042ec69fa62bbbc224455`, linux/amd64; platform manifest `sha256:5a663d9396e6461ecaf55ac5fed005fc4ca423da87fe6ce4c1292efc56987ab7`. `/app/server/dist/build-info.json` records the full fork commit. Exact-image focused regressions: 66/66. The old 0B hybrid image remains historical only. |
+| Migration result | **PASS on isolated restored baseline**. PostgreSQL 17.11 database `paperclip_fork_m0` migrated in place from 279 to 283 Drizzle rows (latest journal timestamp `1790018362070`) with no manual journal/schema editing. A fresh pre-upgrade dump restored separately; all issue/run/lease/workspace ID hashes matched afterward (6/22/21/0). Paired pre-upgrade DB/storage backups are under ignored `.milestone0/fork-readmission-20260923/pre-migration-20260925/`; original baseline untouched. |
+| Re-admission result | **PARTIAL PASS**. Child kill → explicit reconciliation → successful successor; both leases terminal and issue locks clear. Atomic checkout 200/409. Read-only `aif_agent` OpenSearch MCP effective catalog: one external search tool; search succeeds, msearch is deny-default. Optional enricher persisted one artifact ref/digest, the original `process` adapter consumed it under the same run ID, and it survived ordinary restart. Paired DB/storage restore reproduced 1 company, 4 agents, 10 issues, 28 runs, 26 leases and identical row fingerprints; restored artifact bytes matched the recorded SHA-256. Abrupt controller loss before/after lease expiry, orphan reconciliation/resume, no duplicate writer, and repeated receipts remain pending. |
+| Milestone 0 final status | **LIVE CONTROLLER-LOSS GATE PENDING — NOT ADMITTED; Milestone 1 BLOCKED**. |
 
 The owner started Docker Desktop for this attempt. The normal default-cloud
 source build passed compilation but exhausted host disk during image export;
@@ -122,10 +124,13 @@ Docker's Linux engine stopped and Docker Desktop was then shut down cleanly.
 Three obsolete, reproducible source archives and the stopped 0B test
 container/image were removed; paired backups, the original and isolated
 baseline database/storage, and unrelated containers/volumes were retained.
-C: still had only about 0.8 GB free. The next attempt requires roughly 15 GB
-free on C:, Docker Desktop restarted, an explicit `--target production` image
-export from the verified archive, and then migration and live fault gates. No
-Docker admission gate was inferred from source-build success.
+C: still had only about 0.8 GB free at that time. On 2026-09-25 the owner
+restarted the host, freeing about 25 GB. The first retry accidentally used an
+older extracted context whose lockfile lacked the pinned `@lezer/common`
+override; the verified archive contained it. Streaming that exact tar directly
+to Docker avoided the stale copy and Windows symlink extraction errors. The
+production export then completed normally. Admission is still withheld pending
+the live controller-loss gates, not disk space or migration.
 
 Maintaining this fork is an explicit owner decision and transfers security
 updates, upstream rebases, regression testing, and release-image provenance to
