@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Dzikle/Ai-factory/blob/main/autonomy/contracts/v1/provenance-envelope.schema.json",
+  "title": "Source provenance envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_system", "source_id", "source_uri", "source_version", "observed_at", "authority", "status", "canonical", "content_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "source_system": {"enum": ["git", "paperclip", "mempalace", "artifact", "codegraph", "runtime", "opensearch"]},
+    "source_id": {"type": "string", "minLength": 1},
+    "source_uri": {"type": "string", "minLength": 1},
+    "source_version": {"type": "string", "minLength": 1},
+    "source_revision": {"type": "string", "minLength": 1},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "authority": {"enum": ["canonical", "operational", "historical", "artifact", "derived"]},
+    "status": {"enum": ["active", "canonical", "historical", "superseded", "stale", "deprecated"]},
+    "canonical": {"type": "boolean"},
+    "content_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "supersedes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "superseded_by": {"type": "string", "minLength": 1}
+  },
+  "allOf": [
+    {"if": {"properties": {"source_system": {"const": "git"}}, "required": ["source_system"]},
+     "then": {"required": ["source_revision"]}},
+    {"if": {"properties": {"canonical": {"const": true}}, "required": ["canonical"]},
+     "then": {"properties": {"source_system": {"const": "git"}, "authority": {"const": "canonical"}}}},
+    {"if": {"properties": {"source_system": {"const": "mempalace"}}, "required": ["source_system"]},
+     "then": {"properties": {"canonical": {"const": false}, "authority": {"const": "historical"}}}},
+    {"if": {"properties": {"source_system": {"const": "opensearch"}}, "required": ["source_system"]},
+     "then": {"properties": {"canonical": {"const": false}, "authority": {"const": "derived"}}}}
+  ]
+}

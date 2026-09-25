@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Dzikle/Ai-factory/blob/main/autonomy/contracts/v1/promotion-proposal.schema.json",
+  "title": "Experience promotion proposal v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "proposal_id", "project_id", "candidate_kind", "candidate_path", "source_memory_ids", "evidence_refs", "eval_refs", "status"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "proposal_id": {"type": "string", "minLength": 1},
+    "project_id": {"type": "string", "minLength": 1},
+    "candidate_kind": {"enum": ["skill", "tool", "deterministic_check", "policy", "automation"]},
+    "candidate_path": {"type": "string", "minLength": 1},
+    "source_memory_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "evidence_refs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "eval_refs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "status": {"const": "proposed"}
+  }
+}

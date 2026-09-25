@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Dzikle/Ai-factory/blob/main/autonomy/contracts/v1/model-selection-policy.schema.json",
+  "title": "Model/runtime selection policy definition v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "policy_id", "task_class", "risk", "role", "lane", "primary_binding_ref", "fallback_binding_refs", "max_attempts", "gateway", "escalation"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "policy_id": {"type": "string", "minLength": 1},
+    "task_class": {"type": "string", "minLength": 1},
+    "risk": {"enum": ["low", "normal", "high"]},
+    "role": {"type": "string", "minLength": 1},
+    "lane": {"enum": ["native_harness", "raw_api"]},
+    "primary_binding_ref": {"type": "string", "minLength": 1},
+    "fallback_binding_refs": {"type": "array", "maxItems": 4, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "max_attempts": {"type": "integer", "minimum": 1, "maximum": 5},
+    "gateway": {"enum": ["none", "litellm_core"]},
+    "escalation": {"enum": ["human_review", "block"]}
+  },
+  "allOf": [
+    {"if": {"properties": {"lane": {"const": "native_harness"}}}, "then": {"properties": {"gateway": {"const": "none"}}}},
+    {"if": {"properties": {"lane": {"const": "raw_api"}}}, "then": {"properties": {"gateway": {"const": "litellm_core"}}}}
+  ]
+}

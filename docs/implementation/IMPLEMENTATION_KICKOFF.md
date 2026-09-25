@@ -152,12 +152,16 @@ before deployment beyond the validated local host.
 projection boundaries; do not infer permission to implement all later V1
 workflows at once.
 
-**In progress (2026-09-25):** The first 1.1 Git contract slice now defines
-versioned project-overlay, Agent Skills sidecar, capability-vocabulary, and
-deny-default role-policy schemas, with an offline consistency check against
-the existing skill specimens. These are not active Paperclip grants. The
-remaining 1.1 schemas, 1.2 policy materialization, and 1.3 projections remain
-unimplemented; Milestone 1 is not yet complete.
+**1.1 contract status (2026-09-25):** Initial versioned schemas and synthetic
+boundary tests now cover the listed Git contract classes. The first slice
+defined project overlays, Agent Skills sidecars, logical capabilities, and
+deny-default role policy; the second added task scoping, context/provenance/
+budgets, normalized events, memory/promotion, model policy, and validation/
+review outcomes. Offline cross-field checks reject unavailable capabilities,
+cross-project context, and self-review claims. These are not active Paperclip
+grants or a real Context Resolver, and provider event-shape compatibility is
+not yet proven. Sections 1.2 and 1.3 remain unimplemented; Milestone 1 is not
+complete.
 
 ### 1.1 Canonical Git contracts
 

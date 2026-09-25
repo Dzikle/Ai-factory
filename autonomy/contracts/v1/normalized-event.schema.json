@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Dzikle/Ai-factory/blob/main/autonomy/contracts/v1/normalized-event.schema.json",
+  "title": "Paperclip event projection input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "source_system", "source_id", "source_version", "recorded_at", "project_id", "task_id", "kind", "payload"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "event_id": {"type": "string", "minLength": 1},
+    "source_system": {"const": "paperclip"},
+    "source_id": {"type": "string", "minLength": 1},
+    "source_version": {"type": "string", "minLength": 1},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "project_id": {"type": "string", "minLength": 1},
+    "task_id": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["task", "run", "review", "qa", "telemetry"]},
+    "payload": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "task"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/task"}}}},
+    {"if": {"properties": {"kind": {"const": "run"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/run"}}}},
+    {"if": {"properties": {"kind": {"const": "review"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/review"}}}},
+    {"if": {"properties": {"kind": {"const": "qa"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/qa"}}}},
+    {"if": {"properties": {"kind": {"const": "telemetry"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/telemetry"}}}}
+  ],
+  "$defs": {
+    "task": {"type": "object", "additionalProperties": false, "required": ["status"],
+      "properties": {"status": {"enum": ["queued", "in_progress", "blocked", "done", "cancelled"]}}},
+    "run": {"type": "object", "additionalProperties": false, "required": ["run_id", "status", "agent_id"],
+      "properties": {"run_id": {"type": "string", "minLength": 1}, "status": {"enum": ["pending", "running", "completed", "failed", "cancelled"]}, "agent_id": {"type": "string", "minLength": 1}}},
+    "review": {"type": "object", "additionalProperties": false, "required": ["run_id", "subject_run_id", "reviewer_agent_id", "verdict"],
+      "properties": {"run_id": {"type": "string", "minLength": 1}, "subject_run_id": {"type": "string", "minLength": 1}, "reviewer_agent_id": {"type": "string", "minLength": 1}, "verdict": {"enum": ["accepted", "changes_requested", "blocked"]}}},
+    "qa": {"type": "object", "additionalProperties": false, "required": ["run_id", "subject_run_id", "qa_agent_id", "verdict"],
+      "properties": {"run_id": {"type": "string", "minLength": 1}, "subject_run_id": {"type": "string", "minLength": 1}, "qa_agent_id": {"type": "string", "minLength": 1}, "verdict": {"enum": ["accepted", "changes_requested", "blocked"]}}},
+    "telemetry": {"type": "object", "additionalProperties": false, "required": ["run_id", "metric", "value", "unit"],
+      "properties": {"run_id": {"type": "string", "minLength": 1}, "metric": {"type": "string", "minLength": 1}, "value": {"type": "number", "minimum": 0}, "unit": {"enum": ["tokens", "milliseconds", "usd", "count"]}}}
+  }
+}

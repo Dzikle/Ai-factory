@@ -62,3 +62,62 @@ def check_consistency(vocabulary: dict, roles: dict, project: dict, skills: list
                     errors.append(f"{owner} role {role_name} lacks required capability {capability_id} in role policy")
 
     return errors
+
+
+def check_context_budget(plan: dict) -> list[str]:
+    """Reject a plan whose reserved query budgets exceed its hard package ceiling."""
+    errors: list[str] = []
+    if sum(query["max_tokens"] for query in plan["queries"]) > plan["total_budget"]["max_tokens"]:
+        errors.append("query token budgets exceed total")
+    if sum(query["max_bytes"] for query in plan["queries"]) > plan["total_budget"]["max_bytes"]:
+        errors.append("query byte budgets exceed total")
+    for query in plan["queries"]:
+        if query["filters"]["project_id"] != plan["project_id"]:
+            errors.append(f"query {query['domain']} escapes project {plan['project_id']}")
+    return errors
+
+
+def check_quality_independence(outcome: dict) -> list[str]:
+    """Flag self-review evidence before a quality outcome can be accepted."""
+    if outcome["kind"] not in {"review", "qa"}:
+        return []
+    errors: list[str] = []
+    if outcome["actor_agent_id"] == outcome["subject_agent_id"]:
+        errors.append(f"{outcome['kind']} actor must differ from implementer")
+    if outcome["run_id"] == outcome["subject_run_id"]:
+        errors.append(f"{outcome['kind']} run must differ from subject run")
+    return errors
+
+
+def check_task_request(request: dict, vocabulary: dict, roles: dict, project: dict, skills: list[dict]) -> list[str]:
+    """Check task restrictions against Git policy; do not issue runtime grants."""
+    errors: list[str] = []
+    if request["project_id"] != project["project_id"]:
+        errors.append("task project does not match overlay")
+    role = roles["roles"].get(request["role"])
+    if role is None:
+        return errors + [f"task names undefined role {request['role']}"]
+
+    definitions = {item["id"]: item for item in vocabulary["capabilities"]}
+    available = (
+        set(role["allowed_capabilities"])
+        & set(project["allowed_capabilities"])
+    ) - set(role["denied_capabilities"]) - set(project["denied_capabilities"]) - set(request["denied_capabilities"])
+
+    for capability_id in request["required_capabilities"]:
+        definition = definitions.get(capability_id)
+        if capability_id not in available or definition is None or definition["lifecycle"] in {"disabled", "deprecated"}:
+            errors.append(f"task requires unavailable capability {capability_id}")
+
+    sidecars = {skill["skill"]: skill for skill in skills}
+    for skill_id in request["skill_ids"]:
+        skill = sidecars.get(skill_id)
+        if skill is None or skill_id not in project["allowed_skills"] or request["role"] not in skill["roles"]:
+            errors.append(f"task cannot use skill {skill_id}")
+            continue
+        for capability_id in skill["required_capabilities"]:
+            if capability_id in request["denied_capabilities"]:
+                errors.append(f"task denies required skill capability {capability_id}")
+            elif capability_id not in available:
+                errors.append(f"task cannot satisfy skill {skill_id} capability {capability_id}")
+    return errors

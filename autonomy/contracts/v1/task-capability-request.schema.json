@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Dzikle/Ai-factory/blob/main/autonomy/contracts/v1/task-capability-request.schema.json",
+  "title": "Task-scoped capability requirements v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task_id", "project_id", "role", "skill_ids", "required_capabilities", "denied_capabilities"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "task_id": {"type": "string", "minLength": 1},
+    "project_id": {"type": "string", "minLength": 1},
+    "role": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "skill_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}},
+    "required_capabilities": {"$ref": "#/$defs/capabilities"},
+    "denied_capabilities": {"$ref": "#/$defs/capabilities"}
+  },
+  "$defs": {
+    "capabilities": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$"}}
+  }
+}
