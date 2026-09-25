@@ -40,8 +40,11 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 ## Current phase rule
 
 Phase 0.5 and the Paperclip Milestone 0 dependency gate are complete. During
-Phase 1, agents must follow the selected integration boundaries. The first
-Milestone 1 contract slice does not activate runtime permissions or workflows.
+Phase 1, agents must follow the selected integration boundaries. Milestone 1
+has contracts, policy probes, and a Git-documents projection foundation, but
+no real coding workflow yet. Its next exit is one runnable, independently
+reviewed task; other projection domains do not block that first demonstration.
+See the revised `docs/implementation/IMPLEMENTATION_KICKOFF.md` delivery order.
 
 Changes that introduce a second task/workflow, MCP policy, memory, sandbox
 lifecycle, or graph authority require a new ADR and evidence that the existing

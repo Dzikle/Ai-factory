@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 Paperclip gate ADMITTED; Milestone 1 may start (no V1 workflow implemented yet)
+**Status:** Milestone 0 ADMITTED; Milestone 1 in progress, first runnable task next (no V1 workflow implemented yet)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -13,6 +13,29 @@ exact-image baseline migration and real Docker/PostgreSQL re-admission on
 project. The owner closed the former upstream PRs; do not submit upstream work
 without separate approval. See
 [`MILESTONE_0_DEPENDENCY_ADMISSION.md`](MILESTONE_0_DEPENDENCY_ADMISSION.md).
+
+## Delivery order — revised 2026-09-25
+
+The earlier plan made every projection and policy integration a prerequisite
+for the first working task. That was too much horizontal infrastructure before
+user-visible proof. The dependency decisions and authority boundaries remain;
+their implementation order changes. **The next deliverable is one real,
+reviewed coding task, not another platform-completeness gate.**
+
+| Milestone | Deliverable | Exit evidence |
+| --- | --- | --- |
+| 0 — admit dependencies | **Done** | Pinned Paperclip fork passed migration, crash/security/enrichment, and restore gates. |
+| 1 — first runnable task | **Now** | The Git-documents command issue below goes through Paperclip, bounded Git-doc context, a native Developer, deterministic checks, and a different Reviewer. Show the run/artifacts and one interruption/resume. |
+| 2 — harden and broaden | **Later** | Make the working loop repeatable: active-source projections, capability compilation, conditional QA, model-change recovery, and backup/rebuild. |
+| 3 — useful memory | **Later** | One proven experience is stored with provenance, retrieved by a later task, and cannot override current Git. |
+| 4 — measure and operate | **Later** | Compare accepted-task quality/cost against a baseline; run bounded failure/rollback drills and promote improvements only through review. |
+
+Every milestone must end with a runnable demonstration and recorded acceptance
+evidence. Do not add an index, service, generic adapter, or framework merely to
+complete a checklist; add it when the next demonstration needs it. A blocked
+dependency is reported as a blocker, not disguised with a second authority or
+an admin credential in the runtime. The current architecture remains the V1
+target, but its full breadth is not the gate for the **first** useful task.
 
 ## 1. Non-negotiable implementation boundaries
 
@@ -146,11 +169,11 @@ rollback record. Mandatory Paperclip correctness and seam gates passed on the
 exact owner-fork image. Owner-controlled registry publication is required
 before deployment beyond the validated local host.
 
-## 4. Milestone 1 — contracts, policy, and projections
+## 4. Milestone 1 — first runnable engineering task
 
-**Ready:** Milestone 0 status is ADMITTED. Begin with contracts/policy and
-projection boundaries; do not infer permission to implement all later V1
-workflows at once.
+**Ready:** Milestone 0 is ADMITTED. Sections 1.1–1.3 record useful foundation
+already built. Continue directly to the single-task slice in 1.4; do not finish
+the entire projection catalog first.
 
 **1.1 contract status (2026-09-25):** Initial versioned schemas and synthetic
 boundary tests now cover the listed Git contract classes. The first slice
@@ -160,8 +183,9 @@ budgets, normalized events, memory/promotion, model policy, and validation/
 review outcomes. Offline cross-field checks reject unavailable capabilities,
 cross-project context, and self-review claims. These are not active Paperclip
 grants or a real Context Resolver, and provider event-shape compatibility is
-not yet proven. Section 1.2's policy mapping has since been live-probed below;
-1.3 remains unimplemented. Milestone 1 is not complete.
+not yet proven. Section 1.2's policy mapping has since been live-probed and
+1.3's first Git-documents projection passes a local OpenSearch proof. No real
+coding task has passed the full loop. Milestone 1 is not complete.
 
 ### 1.1 Canonical Git contracts
 
@@ -227,8 +251,8 @@ and issue state, not a simplistic run-success count, prove a stage advanced.
 The process adapter's connection-intent broker is **not** the native named MCP
 gateway. The repeatable probes assert deny-default effective profiles; the
 exact native search-only gateway allow/deny behavior was separately proved in
-Milestone 0, not by the process fixture. Reviewer/QA native-adapter runtime
-grants need rechecking in the real Milestone 2 slice. All probe agents are
+Milestone 0, not by the process fixture. Reviewer native-adapter grants need
+rechecking in Milestone 1; QA grants in Milestone 2. All probe agents are
 paused in a `finally` block; failed fixtures are cancelled when possible and
 cleanup errors are recorded. The probe checks the running image ID against
 the admitted dependency lock before mutating test state. It does not repeat
@@ -250,10 +274,10 @@ environment; they are not CI tests.
 
 ### 1.3 OpenSearch projection foundation
 
-**First Git-documents slice implemented (2026-09-25; Milestone 1.3 still in
-progress):** `milestone1/git_projection.py` reads only committed blobs from a
-project overlay's canonical paths. It emits stable per-path IDs, Git commit and
-blob versions, SHA-256, status and source provenance. Full-snapshot
+**First Git-documents slice implemented (2026-09-25; broader projections moved
+to later milestones):** `milestone1/git_projection.py` reads only committed
+blobs from a project overlay's canonical paths. It emits stable per-path IDs,
+Git commit and blob versions, SHA-256, status and source provenance. Full-snapshot
 reconciliation upserts changes and marks removed paths stale; replay of an
 unchanged snapshot issues no writes. `milestone1/opensearch_projection.py`
 installs a strict `ai_factory_docs_v1` mapping with stable read/write aliases,
@@ -270,25 +294,24 @@ search worked through the aliases, unchanged replay issued zero writes, and
 forbidden read/write/admin/delete actions returned 403 (including writes to an
 out-of-scope index and bulk delete). The reader has search only; the writer
 has bulk/index only. Security checks require the underlying physical index in
-each role even when the client
-uses an alias, and the `_bulk` entry point requires its cluster action. The
-test did not alter the Milestone 0 principals and cleaned up its temporary
-users, roles and out-of-scope probe index. This proves effective local
-permissions, **not** production credential provisioning or scheduling. Git
-full scans are the replay/reconciliation mechanism for this slice, not a
-second authoritative cursor. No Context Resolver or workflow was implemented.
+each role even when the client uses an alias; the `_bulk` entry point requires
+its cluster action. The test did not alter the Milestone 0 principals and
+cleaned up its temporary users, roles and out-of-scope probe index. This proves
+effective local permissions, **not** production credential provisioning or
+scheduling. Git full scans are the replay/reconciliation mechanism for this
+slice, not a second authoritative cursor. No Context Resolver or workflow was
+implemented.
 
-**Still required before 1.3 exit:** provision dedicated production read/write
-credentials and enforce one-writer scheduling for the new aliases; capability/skill,
-Paperclip task/run/event/telemetry, MemPalace and artifact projections; durable
-Paperclip event cursor/dead-letter and source reconciliation; CodeGraph symbol
-pointers only after its separate security admission. The 1.3 exit condition
-below is not yet met.
+**For the first task:** use separate non-admin local reader/writer credentials
+and a single serialized invocation of the existing Git-doc projector. Do not
+build a generic projector scheduler. The runtime uses the read-only OpenSearch
+MCP profile; administrator credentials are limited to setup/verification.
 
-Implement versioned mappings/aliases and idempotent projectors for:
+The full projection catalog is **not** a Milestone 1 gate. Add each source
+when a runnable milestone consumes it:
 
 ```text
-Git docs/ADRs/project overlays
+Git docs/ADRs/project overlays (first slice active)
 Agent Skills/capability metadata
 Paperclip tasks/runs/reviews/QA/costs/approvals/MCP audit
 MemPalace memories and temporal status
@@ -296,60 +319,101 @@ CodeGraphContext symbol pointers
 artifact metadata
 ```
 
-Use deterministic document IDs, source revision/version, tombstones or
-supersession, replay cursor, dead-letter evidence, and periodic source
-reconciliation. Projection failure never rolls back valid source state.
+For each activated source use deterministic IDs, source revision/version,
+staleness or supersession, and source reconciliation. Event-driven sources need
+durable replay/dead-letter evidence when introduced. Projection failure never
+rolls back valid source state. An unactivated source needs no V1 index merely
+to satisfy the diagram. CodeGraphContext stays disabled until its separate
+security gate passes.
 
-Milestone 1 exits when every index can be deleted and rebuilt from its named
-authority and a duplicate event produces no duplicate document.
+### 1.4 First runnable task — next implementation work
 
-## 5. Milestone 2 — Context Resolver vertical slice
+The first issue is a useful missing operation in this repository: add a
+single-run Git-documents projection command in `milestone1/project_git_docs.py`
+with `tests/test_project_git_docs.py`. It should call the existing snapshot and
+reconciliation functions, accept the project overlay, require separate
+non-admin reader/writer credentials, never install or administer an index, and
+return a failing exit status on invalid input or projection failure. A second
+run at the same Git revision must issue zero writes. The initial index can be
+seeded by an explicit serialized invocation of existing code; the new command
+is the real agent's coding task, not a synthetic approval fixture.
 
-Implement one task class against one real repository.
+Run this issue in an isolated Paperclip worktree. Keep integration/merge and
+final approval with the human; the earlier simulated board-key approval is
+not production acceptance. Use Paperclip's native Codex adapter and the local
+Codex CLI for this first slice; verify the adapter is available in the actual
+Paperclip runtime before starting. Do not build model routing or wrapper
+adapters. The initial task must not require QA/UX, memory, or code-graph access.
 
-1. Paperclip claims a code-change task atomically and binds a worktree.
-2. Role/project/task policy selects the `repository-discovery` and appropriate
-   implementation/review skills.
-3. Capability compiler materializes a least-privilege Paperclip profile. A
-   missing required capability blocks rather than widens access.
-4. Context Resolver issues separate bounded OpenSearch searches for canonical
-   docs, active decisions, relevant history, similar tasks/reviews, capability/
-   skill metadata, and code symbols.
-5. It optionally expands selected memories and graph relationships, verifies
-   source claims in Git, filters superseded/stale records, and writes one bounded
-   context-package artifact.
-6. A native Developer adapter works only inside the assigned worktree.
-7. Deterministic repository checks run and become artifacts/evidence.
-8. A separate Reviewer receives task, diff, checks, and bounded context. A
-   policy-selected QA agent runs separately when applicable.
-9. Paperclip persists outcome/cost/artifact references and projectors update
-   OpenSearch.
-10. Kill the active Developer process and change its model binding; the task
-    resumes from Paperclip state, context artifact, and workspace without the
-    original conversation.
+Build only the path the task exercises:
 
-Milestone 2 acceptance:
+1. Create the Paperclip issue with the existing distinct Developer, validation,
+   and Reviewer policy. Record a failing test for missing command behavior in
+   the task branch before implementing it; then require a green replay test.
+2. Project the relevant committed Git docs through the existing alias with a
+   serialized run and non-admin credentials. Verify search returns the intended
+   project/repository and current Git revision.
+3. Use the admitted pre-run hook to perform one governed, filtered OpenSearch
+   lookup. Verify selected canonical text against Git, enforce a hard total and
+   per-source byte/token budget, and persist a context artifact reference and
+   SHA-256 in the same run snapshot. Missing permissions, stale source, invalid
+   digest, or budget overflow fail closed before native dispatch.
+4. Dispatch the original native Developer adapter in Paperclip's assigned
+   worktree. Run deterministic validation, then a different logical Reviewer
+   with a read-oriented effective MCP profile. No implementer self-approval.
+5. Record run ID, agent IDs, selected adapter, workspace/ref, context artifact
+   digest, test and review results, and native cost/usage where available.
+   Interrupt one active run, reconcile/resume it, and verify one task writer and
+   the same durable context reference without the original chat.
 
-- one authoritative task/run state throughout;
-- no unauthorized tool appears in each role's MCP catalog;
-- context stays inside configured per-domain and total limits;
-- every supplied record has source, revision/time, status and provenance;
-- stale memory cannot override Git;
-- one process interruption recovers without duplicate side effects;
-- Developer cannot mark its own review/QA accepted;
-- OpenSearch loss does not prevent task-state recovery and its indexes rebuild.
+Show two checkpoints: **(A)** one complete Developer → validation → Reviewer
+handoff with visible artifacts; **(B)** the same task class survives an
+interruption. Milestone 1 exits only when both checkpoints pass on the pinned
+Paperclip image with effective permissions observed at runtime. A process-only
+fixture or configured policy without a native coding run does not count.
+
+## 5. Milestone 2 — repeatable, hardened engineering loop
+
+Start from the **working Milestone 1 task**, not a second greenfield workflow.
+Add only capabilities required by a second representative task or a demonstrated
+failure of the first:
+
+1. Validate and sync the applicable Agent Skills packages. Compile the
+   role/project/task/skill capability intersection into Paperclip MCP profiles;
+   missing capabilities block, and effective catalogs—not configuration alone—
+   prove deny-default access for Developer, Reviewer, and conditional QA.
+2. Add a task class where independent QA/UX is genuinely required. Reuse the
+   Paperclip execution policy; keep Developer, Reviewer, and QA as distinct
+   logical agents with separate evidence and no self-approval.
+3. Project Paperclip task/run/review/cost/artifact metadata needed for task
+   history. Give these event-driven projectors durable replay/dead-letter and
+   reconciliation behavior without making OpenSearch authoritative. Add skill/
+   capability metadata only when the Resolver queries it. Keep one serialized
+   writer per index/alias; do not add a separate scheduler or task database.
+4. Broaden the Resolver from current Git docs to active decisions and related
+   task/review history. Use filtered bounded queries, original-source checks,
+   provenance/freshness labels, and one persisted context package. Do not wait
+   for CodeGraphContext; while disabled, use Git and language-native search.
+5. Repeat the same task class after controller loss and a native model/runtime
+   binding change. Restore Paperclip plus artifact storage, delete/rebuild each
+   **active** OpenSearch index from its named authority, and prove a duplicate
+   event changes no document identity or task state.
+
+Milestone 2 exits with a second accepted task, conditional QA evidence, a
+model-change recovery receipt, effective role catalogs, and a successful
+restore/rebuild of active projections. No inactive index is a prerequisite.
 
 ## 6. Milestone 3 — experiential memory loop
 
-Add memory only after Milestone 2 is stable.
+Add memory only after the engineering loop runs without it. Begin with **one**
+real, reviewed lesson from a completed task or incident, not seven simulated
+memories as a deployment gate. Keep MemPalace as the sole memory authority and
+project only what the Resolver needs into OpenSearch. On a later task, prove
+project/role scoping, source provenance, retrieval use, token cost, and that a
+superseded memory cannot override current Git. A source lookup or memory
+backend failure must degrade safely without changing task truth.
 
-1. Store the seven representative memory scenarios from the adoption decision.
-2. Validate project/role/agent scoping, temporal supersession, provenance,
-   retention/review dates, token impact, and exact-backend fallback.
-3. Record which retrieved memories were supplied, used, rejected as stale, or
-   contradicted by canonical sources.
-4. Detect repeated evidence patterns and create a Paperclip improvement proposal.
-5. Demonstrate one reviewed promotion:
+Then capture a repeated pattern and demonstrate one reviewed promotion:
 
 ```text
 experience
@@ -362,7 +426,10 @@ experience
 
 No automatic write to canonical Git is allowed in V1.
 
-## 7. Milestone 4 — evaluation, self-healing, and operations
+Use the seven adoption scenarios as later regression/evaluation cases, not as
+prerequisites for the first task or first useful memory.
+
+## 7. Milestone 4 — measurable improvement and bounded operations
 
 - Build retrieval query sets/judgments/experiments in OpenSearch Search Relevance
   Workbench and keep expected outcomes/promotion thresholds in Git.
@@ -378,6 +445,12 @@ No automatic write to canonical Git is allowed in V1.
 - Add Promptfoo, Phoenix, Langfuse, ToolHive, SWE-ReX, DBOS, or another store only
   when a measured gap and the authority boundary are recorded in a new ADR.
 
+Milestone 4 exits with paired runs of the same task class showing accepted
+quality, context supplied/used, tokens, latency, and **cost per accepted
+correct task** against a no-retrieval or earlier-version baseline. Record
+failure drills and rollback evidence; do not claim improvement from cheaper
+inference alone.
+
 ## 8. V1 completion test
 
 A real coding task must demonstrate:
@@ -386,7 +459,7 @@ A real coding task must demonstrate:
 Paperclip durable task/claim
 → stable logical expert + replaceable model/runtime
 → validated Agent Skills + least-privilege Paperclip MCP profile
-→ bounded OpenSearch/Memory/CodeGraph context with Git verification
+→ bounded OpenSearch context with Git verification
 → task worktree/sandbox
 → deterministic checks
 → independent Reviewer
@@ -396,6 +469,11 @@ Paperclip durable task/claim
 → forced interruption and model-change recovery
 → later scoped retrieval of the proven experience
 ```
+
+CodeGraphContext is **not** a V1 completion gate while its security enablement
+remains deferred. If it is later admitted, test it as a derived aid, not as code
+truth. Conditional QA/UX is exercised by a task class that actually requires
+it; the first non-UI task does not need a ceremonial QA stage.
 
 The task fails V1 acceptance if it relies on the original chat, permits duplicate
 workflow truth, silently bypasses MCP governance, treats memory/projection as

@@ -49,4 +49,5 @@ Context Resolver. The separate Milestone 1.2 native Paperclip issue-policy
 mapping is documented in `docs/implementation/IMPLEMENTATION_KICKOFF.md`;
 these schemas do not become Paperclip workflow state. Milestone 1.3 now has a
 first Git-document OpenSearch projector, documented in the implementation
-kickoff; the other source projectors and full rebuild gate remain open.
+kickoff. Other source projectors are added when a runnable task consumes them;
+they do not block the first native coding-task demonstration.

@@ -6,6 +6,11 @@
 
 **Scope:** Phase 0.5 open-source adoption spike; this is not a V1 implementation
 
+**Delivery-order amendment (2026-09-25):** The selected stack and authority
+boundaries are unchanged. The [implementation plan](../implementation/IMPLEMENTATION_KICKOFF.md)
+now puts one runnable task before the full projection catalog and defers the
+disabled code graph from V1 acceptance until its separate security gate passes.
+
 > **Current owner decision (2026-09-25): ADMITTED FORK.** The account-owned
 > [Dzikle/paperclip](https://github.com/Dzikle/paperclip) fork at
 > `62760ac9fc69572866c8eed5ad714ab1ddd6cc23` passed exact-image baseline
@@ -303,7 +308,7 @@ template is not a second authority.
 
 1. Paperclip claims the issue with an atomic checkout and creates/reattaches the
    task workspace.
-2. A future AI Factory plugin on the upstream pre-run enrichment hook resolves role, project overlay, skill versions,
+2. A future AI Factory plugin on the admitted owner-fork pre-run enrichment hook resolves role, project overlay, skill versions,
    logical capabilities, task type, risk, and context budget.
 3. The Context Resolver performs separate bounded queries for canonical docs,
    active decisions, memories/incidents, similar tasks/reviews, capabilities,
@@ -327,8 +332,8 @@ external-adapter contract cannot delegate to another registered native adapter
 or durably enrich the host snapshot. Milestone 0B instead proves the optional
 `agent.run.enrich` plugin contract, with snapshot persistence before unchanged
 native dispatch in the same run. The owner-approved fork now contains this
-contract, but Milestone 1 may implement the Resolver plugin only after the exact
-fork image is re-admitted. Never copy native CLI adapters or
+contract. The exact owner-fork image has since been re-admitted, so Milestone 1
+may implement the narrow Resolver plugin. Never copy native CLI adapters or
 introduce nested execution to bridge this gap.
 
 ## 7. Crash, restart, and model-change sequence
@@ -403,9 +408,9 @@ These are the product differentiation that no selected dependency owns:
 1. **Context Resolver and canonical-source verifier.** OpenSearch MCP exposes
    queries; it does not decide the bounded, provenance-aware engineering context
    package or source precedence.
-2. **Pre-run integration adapter.** Paperclip supplies runtime context but no
-   stable generic resolver hook; AI Factory must enrich a run before delegating
-   to the selected adapter.
+2. **Pre-run integration adapter.** The admitted Paperclip fork supplies a
+   generic pre-run enrichment hook; AI Factory must supply the bounded resolver
+   logic while retaining the selected adapter and same run identity.
 3. **Projection workers and schemas.** No dependency knows the AI Factory common
    provenance envelope, versioned aliases, replay rules, or cross-system IDs.
 4. **Engineering workflow pack.** Paperclip supplies generic execution policies;
