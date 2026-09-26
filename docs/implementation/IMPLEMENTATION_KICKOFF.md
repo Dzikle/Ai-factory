@@ -388,6 +388,22 @@ Developer remains paused. A successful native Codex Developer run, independent
 validation/review, and interruption replay are still required; local code and
 unit tests do not substitute for them.
 
+Native-runtime admission update (2026-09-26): the owner completed Codex CLI
+device sign-in inside the Paperclip container. The same Developer identity was
+switched to `codex_local` CLI with bypass disabled; its effective Paperclip MCP
+catalog was reduced to exactly `SearchIndexTool`. The clean assigned worktree
+was fast-forwarded to the current Git revision, and run
+`95ef8cf4-103d-4f7e-8ba0-fcc11695ce07` persisted a bounded context artifact
+whose recorded SHA-256 matched the actual bytes. Native dispatch started, but
+Codex's first shell read failed: `bwrap: No permissions to create a new
+namespace`. The run ended `succeeded` at the process level without making a
+code change or completing the issue. Further automatic retries were paused;
+`AIF-42` remains blocked and unapproved. Do not bypass Codex's sandbox inside
+the shared Paperclip controller. The next runtime step is a separately isolated
+coding execution target that can support the native Codex workspace sandbox,
+followed by the same Developer → validator → Reviewer gate. Login and pre-run
+context have passed; native coding and both Milestone 1 checkpoints have not.
+
 ## 5. Milestone 2 — repeatable, hardened engineering loop
 
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
