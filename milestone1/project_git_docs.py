@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from pathlib import Path, PurePosixPath
 import subprocess
 import sys
@@ -48,11 +49,25 @@ def _committed_overlay(root: Path, overlay_path: str) -> tuple[dict, str]:
     return overlay, revision
 
 
-def project_once(root: Path, overlay_path: str, repository_id: str, reader, writer) -> dict:
+def project_once(
+    root: Path,
+    overlay_path: str,
+    repository_id: str,
+    reader,
+    writer,
+    expected_revision: str | None = None,
+) -> dict:
     """Reconcile one repository snapshot; return an evidence-friendly summary."""
     if not repository_id:
         raise ValueError("repository id is required")
     overlay, revision = _committed_overlay(root, overlay_path)
+    if expected_revision is not None:
+        if not re.fullmatch(r"[0-9a-fA-F]{40}", expected_revision):
+            raise ValueError("expected Git revision must be a full commit SHA")
+        if revision != expected_revision.lower():
+            raise ValueError(
+                f"expected Git revision {expected_revision.lower()}, found {revision}"
+            )
     repositories = [
         item for item in overlay["repositories"]
         if isinstance(item, dict) and item.get("id") == repository_id
@@ -108,6 +123,7 @@ def run(argv: list[str] | None = None, environ: dict[str, str] | None = None) ->
     parser.add_argument("--repo-root", type=Path, required=True)
     parser.add_argument("--overlay", required=True, help="committed path relative to repo root")
     parser.add_argument("--repository", required=True, help="repository id in the overlay")
+    parser.add_argument("--expect-revision", help="required full Git commit SHA")
     parser.add_argument("--ca-file")
     parser.add_argument("--insecure-localhost", action="store_true", help="local test cluster only")
     args = parser.parse_args(argv)
@@ -125,7 +141,14 @@ def run(argv: list[str] | None = None, environ: dict[str, str] | None = None) ->
     options = {"cafile": args.ca_file, "insecure_localhost": args.insecure_localhost}
     reader = HttpClient(env["AIF_DOCS_URL"], reader_user, env["AIF_DOCS_READER_PASSWORD"], **options)
     writer = HttpClient(env["AIF_DOCS_URL"], writer_user, env["AIF_DOCS_WRITER_PASSWORD"], **options)
-    return project_once(args.repo_root, args.overlay, args.repository, reader, writer)
+    return project_once(
+        args.repo_root,
+        args.overlay,
+        args.repository,
+        reader,
+        writer,
+        expected_revision=args.expect_revision,
+    )
 
 
 def main() -> int:

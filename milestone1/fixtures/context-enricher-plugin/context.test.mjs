@@ -52,6 +52,15 @@ test("a five-kilobyte task section fits the bounded default artifact", async (t)
   assert.ok(result.bytes.length <= 8192);
 });
 
+test("historical task progress does not crowd out the bounded instructions", async (t) => {
+  const content = `### 1.4 First runnable task\nImplement one command.\nCurrent first-task progress\n${"old news".repeat(2000)}\n\n## 5. Next milestone\nLater.\n`;
+  const { cwd, hit } = await fixture(t, content);
+  const result = await buildContext({ cwd, hit, runId: "run-progress" });
+  assert.match(result.package.content, /Implement one command/);
+  assert.doesNotMatch(result.package.content, /old news/);
+  assert.ok(result.bytes.length <= 8192);
+});
+
 test("remote native adapters receive verified context without mounting controller storage", async (t) => {
   const { cwd, hit } = await fixture(t);
   const context = await buildContext({ cwd, hit, runId: "run-remote" });

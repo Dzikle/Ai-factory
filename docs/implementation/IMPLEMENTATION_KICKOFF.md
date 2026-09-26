@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 ADMITTED; Milestone 1 in progress, first runnable task next (no V1 workflow implemented yet)
+**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 hardening next (V1 workflow still incomplete)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -19,14 +19,14 @@ without separate approval. See
 The earlier plan made every projection and policy integration a prerequisite
 for the first working task. That was too much horizontal infrastructure before
 user-visible proof. The dependency decisions and authority boundaries remain;
-their implementation order changes. **The next deliverable is one real,
-reviewed coding task, not another platform-completeness gate.**
+their implementation order changes. The first reviewed coding task is now
+complete; harden that loop before adding breadth.
 
 | Milestone | Deliverable | Exit evidence |
 | --- | --- | --- |
 | 0 — admit dependencies | **Done** | Pinned Paperclip fork passed migration, crash/security/enrichment, and restore gates. |
-| 1 — first runnable task | **Now** | The Git-documents command issue below goes through Paperclip, bounded Git-doc context, a native Developer, deterministic checks, and a different Reviewer. Show the run/artifacts and one interruption/resume. |
-| 2 — harden and broaden | **Later** | Make the working loop repeatable: active-source projections, capability compilation, conditional QA, model-change recovery, and backup/rebuild. |
+| 1 — first runnable task | **Done** | AIF-42 completed Developer → Validator → Reviewer → human approval; AIF-43 survived a native child kill and resumed under a different native adapter. Evidence below. |
+| 2 — harden and broaden | **Next** | Make the working loop repeatable: supervised MCP, clean native runtime tool catalogs, active-source projections, capability compilation, conditional QA, and backup/rebuild. |
 | 3 — useful memory | **Later** | One proven experience is stored with provenance, retrieved by a later task, and cannot override current Git. |
 | 4 — measure and operate | **Later** | Compare accepted-task quality/cost against a baseline; run bounded failure/rollback drills and promote improvements only through review. |
 
@@ -364,7 +364,7 @@ Build only the path the task exercises:
 5. Record run ID, agent IDs, selected adapter, workspace/ref, context artifact
    digest, test and review results, and native cost/usage where available.
    Interrupt one active run, reconcile/resume it, and verify one task writer and
-   the same durable context reference without the original chat.
+   durable, Git-verified context lineage without the original chat.
 
 Show two checkpoints: **(A)** one complete Developer → validation → Reviewer
 handoff with visible artifacts; **(B)** the same task class survives an
@@ -372,84 +372,59 @@ interruption. Milestone 1 exits only when both checkpoints pass on the pinned
 Paperclip image with effective permissions observed at runtime. A process-only
 fixture or configured policy without a native coding run does not count.
 
-Current first-task progress (2026-09-26; **neither checkpoint has passed**):
-`milestone1/project_git_docs.py` and its tests were authored locally after the
-free OpenCode native run failed to write an allowlisted file. The command reads
-the overlay and documents from one Git commit, uses separate non-admin runtime
-credentials, and never installs an index. At commit `08c52fc`, the pinned local
-OpenSearch run wrote 49 documents, then zero on replay; a filtered read returned
-the canonical plan at that revision. The offline suite passed 48 tests (two
-opt-in live tests skipped). Paperclip run `a0142f59` durably persisted the
-pre-run artifact reference and digest with its original native adapter. The
-later cancelled run `59ebbcb7` produced no file changes; its no-replay hold was
-explicitly reconciled from the run log and clean worktree. Issue `AIF-42` is
-back at `todo` without an execution blocker, while the unreliable free-model
-Developer remains paused. A successful native Codex Developer run, independent
-validation/review, and interruption replay are still required; local code and
-unit tests do not substitute for them.
+Current first-task progress (2026-09-26; **both checkpoints passed with the
+artifact-lineage clarification below**):
 
-Native-runtime admission update (2026-09-26): the owner completed Codex CLI
-device sign-in inside the Paperclip container. The same Developer identity was
-switched to `codex_local` CLI with bypass disabled; its effective Paperclip MCP
-catalog was reduced to exactly `SearchIndexTool`. The clean assigned worktree
-was fast-forwarded to the current Git revision, and run
-`95ef8cf4-103d-4f7e-8ba0-fcc11695ce07` persisted a bounded context artifact
-whose recorded SHA-256 matched the actual bytes. Native dispatch started, but
-Codex's first shell read failed: `bwrap: No permissions to create a new
-namespace`. The run ended `succeeded` at the process level without making a
-code change or completing the issue. Further automatic retries were paused;
-`AIF-42` remains blocked and unapproved. Do not bypass Codex's sandbox inside
-the shared Paperclip controller. The next runtime step is a separately isolated
-coding execution target that can support the native Codex workspace sandbox,
-followed by the same Developer → validator → Reviewer gate. Login and pre-run
-context have passed; native coding and both Milestone 1 checkpoints have not.
-
-Current update (2026-09-26; supersedes the older status above): the separate
-non-root SSH runner is built at
-`sha256:b0bf27db91ddf5737b797f003a6ed570fec0191df0f35005c53c218c77ebfdd2`.
-It has no host repository/secret mounts, and native Codex's sandbox executes
-there; the shared controller remains unchanged. Paperclip's SSH probe passes,
-the Developer's effective external MCP catalog is exactly `SearchIndexTool`,
-and the pre-run fixture persists a bounded context artifact while supplying
-its verified text inline to the remote native adapter. Run `71c101aa` wrote
-the requested command guard and tests in the isolated AIF-42 worktree, then
-failed with `provider_quota` before commit. Paperclip restored the edits; an
-operator independently ran the targeted 8 tests and full 50-test suite
-(48 pass, 2 expected skips), and committed the two task files as `d415175`.
-That commit exists on a **local, unmerged, unpushed** AIF-42 branch in this
-repository and in Paperclip's task worktree. The recorded Developer context artifact
-SHA-256 `0fcd5632b93828a55f24ac369561ffb176a32d54a85a25c15da892d13342eb20`
-matches stored bytes. The Developer is paused to avoid quota retries. The runner's
-`seccomp=unconfined` exception is isolated to this trusted-repository sidecar
-and must be narrowed before untrusted-code use.
-
-Review-stage update (2026-09-26): Paperclip's process Validator does not
-export `PAPERCLIP_TASK_ID` or start in the task worktree, so the fixture now
-resolves its sole issue and workspace from run-scoped Paperclip APIs and
-verifies the workspace boundary. The failed pre-check run `e7a4dca4` was
-explicitly reconciled as having no side effects before retry. Validator run
-`8967c4e4` tested commit `d415175` (8/8 passing) and wrote evidence artifact
-SHA-256 `1090fb98414f0890098296058c37ba8ac9d2d709ae8fa65b5aeeb3ca0ac4e7b8`;
-its run was cancelled when Paperclip reassigned the issue to the next stage,
-but its review decision and artifact persisted. The independent OpenCode
-Reviewer initially failed closed because the local OpenSearch MCP service had
-stopped. After restarting it and verifying Paperclip connection health `ok`,
-the Reviewer used exactly `SearchIndexTool`. A task-scoped `--dir` fixed its
-OpenCode project root; narrow Reviewer instructions fixed repeated runs that
-exited without a verdict. Reviewer run `fae9caca` inspected the two-file diff,
-reran the targeted suite, recorded a concrete residual risk, and approved only
-its own stage. Paperclip now shows both machine stages complete and the final
-approval stage pending for the human board user. The Reviewer did not edit,
-commit, push, or merge. The task worktree remains clean at `d415175`.
-
-This is a real native Developer edit and independent validation/review, but
-**checkpoint A is not yet accepted**: the provider quota interrupted Developer
-before its own commit/status transition, an operator committed and handed the
-issue to validation, and the human final approval is pending. Checkpoint B's
-active-run interruption/recovery test has not run. Do not count zero-exit
-Reviewer heartbeats without a Paperclip stage decision, or the temporarily
-restarted host MCP process as production service supervision. Retain the task
-branch separately until the human reviews it; do not silently merge it.
+- **A — reviewed task.** AIF-42's native Codex Developer run `71c101aa` wrote
+  the command guard and tests in its isolated SSH worktree. Provider quota
+  stopped the run before commit, so the operator verified and committed the
+  two files as `d415175`; Paperclip Validator `8967c4e4` passed 8 tests and
+  recorded artifact SHA-256 `1090fb98414f0890098296058c37ba8ac9d2d709ae8fa65b5aeeb3ca0ac4e7b8`.
+  Independent Reviewer `fae9caca` approved its stage. The human approved the
+  final Paperclip stage, leaving AIF-42 `done`; local merge `26237e5` placed
+  the reviewed change on `milestone1-contracts`. The Developer's context
+  artifact SHA-256 `0fcd5632b93828a55f24ac369561ffb176a32d54a85a25c15da892d13342eb20`
+  matched stored bytes. Operator commit/handoff is explicit, not claimed as
+  autonomous agent completion.
+- **B — real native interruption.** AIF-43 used the same Git-documents task
+  class and logical Developer `7a134376-dd89-4006-97bb-eeba855e443d` in
+  workspace `890a248a-304a-48f5-ba17-e35bcd9d1269`. Codex run
+  `b94304ba-0fb5-46ca-bbad-96e9b9410140` edited the two allowlisted files;
+  its Codex child was killed. Paperclip terminalized the run and restored the
+  exact two-file diff. The run's context artifact (3,542 bytes) at
+  `file:///paperclip/milestone1-context/b94304ba-0fb5-46ca-bbad-96e9b9410140.json`
+  retained SHA-256 `b7fe5bf05ee5bfb783de79a9c3a1ce283a8f0b0e8b0ba4be8ab5d06430b56f2a`;
+  automatic same-execution retries retained that reference but stopped at a
+  Codex-account provider quota. The unused delayed retry was cancelled and
+  explicitly reconciled as `not_performed` through Paperclip's recovery API.
+  Fresh native OpenCode run `dfb632d6-aa83-42f9-becc-c8956eff940f` then
+  resumed the **same issue, logical agent, and Paperclip worktree** with a new
+  model session, inspected the restored diff, reran 10/10 tests, made no new
+  edits, and marked AIF-43 `done`. All 12 acquired leases have `releasedAt`,
+  no run intervals overlap, and checkout/execution locks are clear. Its
+  recorded cost was $0 (free model); token counts were 27,821 input and 1,459
+  output. The Developer was returned to its original Codex configuration and
+  paused after the test.
+- **Context-lineage clarification.** A distinct successor execution gets a
+  distinct run-scoped artifact ref/digest, not the same literal ref. Run
+  `dfb632d6` retained ref
+  `file:///paperclip/milestone1-context/dfb632d6-aa83-42f9-becc-c8956eff940f.json`
+  and verified SHA-256 `2a40ca0238384926602cb8f5b208b2675279ebbeb197bea77335437fd5829b61`.
+  Both artifact byte hashes match their snapshots; their context text and
+  source metadata are identical, including canonical source SHA-256
+  `3484209e5f92516f38eab66775e4e372e9e34a64d02b6f28180bfd2fde28963d`.
+  This is safer than copying a possibly stale prior-run artifact blindly:
+  same-run retries preserve the original ref, while a new run must reverify
+  Git and persist its own provenance. No original conversation was supplied.
+- **Validation and limits.** The local full suite passes 52 tests (two
+  expected opt-in skips); the context fixture passes 10 tests. Live one-shot
+  OpenSearch projection at `26237e5` wrote 49 canonical documents, then zero
+  on guarded replay with separate non-admin credentials. Paperclip's effective
+  external profile is deny-default with only `SearchIndexTool`. The host MCP
+  process is not yet supervised; native Codex's copied home still contains
+  stale MCP stanzas with ignored headers. Narrow both before claiming a
+  repeatable production runtime. The trusted-only runner still has an isolated
+  `seccomp=unconfined` exception; it is not approved for untrusted repositories.
 
 ## 5. Milestone 2 — repeatable, hardened engineering loop
 

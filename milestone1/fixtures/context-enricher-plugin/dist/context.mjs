@@ -69,7 +69,10 @@ export async function buildContext({
   const start = hit.content.indexOf(heading);
   if (start < 0) throw new Error("required first-task section is missing");
   const next = hit.content.indexOf("\n## ", start + heading.length);
-  const content = hit.content.slice(start, next < 0 ? undefined : next).trim() + "\n";
+  // Historical progress notes are not instructions for the current run.
+  const progress = hit.content.indexOf("\nCurrent first-task progress", start + heading.length);
+  const end = [next, progress].filter((position) => position >= 0).reduce((a, b) => Math.min(a, b), hit.content.length);
+  const content = hit.content.slice(start, end).trim() + "\n";
   const contextPackage = {
     schemaVersion: 1,
     kind: "git-doc-context",

@@ -28,5 +28,8 @@ Admission checks: Paperclip SSH environment probe; SSH from controller with
 strict host-key checking; `codex sandbox -- sh -lc 'echo sandbox_ok'` in the
 runner; `unshare -Ur true`; Python import of `yaml` and `jsonschema`; and
 negative DNS lookup for the PostgreSQL service. These checks establish runner
-mechanics, not an accepted coding task. The first native Developer run and
-independent validation/review remain separate gates.
+mechanics. The separate AIF-42 native Developer/Validator/Reviewer proof and
+AIF-43 child-kill/recovery proof are recorded in
+`docs/implementation/IMPLEMENTATION_KICKOFF.md`; they do not remove the
+trusted-repository-only seccomp exception or the need to supervise the MCP
+service before repeatable production use.

@@ -155,6 +155,65 @@ class ProjectGitDocsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             project_git_docs.run(["--repo-root", str(self.root), "--overlay", "overlay.yaml", "--repository", "source"], {**env, "AIF_DOCS_WRITER_USER": "admin"})
 
+    def test_expected_revision_mismatch_prevents_opensearch_operations(self):
+        env = {
+            "AIF_DOCS_URL": "https://127.0.0.1:19200",
+            "AIF_DOCS_READER_USER": "reader",
+            "AIF_DOCS_READER_PASSWORD": "reader-secret",
+            "AIF_DOCS_WRITER_USER": "writer",
+            "AIF_DOCS_WRITER_PASSWORD": "writer-secret",
+        }
+
+        with patch.object(project_git_docs, "HttpClient", side_effect=(self.reader, self.writer)):
+            with self.assertRaisesRegex(ValueError, "expected Git revision"):
+                project_git_docs.run(
+                    [
+                        "--repo-root", str(self.root),
+                        "--overlay", "overlay.yaml",
+                        "--repository", "source",
+                        "--expect-revision", "0" * 40,
+                    ],
+                    env,
+                )
+
+        self.assertEqual([], self.reader.calls)
+        self.assertEqual([], self.writer.calls)
+        with self.assertRaisesRegex(ValueError, "full commit SHA"):
+            project_git_docs.project_once(
+                self.root,
+                "overlay.yaml",
+                "source",
+                self.reader,
+                self.writer,
+                expected_revision="HEAD",
+            )
+        self.assertEqual([], self.reader.calls)
+        self.assertEqual([], self.writer.calls)
+
+    def test_expected_revision_match_projects(self):
+        env = {
+            "AIF_DOCS_URL": "https://127.0.0.1:19200",
+            "AIF_DOCS_READER_USER": "reader",
+            "AIF_DOCS_READER_PASSWORD": "reader-secret",
+            "AIF_DOCS_WRITER_USER": "writer",
+            "AIF_DOCS_WRITER_PASSWORD": "writer-secret",
+        }
+        revision = self.git("rev-parse", "HEAD").stdout.decode().strip()
+
+        with patch.object(project_git_docs, "HttpClient", side_effect=(self.reader, self.writer)):
+            result = project_git_docs.run(
+                [
+                    "--repo-root", str(self.root),
+                    "--overlay", "overlay.yaml",
+                    "--repository", "source",
+                    "--expect-revision", revision,
+                ],
+                env,
+            )
+
+        self.assertEqual(revision, result["revision"])
+        self.assertEqual(1, result["writes"])
+
     def test_projection_failure_propagates(self):
         class FailedWriter(BulkClient):
             def request(self, method, path, body=None, **kwargs):
