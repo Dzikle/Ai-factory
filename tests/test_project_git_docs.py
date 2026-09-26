@@ -82,6 +82,23 @@ class ProjectGitDocsTests(unittest.TestCase):
         self.assertTrue(all(path == "/ai_factory_docs/_search" for _, path in self.reader.calls))
         self.assertEqual("# One\nFirst\n", next(iter(self.documents.values()))["content"])
 
+    def test_accepts_a_canonical_file_path(self):
+        (self.root / "overlay.yaml").write_text(
+            "schema_version: 1\nproject_id: example\nrepositories:\n"
+            "  - id: source\n    remote: https://example.test/source.git\n"
+            "    canonical_paths: [docs/one.md]\n",
+            encoding="utf-8",
+        )
+        self.git("add", "overlay.yaml")
+        self.git("commit", "-qm", "use canonical file path")
+
+        result = project_git_docs.project_once(
+            self.root, "overlay.yaml", "source", self.reader, self.writer
+        )
+
+        self.assertEqual(1, result["documents"])
+        self.assertEqual(1, result["writes"])
+
     def test_overlay_is_read_from_committed_git_not_uncommitted_file(self):
         (self.root / "overlay.yaml").write_text("not: the committed overlay\n", encoding="utf-8")
         self.assertEqual(1, project_git_docs.project_once(
@@ -92,6 +109,24 @@ class ProjectGitDocsTests(unittest.TestCase):
         for path, repo_id in (("overlay.yaml", "missing"), ("../overlay.yaml", "source")):
             with self.subTest(path=path, repo_id=repo_id), self.assertRaises(ValueError):
                 project_git_docs.project_once(self.root, path, repo_id, self.reader, self.writer)
+        self.assertEqual([], self.reader.calls)
+        self.assertEqual([], self.writer.calls)
+
+    def test_rejects_any_canonical_path_without_an_eligible_document(self):
+        (self.root / "overlay.yaml").write_text(
+            "schema_version: 1\nproject_id: example\nrepositories:\n"
+            "  - id: source\n    remote: https://example.test/source.git\n"
+            "    canonical_paths: [docs/, typo/]\n",
+            encoding="utf-8",
+        )
+        self.git("add", "overlay.yaml")
+        self.git("commit", "-qm", "add invalid canonical path")
+
+        with self.assertRaisesRegex(ValueError, "typo/"):
+            project_git_docs.project_once(
+                self.root, "overlay.yaml", "source", self.reader, self.writer
+            )
+
         self.assertEqual([], self.reader.calls)
         self.assertEqual([], self.writer.calls)
 

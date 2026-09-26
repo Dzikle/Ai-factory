@@ -76,6 +76,21 @@ def project_once(root: Path, overlay_path: str, repository_id: str, reader, writ
         canonical_paths=repository["canonical_paths"],
         revision=revision,
     )
+    document_paths = {document["path"] for document in documents}
+    missing_paths = [
+        canonical_path
+        for canonical_path in repository["canonical_paths"]
+        if not any(
+            document_path == canonical_path.rstrip("/")
+            or document_path.startswith(canonical_path.rstrip("/") + "/")
+            for document_path in document_paths
+        )
+    ]
+    if missing_paths:
+        raise ValueError(
+            "canonical paths contain no eligible committed document: "
+            + ", ".join(repr(path) for path in missing_paths)
+        )
     writes = reconcile_documents(
         reader, writer, documents, overlay["project_id"], repository_id, revision
     )
