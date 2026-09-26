@@ -45,7 +45,9 @@ export async function buildContext({
   if (hit.path !== expectedPath || hit.type !== "git_document" || hit.source_system !== "git") {
     throw new Error("search hit is not the expected Git document");
   }
-  if (hit.status !== "canonical" || hit.canonical !== true || hit.authority !== "canonical") {
+  // The governed MCP gateway may redact fields whose names contain "auth".
+  // Canonical authority is re-established below from the current Git blob.
+  if (hit.status !== "canonical" || hit.canonical !== true) {
     throw new Error("search hit is not canonical");
   }
   if (hit.id !== sha256(Buffer.from(`${expectedProjectId}\0${expectedRepositoryId}\0${expectedPath}`))) {

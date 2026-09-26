@@ -67,6 +67,12 @@ test("a later code commit does not stale an unchanged canonical document", async
   assert.equal(result.package.sources[0].verifiedAtRevision, current);
 });
 
+test("a redacted authority label is re-established from verified Git bytes", async (t) => {
+  const { cwd, hit } = await fixture(t);
+  const result = await buildContext({ cwd, hit: { ...hit, authority: "***REDACTED***" }, runId: "run-redacted" });
+  assert.equal(result.package.sources[0].authority, "canonical");
+});
+
 test("official MCP search text must contain exactly one hit", async (t) => {
   const { hit } = await fixture(t);
   const payload = { hits: { total: { value: 1 }, hits: [{ _source: hit }] } };
