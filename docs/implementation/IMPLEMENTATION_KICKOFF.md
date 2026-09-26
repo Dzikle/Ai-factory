@@ -372,6 +372,22 @@ interruption. Milestone 1 exits only when both checkpoints pass on the pinned
 Paperclip image with effective permissions observed at runtime. A process-only
 fixture or configured policy without a native coding run does not count.
 
+Current first-task progress (2026-09-26; **neither checkpoint has passed**):
+`milestone1/project_git_docs.py` and its tests were authored locally after the
+free OpenCode native run failed to write an allowlisted file. The command reads
+the overlay and documents from one Git commit, uses separate non-admin runtime
+credentials, and never installs an index. At commit `08c52fc`, the pinned local
+OpenSearch run wrote 49 documents, then zero on replay; a filtered read returned
+the canonical plan at that revision. The offline suite passed 48 tests (two
+opt-in live tests skipped). Paperclip run `a0142f59` durably persisted the
+pre-run artifact reference and digest with its original native adapter. The
+later cancelled run `59ebbcb7` produced no file changes; its no-replay hold was
+explicitly reconciled from the run log and clean worktree. Issue `AIF-42` is
+back at `todo` without an execution blocker, while the unreliable free-model
+Developer remains paused. A successful native Codex Developer run, independent
+validation/review, and interruption replay are still required; local code and
+unit tests do not substitute for them.
+
 ## 5. Milestone 2 — repeatable, hardened engineering loop
 
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
