@@ -34,7 +34,7 @@ export function parseSearchResult(result) {
 
 export async function buildContext({
   cwd, hit, runId, expectedProjectId = "ai-factory", expectedRepositoryId = "ai-factory",
-  expectedPath = hit?.path, maxArtifactBytes = 5000,
+  expectedPath = hit?.path, maxArtifactBytes = 8192,
 }) {
   if (!cwd || !runId || !expectedPath || !/^[\w./-]+$/.test(expectedPath) || expectedPath.includes("..")) {
     throw new Error("invalid context request");

@@ -11,13 +11,13 @@ import { publishArtifact } from "./dist/artifact.mjs";
 
 const section = "### 1.4 First runnable task\nImplement one command.\n\n## 5. Milestone 2\nLater.\n";
 
-async function fixture(t) {
+async function fixture(t, content = section) {
   const cwd = await mkdtemp(path.join(os.tmpdir(), "aif-m1-context-"));
   t.after(() => rm(cwd, { recursive: true, force: true }));
   execFileSync("git", ["init", "-q", cwd]);
   execFileSync("git", ["-C", cwd, "config", "user.email", "fixture@example.invalid"]);
   execFileSync("git", ["-C", cwd, "config", "user.name", "Fixture"]);
-  await writeFile(path.join(cwd, "PLAN.md"), section);
+  await writeFile(path.join(cwd, "PLAN.md"), content);
   execFileSync("git", ["-C", cwd, "add", "PLAN.md"]);
   execFileSync("git", ["-C", cwd, "commit", "-qm", "fixture"]);
   const revision = execFileSync("git", ["-C", cwd, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
@@ -25,9 +25,9 @@ async function fixture(t) {
   const id = createHash("sha256").update("ai-factory\0ai-factory\0PLAN.md").digest("hex");
   const hit = {
     id, type: "git_document", project_id: "ai-factory", repository_id: "ai-factory",
-    path: "PLAN.md", content: section, source_system: "git", source_id: "ai-factory:PLAN.md",
+    path: "PLAN.md", content, source_system: "git", source_id: "ai-factory:PLAN.md",
     source_revision: revision, source_version: blob, status: "canonical", canonical: true,
-    authority: "canonical", content_sha256: createHash("sha256").update(section).digest("hex"),
+    authority: "canonical", content_sha256: createHash("sha256").update(content).digest("hex"),
   };
   return { cwd, hit };
 }
@@ -41,6 +41,14 @@ test("verified current Git text becomes a bounded context artifact", async (t) =
   assert.doesNotMatch(result.package.content, /Later\./);
   assert.equal(createHash("sha256").update(result.bytes).digest("hex"), result.sha256);
   assert.ok(result.bytes.length <= 2048);
+});
+
+test("a five-kilobyte task section fits the bounded default artifact", async (t) => {
+  const content = `### 1.4 First runnable task\n${"a".repeat(5300)}\n\n## 5. Next milestone\nLater.\n`;
+  const { cwd, hit } = await fixture(t, content);
+  const result = await buildContext({ cwd, hit, runId: "run-large-section" });
+  assert.match(result.package.content, /a{100}/);
+  assert.ok(result.bytes.length <= 8192);
 });
 
 test("stale or altered search hits fail closed", async (t) => {
