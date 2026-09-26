@@ -1,19 +1,21 @@
 // Narrow first-task validation participant; Paperclip owns the review decision.
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveRunIssueId, resolveRunWorkspace } from "./git-doc-validator-identity.mjs";
 
 const { PAPERCLIP_API_URL: api, PAPERCLIP_API_KEY: token, PAPERCLIP_RUN_ID: runId,
-  PAPERCLIP_AGENT_ID: agentId, PAPERCLIP_TASK_ID: issueId } = process.env;
-if (!api || !token || !runId || !agentId || !issueId) throw new Error("missing Paperclip run identity");
-const cwd = process.cwd();
-if (!cwd.startsWith("/paperclip/m1-first-task-worktrees/")) {
-  throw new Error(`validator is outside the issue worktree: ${cwd}`);
-}
+  PAPERCLIP_AGENT_ID: agentId, PAPERCLIP_TASK_ID: configuredIssueId } = process.env;
+if (!api || !token || !runId || !agentId) throw new Error("missing Paperclip run identity");
 const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
 const me = await fetch(`${api}/api/agents/me`, { headers });
 if (!me.ok || (await me.json()).id !== agentId) throw new Error("run identity mismatch");
+const issueId = await resolveRunIssueId({ api, token, runId, configuredIssueId });
+const cwd = await resolveRunWorkspace({ api, token, runId, issueId, agentId });
+const actualRoot = await realpath("/paperclip/m1-first-task-worktrees");
+const actualCwd = await realpath(cwd);
+if (!actualCwd.startsWith(`${actualRoot}/`)) throw new Error("validator worktree escapes its root");
 
 const commandPath = path.join(cwd, "milestone1/project_git_docs.py");
 const testPath = path.join(cwd, "tests/test_project_git_docs.py");

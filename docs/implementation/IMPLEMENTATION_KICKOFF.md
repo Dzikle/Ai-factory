@@ -404,6 +404,53 @@ coding execution target that can support the native Codex workspace sandbox,
 followed by the same Developer → validator → Reviewer gate. Login and pre-run
 context have passed; native coding and both Milestone 1 checkpoints have not.
 
+Current update (2026-09-26; supersedes the older status above): the separate
+non-root SSH runner is built at
+`sha256:b0bf27db91ddf5737b797f003a6ed570fec0191df0f35005c53c218c77ebfdd2`.
+It has no host repository/secret mounts, and native Codex's sandbox executes
+there; the shared controller remains unchanged. Paperclip's SSH probe passes,
+the Developer's effective external MCP catalog is exactly `SearchIndexTool`,
+and the pre-run fixture persists a bounded context artifact while supplying
+its verified text inline to the remote native adapter. Run `71c101aa` wrote
+the requested command guard and tests in the isolated AIF-42 worktree, then
+failed with `provider_quota` before commit. Paperclip restored the edits; an
+operator independently ran the targeted 8 tests and full 50-test suite
+(48 pass, 2 expected skips), and committed the two task files as `d415175`.
+That commit exists on a **local, unmerged, unpushed** AIF-42 branch in this
+repository and in Paperclip's task worktree. The recorded Developer context artifact
+SHA-256 `0fcd5632b93828a55f24ac369561ffb176a32d54a85a25c15da892d13342eb20`
+matches stored bytes. The Developer is paused to avoid quota retries. The runner's
+`seccomp=unconfined` exception is isolated to this trusted-repository sidecar
+and must be narrowed before untrusted-code use.
+
+Review-stage update (2026-09-26): Paperclip's process Validator does not
+export `PAPERCLIP_TASK_ID` or start in the task worktree, so the fixture now
+resolves its sole issue and workspace from run-scoped Paperclip APIs and
+verifies the workspace boundary. The failed pre-check run `e7a4dca4` was
+explicitly reconciled as having no side effects before retry. Validator run
+`8967c4e4` tested commit `d415175` (8/8 passing) and wrote evidence artifact
+SHA-256 `1090fb98414f0890098296058c37ba8ac9d2d709ae8fa65b5aeeb3ca0ac4e7b8`;
+its run was cancelled when Paperclip reassigned the issue to the next stage,
+but its review decision and artifact persisted. The independent OpenCode
+Reviewer initially failed closed because the local OpenSearch MCP service had
+stopped. After restarting it and verifying Paperclip connection health `ok`,
+the Reviewer used exactly `SearchIndexTool`. A task-scoped `--dir` fixed its
+OpenCode project root; narrow Reviewer instructions fixed repeated runs that
+exited without a verdict. Reviewer run `fae9caca` inspected the two-file diff,
+reran the targeted suite, recorded a concrete residual risk, and approved only
+its own stage. Paperclip now shows both machine stages complete and the final
+approval stage pending for the human board user. The Reviewer did not edit,
+commit, push, or merge. The task worktree remains clean at `d415175`.
+
+This is a real native Developer edit and independent validation/review, but
+**checkpoint A is not yet accepted**: the provider quota interrupted Developer
+before its own commit/status transition, an operator committed and handed the
+issue to validation, and the human final approval is pending. Checkpoint B's
+active-run interruption/recovery test has not run. Do not count zero-exit
+Reviewer heartbeats without a Paperclip stage decision, or the temporarily
+restarted host MCP process as production service supervision. Retain the task
+branch separately until the human reviews it; do not silently merge it.
+
 ## 5. Milestone 2 — repeatable, hardened engineering loop
 
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
