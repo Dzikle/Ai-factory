@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { buildContext, parseSearchResult } from "./dist/context.mjs";
+import * as contextModule from "./dist/context.mjs";
 import { publishArtifact } from "./dist/artifact.mjs";
 
 const section = "### 1.4 First runnable task\nImplement one command.\n\n## 5. Milestone 2\nLater.\n";
@@ -49,6 +50,16 @@ test("a five-kilobyte task section fits the bounded default artifact", async (t)
   const result = await buildContext({ cwd, hit, runId: "run-large-section" });
   assert.match(result.package.content, /a{100}/);
   assert.ok(result.bytes.length <= 8192);
+});
+
+test("remote native adapters receive verified context without mounting controller storage", async (t) => {
+  const { cwd, hit } = await fixture(t);
+  const context = await buildContext({ cwd, hit, runId: "run-remote" });
+  const prompt = contextModule.formatContextPrompt(context, "file:///paperclip/context/run-remote.json");
+  assert.match(prompt, /Implement one command/);
+  assert.match(prompt, new RegExp(context.sha256));
+  assert.match(prompt, /file:\/\/\/paperclip\/context\/run-remote\.json/);
+  assert.ok(Buffer.byteLength(prompt) <= 10_000);
 });
 
 test("stale or altered search hits fail closed", async (t) => {

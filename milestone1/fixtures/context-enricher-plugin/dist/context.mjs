@@ -90,3 +90,9 @@ export async function buildContext({
   if (bytes.length > maxArtifactBytes) throw new Error("context artifact exceeds byte budget");
   return { package: contextPackage, bytes, sha256: sha256(bytes) };
 }
+
+export function formatContextPrompt(context, ref) {
+  const prompt = `Verified bounded task context (artifact ${ref}; SHA-256 ${context.sha256}). Git in the assigned workspace remains authoritative.\n\n${context.package.content}`;
+  if (Buffer.byteLength(prompt, "utf8") > 10_000) throw new Error("context prompt exceeds byte budget");
+  return prompt;
+}

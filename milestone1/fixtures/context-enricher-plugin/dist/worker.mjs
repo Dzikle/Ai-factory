@@ -2,7 +2,7 @@ import { createInterface } from "node:readline";
 import { createHash } from "node:crypto";
 
 import { publishArtifact } from "./artifact.mjs";
-import { buildContext, parseSearchResult } from "./context.mjs";
+import { buildContext, formatContextPrompt, parseSearchResult } from "./context.mjs";
 
 const DOCUMENT_PATH = "docs/implementation/IMPLEMENTATION_KICKOFF.md";
 const ARTIFACT_DIR = "/paperclip/milestone1-context";
@@ -63,7 +63,7 @@ async function enrich(params) {
   });
   const ref = await publishArtifact(ARTIFACT_DIR, params.runId, context.bytes);
   return {
-    promptMarkdown: `Read the verified, bounded first-task context at ${ref} (SHA-256 ${context.sha256}) before work. Git in the assigned workspace remains authoritative.`,
+    promptMarkdown: formatContextPrompt(context, ref),
     artifact: {
       ref, sha256: context.sha256, mediaType: "application/json", byteSize: context.bytes.length,
     },
