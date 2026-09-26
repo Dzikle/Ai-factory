@@ -1,0 +1,41 @@
+name: aif-m2-opensearch-mcp
+
+services:
+  opensearch-mcp:
+    build:
+      context: ../containers
+      dockerfile: opensearch-mcp.Dockerfile
+    image: aif-m2/opensearch-mcp:0.11.0-fcb23ec
+    environment:
+      OPENSEARCH_URL: https://aif-m0-opensearch-opensearch-1:9200
+      OPENSEARCH_USERNAME: aif_agent
+      OPENSEARCH_PASSWORD: ${AIF_M2_OPENSEARCH_READER_PASSWORD:?set the existing read-only OpenSearch user's password}
+      OPENSEARCH_SSL_VERIFY: "false" # Local self-signed admission cluster only.
+      OPENSEARCH_DYNAMIC_CONNECTION: "false"
+      OPENSEARCH_SETTINGS_ALLOW_WRITE: "false"
+      OPENSEARCH_MAX_RESPONSE_SIZE: "262144"
+    volumes:
+      - type: bind
+        source: ../../milestone0/config/opensearch-mcp.yaml
+        target: /etc/ai-factory/opensearch-mcp.yaml
+        read_only: true
+    ports:
+      - "127.0.0.1:19902:9900"
+    networks:
+      paperclip:
+      opensearch:
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 9900), 2).close()"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+
+networks:
+  paperclip:
+    external: true
+    name: aif-m0-paperclip_default
+  opensearch:
+    external: true
+    name: aif-m0-opensearch_default

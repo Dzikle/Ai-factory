@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 hardening next (V1 workflow still incomplete)
+**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 MCP supervision slice passed (V1 workflow still incomplete)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -420,13 +420,43 @@ artifact-lineage clarification below**):
   expected opt-in skips); the context fixture passes 10 tests. Live one-shot
   OpenSearch projection at `26237e5` wrote 49 canonical documents, then zero
   on guarded replay with separate non-admin credentials. Paperclip's effective
-  external profile is deny-default with only `SearchIndexTool`. The host MCP
-  process is not yet supervised; native Codex's copied home still contains
-  stale MCP stanzas with ignored headers. Narrow both before claiming a
+  external profile is deny-default with only `SearchIndexTool`. At this
+  Milestone 1 checkpoint the host MCP process was not yet supervised; the
+  Milestone 2 slice below replaces it. Native Codex's copied home still contains
+  stale MCP stanzas with ignored headers. Narrow those before claiming a
   repeatable production runtime. The trusted-only runner still has an isolated
   `seccomp=unconfined` exception; it is not approved for untrusted repositories.
 
 ## 5. Milestone 2 — repeatable, hardened engineering loop
+
+**First reliability slice, 2026-09-26:** The official OpenSearch MCP server
+`0.11.0`/`fcb23ec` now runs from pinned source and `uv.lock` in a supervised
+Docker container, local image ID
+`sha256:c47f67f75b31370868424a9176784f8cf212d293507e70467911a2c9736cc4a8`.
+Its direct catalog is exactly `ListIndexTool`, `IndexMappingTool`,
+`SearchIndexTool`, and `MsearchTool`; a killed server child restarted and
+recovered real searches. Paperclip connection
+`34e29b2e-e5f2-455e-ab47-b1187eb38537` has the same exact catalog.
+Developer, Reviewer, and the admission seam probe have one installed
+connection and only `SearchIndexTool` effective. Run
+`0d5050af-e948-4c75-a31b-054c9e7b856f` proved a governed search 200 and
+ungranted multi-search 403/`deny_default`; after reader-secret rotation and
+another MCP restart, `c60ea56e-4f8e-488c-b548-abb940753efc` repeated it.
+The old unsupervised host process
+was stopped and its stale-catalog connection disabled; its remaining 19
+installed agents are paused test fixtures, not active workflow agents.
+
+The MCP reader role now covers the active `ai_factory_docs` alias and older
+admission alias without write actions. Direct live checks returned search 200,
+write 403. Its formerly shared admin password was rotated; the old password
+for `aif_agent` now returns 401. The local self-signed cluster still disables
+TLS verification; production needs a trusted CA and secret store. Generic Paperclip
+catalog refresh did not retire removed tools, so this transition required a
+fresh connection and explicit removal of auto-generated broad grants. The
+reproducible deployment and test commands are in [`milestone2/README.md`](../../milestone2/README.md).
+This completes **one Milestone 2 reliability slice**, not the Milestone 2 exit.
+Next: clean native harness MCP entries, make Git handoff repeatable, then run
+the second independently accepted task with conditional QA evidence.
 
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
 Add only capabilities required by a second representative task or a demonstrated

@@ -54,7 +54,11 @@ dependencies:
     version: "0.11.0; commit fcb23ec17186ba905590fb06b2eeecb063bc54a7"
     source: "https://github.com/opensearch-project/opensearch-mcp-server-py.git"
     license: "Apache-2.0"
-    deployment: "Source checkout with uv.lock; fixed single-cluster Streamable HTTP transport and an explicit four-tool read allowlist"
+    deployment: "Pinned source/uv.lock built as supervised Docker service; fixed single-cluster Streamable HTTP transport and explicit four-tool read allowlist"
+    milestone2_local_image_id: "sha256:c47f67f75b31370868424a9176784f8cf212d293507e70467911a2c9736cc4a8"
+    milestone2_base_python_image: "python:3.10-slim@sha256:31dd4d9529d02d7436659061cb7564cd4733fc90e5e152709a942d53382ec8d0"
+    milestone2_paperclip_connection_id: "34e29b2e-e5f2-455e-ab47-b1187eb38537"
+    milestone2_note: "Local self-signed test cluster uses TLS verification disabled. Reader secret was rotated to differ from admin; production needs trusted CA, its own secret store, and published immutable image. Old unsupervised host process stopped; old connection 61bc2d0d-11ba-41e3-a989-6d47f79576df disabled."
   mempalace:
     version: "3.9.0; commit 38260df588968604186b525ecdffb41c140e5f61"
     source: "https://github.com/MemPalace/mempalace.git"

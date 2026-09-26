@@ -67,6 +67,13 @@ Tool filtering must be enforced twice (server and Paperclip), response limits
 must be below token budgets, and hybrid DSL/version compatibility needs tests.
 Least-privilege and startup issues in the upstream tracker are acceptance gates.
 
+Milestone 2 local deployment proved a catalog-contraction caveat: refreshing a
+generic Paperclip MCP connection did not retire five tools removed from the
+server's direct catalog. A fresh connection had the exact four-tool catalog;
+its generated company/agent grants had to be unbound after installation.
+Future tool-surface changes must assert both direct and effective catalogs and
+use a new connection or a tested Paperclip catalog-retirement fix.
+
 ## Exit/replacement strategy
 
 The logical `knowledge.*` contract and stable aliases isolate callers. Rebuild

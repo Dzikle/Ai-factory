@@ -1,0 +1,19 @@
+{
+  "cluster_permissions": ["cluster_monitor", "cluster_composite_ops_ro"],
+  "index_permissions": [
+    {
+      "index_patterns": [
+        "aif_docs_v*",
+        "aif_docs_current",
+        "ai_factory_docs_v*",
+        "ai_factory_docs"
+      ],
+      "allowed_actions": [
+        "read",
+        "indices:admin/mappings/get",
+        "indices:admin/aliases/get"
+      ]
+    }
+  ],
+  "tenant_permissions": []
+}
