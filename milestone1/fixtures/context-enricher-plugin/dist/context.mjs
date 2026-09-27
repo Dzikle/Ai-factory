@@ -62,17 +62,19 @@ export async function buildContext({
   const blob = (await git(cwd, "rev-parse", `HEAD:${expectedPath}`)).toString("utf8").trim();
   if (hit.source_version !== blob) throw new Error("stale Git blob in search hit");
   const original = await git(cwd, "show", `HEAD:${expectedPath}`);
-  if (sha256(original) !== hit.content_sha256 || original.toString("utf8") !== hit.content) {
+  const verifiedContent = original.toString("utf8");
+  if (sha256(original) !== hit.content_sha256 ||
+      (Object.hasOwn(hit, "content") && verifiedContent !== hit.content)) {
     throw new Error("search content does not match canonical Git bytes");
   }
   const heading = "### 1.4 First runnable task";
-  const start = hit.content.indexOf(heading);
+  const start = verifiedContent.indexOf(heading);
   if (start < 0) throw new Error("required first-task section is missing");
-  const next = hit.content.indexOf("\n## ", start + heading.length);
+  const next = verifiedContent.indexOf("\n## ", start + heading.length);
   // Historical progress notes are not instructions for the current run.
-  const progress = hit.content.indexOf("\nCurrent first-task progress", start + heading.length);
-  const end = [next, progress].filter((position) => position >= 0).reduce((a, b) => Math.min(a, b), hit.content.length);
-  const content = hit.content.slice(start, end).trim() + "\n";
+  const progress = verifiedContent.indexOf("\nCurrent first-task progress", start + heading.length);
+  const end = [next, progress].filter((position) => position >= 0).reduce((a, b) => Math.min(a, b), verifiedContent.length);
+  const content = verifiedContent.slice(start, end).trim() + "\n";
   const contextPackage = {
     schemaVersion: 1,
     kind: "git-doc-context",

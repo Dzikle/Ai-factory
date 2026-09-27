@@ -79,6 +79,18 @@ test("stale or altered search hits fail closed", async (t) => {
   await assert.rejects(buildContext({ cwd, hit: { ...hit, project_id: "other" }, runId: "run-1" }), /project/);
 });
 
+test("metadata-only retrieval verifies Git before composing context", async (t) => {
+  const { cwd, hit } = await fixture(t, section.replace("Implement one command.", "Verify bearer headers."));
+  const { content, ...metadata } = hit;
+  const result = await buildContext({ cwd, hit: metadata, runId: "metadata-run" });
+  assert.match(result.package.content, /Verify bearer headers\./);
+  assert.equal(result.package.sources[0].contentSha256, hit.content_sha256);
+  await assert.rejects(buildContext({ cwd, hit: { ...metadata, content_sha256: "0".repeat(64) }, runId: "bad-digest" }), /content/);
+  const { content_sha256, ...missingDigest } = metadata;
+  await assert.rejects(buildContext({ cwd, hit: missingDigest, runId: "missing-digest" }), /content/);
+  await assert.rejects(buildContext({ cwd, hit: { ...metadata, content: "***REDACTED***" }, runId: "altered-text" }), /content/);
+});
+
 test("artifact budget overflow fails rather than silently truncating", async (t) => {
   const { cwd, hit } = await fixture(t);
   await assert.rejects(buildContext({ cwd, hit, runId: "run-1", maxArtifactBytes: 100 }), /budget/);

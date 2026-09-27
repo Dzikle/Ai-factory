@@ -247,3 +247,90 @@ and records commit `15660c717f00f12f097cd13644c9c1b753b4a1ae`, tree
 `454b0382254312e55c3eda58793343ee5ff62ed3`, and `isolated_commit_copy`.
 This verifies the deployed deterministic stage, not independent model review
 or human acceptance of a new engineering task.
+
+## Second task: preview and independent QA, 2026-09-27
+
+**AIF-47 is awaiting human approval**, not `done` and not a Milestone 2 exit.
+Issue `bf01619d-4359-423e-bc58-36362ddf6c99` implements a reader-only
+`--dry-run` for the existing Git-doc projector. Native OpenCode
+`opencode/muse-spark-1.3-contributor-free` implemented and separately reviewed
+the change. Candidate commit `43a379add55538cdf8a2e3e87e5c7c25d045e28a`, tree
+`50ea2aa7138f6bb5e336ab5b11f2af395f54dbf4`, is on the owned repository branch
+`milestone2-projection-preview`; it is **not merged** into `milestone1-contracts`.
+
+The command previews upserts and tombstones using the existing reconciliation
+algorithm, accepts only reader credentials, reports actual `writes: 0`, and
+leaves ordinary apply behavior unchanged. `fixtures/projection-preview-task.md`
+is the exact task contract; `fixtures/projection-preview-reviewer.md` is the
+separate review instruction. No new service, dependency or workflow engine.
+
+| Native participant | Agent / run | Evidence |
+| --- | --- | --- |
+| Developer | `2ef551a8-e8e0-4cfe-855c-bf78f795c3a0` / final handoff `8479598d-975a-43a6-9a40-8d5a368b21af` | Four allowed files committed; targeted 27 tests passed. |
+| Validator | Existing `e86e8b20-2f2c-44c3-8279-27c6378ed98d` / `40cf0273-2fff-4157-b06b-40fb8fbc1c26` | 14 CLI-unit tests; exact commit/tree artifact. |
+| Reviewer | `55f721f8-54d4-4f02-ba19-f55fb24c501e` / `65c404fb-faa0-42f6-91e2-9831b7b49292` | Native review approved the same commit/tree. |
+| Functional QA | `4964fe25-762e-41ff-a780-d5ee8f17e472` / `bbbb0b44-0cd3-4945-88f5-c0827c0c70b0` | Six independent black-box CLI checks passed. |
+
+QA uses `fixtures/projection-preview-qa.mjs` and `projection_preview_qa.py`,
+deployed under `/paperclip/m2-preview/milestone2/fixtures/`, with the existing
+Git handoff helpers under `/paperclip/m2-preview/milestone1/fixtures/`. It tests
+an isolated committed copy, checks ownership of the current QA stage, and passes
+no live Paperclip/model/OpenSearch credentials into tested subprocesses. Its
+loopback HTTP fixture exercises reader-only preview, repeat preview, writer
+credentials present but unused, tombstone counts, apply/replay, bad revision
+and malformed response. It is functional CLI QA, not browser/UX evidence.
+Before implementation, five of six cases failed on the missing preview flag;
+afterward all six passed against the candidate. QA script SHA-256:
+`2b865f2bfc85d2dc9f5ed0e569039ed859238b8d7348acf03086a3392757b6b9`.
+
+Actual artifact bytes independently verified:
+
+- `/paperclip/milestone1-validation/40cf0273-2fff-4157-b06b-40fb8fbc1c26.json`:
+  `ab1d39bc25257a2869e7ed14e2d5821a142c94bf49858c40dc375674475058e8`.
+- `/paperclip/milestone2-qa/bbbb0b44-0cd3-4945-88f5-c0827c0c70b0.json`:
+  `6a29f1eb5aa9f64df91e19fcf44511922fa1de86fd2a785d0103255a160149c6`.
+
+The candidate full suite passes **59 tests, two opt-in live skips**, using the
+pinned `uv` dependencies in a real Git clone. The native model runtimes lacked
+`jsonschema`, so their claimed full-suite attempts were incomplete; they are not
+the full-suite evidence. An archive-only host test also failed its Git-snapshot
+case; the successful repeat used a Git clone, not modified tests.
+
+A separate real OpenSearch check loaded candidate code, previewed the published
+`c85738a` source twice with only the existing non-admin reader credentials, and
+reported 49 documents, zero planned/actual writes. The 49 indexed documents,
+including sequence/primary-term metadata, were unchanged (snapshot SHA-256
+`ae67a3b3a65048e0b42a33e2c2adfc4d6cad8d70220f2e89cf6f53919537e42d`).
+The offline QA covers nonzero planned writes without mutation. This is projector
+verification, not a replacement for the still-open native Codex MCP-search gate.
+
+Two launch issues were corrected without relaxing security checks:
+
+- Paperclip redacted the innocuous phrase `bearer headers` inside retrieved
+  canonical prose. Git and raw OpenSearch digests agreed; the governed text did
+  not. The plugin now requests metadata without `content`, then composes text
+  from the authorized Git source only after revision/blob/SHA-256 verification.
+  Supplied altered text and missing/bad digests still fail. Eleven context tests
+  pass, including a failing-before/passing-after metadata-only regression.
+  Gateway redaction is unchanged. Old plugin files are preserved in ignored
+  `.milestone0/m2-preview-pre-plugin/`; deployed files match repository bytes.
+- This installed OpenCode runtime started in `/app` without explicit `--dir`.
+  Both task-specific native bindings now name the Paperclip-recorded AIF-47
+  worktree in `extraArgs`; permissions were not broadened. General automatic
+  OpenCode directory binding remains work, not a claimed solved runtime gate.
+
+Developer/Reviewer effective profiles remain exactly `SearchIndexTool` on the
+supervised connection; generated broad grants were removed after installation.
+QA has zero external tools/connections. Live catalog/profile verification passed.
+Reviewer and QA were initially paused during fixture deployment, so Paperclip
+correctly blocked unavailable participants; restoring the existing QA stage
+preserved both earlier decisions. Their post-decision run status is `cancelled`
+with `issue_reassigned`, not a failed review or a fabricated successful run.
+All seven task leases are terminal with release timestamps; issue checkout and
+execution locks are clear. The three task-specific agents are paused again.
+
+The existing policy now holds at its fourth, human approval stage with all three
+review stages recorded. No board approval or task merge was simulated. Next:
+obtain owner acceptance of this exact candidate, integrate it, refresh the Git
+projection, then continue remaining Milestone 2 work. Preserve the current
+`c85738a` projection while this task awaits acceptance.

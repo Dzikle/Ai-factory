@@ -48,7 +48,9 @@ async function enrich(params) {
     arguments: {
       index: "ai_factory_docs",
       size: 2,
-      query_dsl: { query: { bool: { filter: [
+      // Retrieve identity/digest metadata; read authorized source text from Git.
+      // Gateway text redaction must not become a second canonical text format.
+      query_dsl: { _source: { excludes: ["content"] }, query: { bool: { filter: [
         { term: { project_id: "ai-factory" } },
         { term: { repository_id: "ai-factory" } },
         { term: { path: DOCUMENT_PATH } },

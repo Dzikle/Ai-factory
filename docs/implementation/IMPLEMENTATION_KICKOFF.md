@@ -499,6 +499,19 @@ See [`milestone2/README.md`](../../milestone2/README.md) for precise evidence an
 the remaining native-search/conditional-QA gates.
 
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
+**Second task reached human approval (2026-09-27):** AIF-47 adds read-only
+projection preview. Native OpenCode Developer and separate Reviewer, the existing
+Validator, and independent functional CLI QA all recorded evidence for commit
+`43a379add55538cdf8a2e3e87e5c7c25d045e28a`. The candidate passes 59 Python
+tests (two opt-in live skips) and six independent QA cases; a real reader-only
+preview leaves all 49 indexed documents unchanged. It is on
+`milestone2-projection-preview`, awaiting owner acceptance and integration, not
+a second **accepted** task yet. Launch fixes use verified Git text after
+metadata-only governed retrieval and task-specific native OpenCode `--dir`;
+they do not close the native Codex quota gate or generic runtime binding work.
+See [`milestone2/README.md`](../../milestone2/README.md) for exact runs, artifacts,
+limitations and the held human approval stage.
+
 Add only capabilities required by a second representative task or a demonstrated
 failure of the first:
 
