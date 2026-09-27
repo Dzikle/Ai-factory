@@ -353,3 +353,63 @@ Milestone 2 remains **IN PROGRESS**: generic native OpenCode directory binding,
 skill/capability synchronization, task-history projections, model-change recovery
 and active-projection restore/rebuild are still open. The native Codex MCP-search
 probe remains separately quota-blocked; accepting AIF-47 does not waive it.
+
+## Automatic OpenCode worktree binding, 2026-09-27
+
+**Implemented and source-validated, not deployed.** Owner-fork commit
+`379fe383d0e21a8e6194e799ba224762f7245cf4`, branch
+`ai-factory/milestone2-opencode-workspace`, builds on active source `d57c0b7c`.
+No upstream PR, new runtime, schema change, or live-controller modification.
+
+Root cause: OpenCode 1.18.32 chooses its session directory using inherited
+`PWD` before `process.cwd()` in its [run command](https://github.com/anomalyco/opencode/blob/v1.18.32/packages/opencode/src/cli/cmd/run.ts#L322).
+The initial instance/adapter metadata can show the correct task path while the
+native session and tools bind to `/app`. The adapter now supplies `--dir` from
+the final local/prepared remote workspace on every attempt, including resume
+and missing-session retry. Matching legacy explicit directory flags normalize;
+conflicting/missing values fail before native invocation. Other arguments,
+model/native adapter, permissions and Paperclip run ownership remain unchanged.
+
+Evidence:
+
+- Linux baseline: 15/15 existing execution tests. Windows baseline had five
+  symlink-related failures; Linux is the deployed/tested target, not a waived
+  cross-platform regression.
+- RED: eight new real-child cases and two SSH cases failed on the old adapter.
+  GREEN: all 58 OpenCode package tests pass, including ten new real-child cases.
+  Package `typecheck`, normal package `build`, and `git diff --check` pass.
+  Independent scoped review found no issues. Repo-wide build/tests were not run;
+  these results do not substitute for a normal published production image.
+- `fixtures/opencode-workspace-probe.mjs` runs the real 1.18.32 binary through
+  the adapter with inherited `PWD=/app`. The unchanged image fails because the
+  real native session records `/app`; a read-only source overlay passes with
+  session `ses_f1b4a4659ffe1eVps5FK0hvOvM` bound to the task directory.
+  The container has no network, live volume or credentials. A deliberately
+  nonexistent model stops execution before inference; this is a directory
+  regression, **not** a successful model task or durable Paperclip run.
+
+Reproduce from this repository in PowerShell (set `$adapter` to the fork's
+`packages/adapters/opencode-local/src/server/execute.ts` at the candidate SHA):
+
+```powershell
+$fixture = (Resolve-Path milestone2/fixtures/opencode-workspace-probe.mjs).Path
+docker run --rm --network none --mount "type=bind,source=$fixture,target=/probe.mjs,readonly" --mount "type=bind,source=$adapter,target=/app/packages/adapters/opencode-local/src/server/execute.ts,readonly" --entrypoint node --workdir /app ghcr.io/dzikle/paperclip@sha256:95f6708217d9b34b10c9a3637d024e121a2bdaf6fa0008eb3fca5983b80f1676 --import ./server/node_modules/tsx/dist/loader.mjs /probe.mjs
+```
+
+Omit the adapter mount to reproduce the old failure. The source-overlay image
+is test evidence only; active/rollback image pins remain unchanged. A separate
+free-model probe was rejected by the provider with 403; no access workaround
+was attempted and no successful inference is claimed.
+
+### Security follow-up before further native agent work
+
+Historical AIF-47 local-agent output contains a controller database credential
+in inherited `DATABASE_URL`. Do not copy raw output or its value into Git,
+issues, public artifacts or model prompts. Local child-process spawning merges
+the controller environment; the directory correction does **not** isolate
+secrets. The task-specific agents remain paused. Next: remove privileged
+controller credentials from agent environments with focused regression tests,
+then perform owner-approved credential rotation and controlled restart while
+preserving data. Review stored-log redaction separately without silently
+changing hashed validation artifacts. Normal candidate image build/cutover and
+a new governed task can follow containment; no live rollout is claimed here.

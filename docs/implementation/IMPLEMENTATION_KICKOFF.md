@@ -515,6 +515,17 @@ they do not close the native Codex quota gate or generic runtime binding work.
 See [`milestone2/README.md`](../../milestone2/README.md) for exact runs, artifacts,
 limitations and the completed human approval stage.
 
+**Automatic OpenCode worktree binding implemented, not deployed (2026-09-27):**
+Owner-fork `379fe383d0e21a8e6194e799ba224762f7245cf4` passes 58 Linux adapter
+tests, package typecheck/build, independent review, and a real model-free native
+session regression. Explicit resolved `--dir` prevents inherited controller
+`PWD` from selecting `/app`. Active image and Milestone 0 pins are unchanged;
+normal image rollout remains open. Historical local-agent output also exposed
+an inherited controller database credential. **Before further native work**,
+contain privileged environment inheritance, obtain owner-approved credential
+rotation with data preserved, and revalidate effective capabilities. Task agents
+remain paused; see the Milestone 2 README for evidence and the bounded follow-up.
+
 Add only capabilities required by a second representative task or a demonstrated
 failure of the first:
 
