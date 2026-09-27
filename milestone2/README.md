@@ -67,7 +67,7 @@ workspace was seeded from the already accepted AI Factory commit because the
 globally enabled Milestone 1 pre-run plugin requires a Git source. This is a
 test fixture, not a new Context Resolver or workflow implementation.
 
-## Native Codex MCP catalog: fix prepared, not deployed
+## Native Codex MCP catalog: fork image built, not deployed
 
 Paperclip fork branch `ai-factory/milestone2-codex-mcp-headers`, commit
 `c2f23c8102461a93cb07d294748c32f185d8ecdd`, changes its managed Codex
@@ -94,10 +94,26 @@ protocol-manifest check. The Windows checkout has CRLF working-tree bytes for
 generated files whose Git blobs are LF. An exact Git-archive retry avoided
 checkout conversion but missed Docker's package-install cache; it was stopped
 at about 7 GB remaining host space to protect other running work. No live
-controller, database, or storage was changed. Next build must run from clean
-Git bytes on a Linux builder with enough space, then take a paired DB/storage
-backup before any controller switch. This fork revision is **not** the active
-Paperclip dependency pin.
+controller, database, or storage was changed.
+
+The owner fork's normal Linux Docker workflow now builds the same fix from
+commit `d57c0b7c5cbd2e29c25363df7dc30531e44f5ad1`. The additional commit
+normalizes mixed-case GitHub owner names for GHCR and skips the unrelated cloud
+image on manual branch builds. [Run 36332581214](https://github.com/Dzikle/paperclip/actions/runs/36332581214)
+passed both production architecture builds, manifest merge, and the published
+image's PID-1 orphan-reaping check. Immutable multi-arch image:
+`ghcr.io/dzikle/paperclip@sha256:95f6708217d9b34b10c9a3637d024e121a2bdaf6fa0008eb3fca5983b80f1676`.
+This is a build result, **not** a local runtime admission or the active
+Paperclip dependency pin. The Linux `codex-home.test.ts` suite was not run by
+that Docker workflow.
+
+Local Docker Desktop then failed to start its engine because its inference
+manager could not remove a stale `dockerInference` runtime socket. No reset,
+image/volume prune, or data deletion was performed. Once Docker is available,
+take a paired Paperclip DB/storage backup before switching the controller to
+the immutable image; then assert the exact effective native MCP catalog and
+bearer headers and run a real native task. Until those gates pass, the admitted
+image remains `aif-paperclip-fork:62760ac` and the fix is **not deployed**.
 
 Still open: native-harness MCP home cleanup and live verification, reliable
 Git handoff, and a second independently accepted task with conditional QA.

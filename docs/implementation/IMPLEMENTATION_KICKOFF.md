@@ -461,13 +461,15 @@ the second independently accepted task with conditional QA evidence.
 **Native-catalog hardening in progress, 2026-09-27:** The owner Paperclip fork
 commit `c2f23c81` corrects the managed Codex MCP header key to `http_headers`;
 focused red/green test, adapter typecheck, and independent Codex CLI parsing
-support it. The exact native-catalog gate still fails on the active `62760ac`
-image because five historical named gateways remain visible. A normal local
-image build failed its generated protocol-manifest check from Windows CRLF
-checkout bytes; a clean-archive retry was stopped for disk safety. The patch
-is **not deployed** and the admitted image/pin is unchanged. See
-[`milestone2/README.md`](../../milestone2/README.md) for the evidence and
-remaining Linux-build, backup, gateway-cleanup, and native-run gates.
+support it. Fork commit `d57c0b7c` also fixes GHCR naming for a mixed-case
+owner; its normal Linux production-image workflow passed at immutable digest
+`sha256:95f6708217d9b34b10c9a3637d024e121a2bdaf6fa0008eb3fca5983b80f1676`.
+The exact native-catalog gate still fails on the active `62760ac` image because
+five historical named gateways remain visible. Docker Desktop is currently
+unavailable locally, so no paired backup, controller cutover, Linux adapter
+test, or real native-run gate has passed. The patch is **not deployed** and the
+admitted image/pin is unchanged. See [`milestone2/README.md`](../../milestone2/README.md)
+for the CI record and remaining gates.
 
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
 Add only capabilities required by a second representative task or a demonstrated
