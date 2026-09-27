@@ -38,11 +38,11 @@ test("resolves only the Paperclip snapshot worktree for this run and issue", asy
       assert.equal(url, "http://paperclip.test/api/heartbeat-runs/run-1");
       assert.equal(options.headers.authorization, "Bearer run-token");
       return { ok: true, json: async () => ({ id: "run-1", agentId: "agent-1",
-        contextSnapshot: { issueId: "issue-1", paperclipWorkspace: { cwd } },
+        contextSnapshot: { issueId: "issue-1", paperclipWorkspace: { cwd, branchName: "AIF-42-task" } },
       }) };
     },
   });
-  assert.equal(actual, cwd);
+  assert.deepEqual(actual, { cwd, branchName: "AIF-42-task" });
 });
 
 test("rejects unrelated or outside workspaces", async () => {
@@ -52,7 +52,19 @@ test("rejects unrelated or outside workspaces", async () => {
   ]) {
     await assert.rejects(resolveRunWorkspace({ ...input, issueId: "issue-1", agentId: "agent-1",
       fetchImpl: async () => ({ ok: true, json: async () => ({ id: "run-1", agentId: "agent-1",
-        contextSnapshot: { issueId, paperclipWorkspace: { cwd } },
+        contextSnapshot: { issueId, paperclipWorkspace: { cwd, branchName: "AIF-42-task" } },
+      }) }),
+    }), /snapshot identity or workspace mismatch/);
+  }
+});
+
+test("rejects missing task branch identity instead of trusting the current checkout", async () => {
+  for (const branchName of [undefined, null, "", "   ", 42]) {
+    await assert.rejects(resolveRunWorkspace({ ...input, issueId: "issue-1", agentId: "agent-1",
+      fetchImpl: async () => ({ ok: true, json: async () => ({ id: "run-1", agentId: "agent-1",
+        contextSnapshot: { issueId: "issue-1", paperclipWorkspace: {
+          cwd: "/paperclip/m1-first-task-worktrees/AIF-42-task", branchName,
+        } },
       }) }),
     }), /snapshot identity or workspace mismatch/);
   }

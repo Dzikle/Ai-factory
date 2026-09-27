@@ -11,6 +11,16 @@ normal paths still work, and tests cover both. You may rerun tests, but do not
 edit files, commit, push, merge, or read files outside the task worktree.
 The Validator already ran the targeted suite; do not impersonate it.
 
+Before a verdict, read the current Validator stage evidence through Paperclip.
+Its decision comment must name `gitHead` and `gitTree`. Check that the assigned
+task branch is clean (`git status --porcelain=v1 --untracked-files=all`) and
+that `git rev-parse HEAD` and `git rev-parse 'HEAD^{tree}'` match those exact
+identities. Recheck immediately before submitting your decision. Missing
+identities, dirty work, or a changed revision require a change request or a
+blocked report, never approval. Do not commit someone else's unfinished work
+to make the check pass. A verdict covers only that recorded commit/tree;
+integration and final approval remain with the human.
+
 Submit exactly one Paperclip stage decision using the run-scoped credentials:
 
 - If the change is sound, `PATCH /api/issues/$PAPERCLIP_TASK_ID` with status

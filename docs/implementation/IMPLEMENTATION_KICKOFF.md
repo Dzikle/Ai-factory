@@ -483,6 +483,21 @@ probe after quota becomes available; **do not count this as the native-search
 gate or Milestone 2 exit**. See [`milestone2/README.md`](../../milestone2/README.md)
 for backup hashes, exact versions, run evidence and remaining gates.
 
+**Git handoff guard implemented, 2026-09-27:** Work continues independently of
+the Codex quota. The Paperclip source checkout now fetches the owner GitHub
+repository instead of its stale offline bundle; the native worktree policy is
+unchanged. A newly created diagnostic worktree resolved the published source
+commit without moving existing branches. The Git-doc Validator now rejects
+dirty/wrong-branch handoffs, tests an isolated copy of the recorded commit,
+checks for drift afterward, and records commit/tree identities for the separate
+Reviewer. Nine real-process container integration cases and 28 Node tests
+pass, including an outside edit/restore during testing. Runtime fixtures are
+updated; live AIF-46 Validator smoke passed 10/10 tests with persisted commit/tree
+evidence and clear locks. These are deterministic handoff safeguards, not a second accepted
+native task or final merge enforcement; human integration remains required.
+See [`milestone2/README.md`](../../milestone2/README.md) for precise evidence and
+the remaining native-search/conditional-QA gates.
+
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
 Add only capabilities required by a second representative task or a demonstrated
 failure of the first:

@@ -23,12 +23,14 @@ export async function resolveRunWorkspace({ api, token, runId, issueId, agentId,
   if (!response.ok) throw new Error(`Paperclip run snapshot lookup failed: ${response.status}`);
   const run = await response.json();
   const cwd = run?.contextSnapshot?.paperclipWorkspace?.cwd;
+  const branchName = run?.contextSnapshot?.paperclipWorkspace?.branchName;
   const relative = typeof cwd === "string" ? path.posix.relative(worktreeRoot, cwd) : "";
   if (run?.id !== runId || run?.agentId !== agentId ||
       run?.contextSnapshot?.issueId !== issueId || typeof cwd !== "string" ||
+      typeof branchName !== "string" || !branchName.trim() ||
       !path.posix.isAbsolute(cwd) || !relative || relative.startsWith("..") ||
       path.posix.isAbsolute(relative)) {
     throw new Error("run snapshot identity or workspace mismatch");
   }
-  return cwd;
+  return { cwd, branchName };
 }

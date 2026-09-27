@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveRunIssueId, resolveRunWorkspace } from "./git-doc-validator-identity.mjs";
+import { validateCommittedTask } from "./git-handoff.mjs";
 
 const { PAPERCLIP_API_URL: api, PAPERCLIP_API_KEY: token, PAPERCLIP_RUN_ID: runId,
   PAPERCLIP_AGENT_ID: agentId, PAPERCLIP_TASK_ID: configuredIssueId } = process.env;
@@ -12,25 +13,26 @@ const headers = { authorization: `Bearer ${token}`, "content-type": "application
 const me = await fetch(`${api}/api/agents/me`, { headers });
 if (!me.ok || (await me.json()).id !== agentId) throw new Error("run identity mismatch");
 const issueId = await resolveRunIssueId({ api, token, runId, configuredIssueId });
-const cwd = await resolveRunWorkspace({ api, token, runId, issueId, agentId });
+const { cwd, branchName } = await resolveRunWorkspace({ api, token, runId, issueId, agentId });
 const actualRoot = await realpath("/paperclip/m1-first-task-worktrees");
 const actualCwd = await realpath(cwd);
 if (!actualCwd.startsWith(`${actualRoot}/`)) throw new Error("validator worktree escapes its root");
-
-const commandPath = path.join(cwd, "milestone1/project_git_docs.py");
-const testPath = path.join(cwd, "tests/test_project_git_docs.py");
-const commandBytes = await readFile(commandPath);
-const testBytes = await readFile(testPath);
-const check = spawnSync("python3", ["-m", "unittest", "tests.test_project_git_docs", "-v"], {
-  cwd, encoding: "utf8", timeout: 90_000, maxBuffer: 64 * 1024,
-  env: { ...process.env, PYTHONPATH: `/paperclip/m1-python-libs:${cwd}` },
+const { handoff, result } = await validateCommittedTask({ cwd, expectedBranch: branchName }, async (snapshot) => {
+  const commandBytes = await readFile(path.join(snapshot, "milestone1/project_git_docs.py"));
+  const testBytes = await readFile(path.join(snapshot, "tests/test_project_git_docs.py"));
+  const check = spawnSync("python3", ["-m", "unittest", "tests.test_project_git_docs", "-v"], {
+    cwd: snapshot, encoding: "utf8", timeout: 90_000, maxBuffer: 64 * 1024,
+    env: { ...process.env, PYTHONPATH: `/paperclip/m1-python-libs:${snapshot}` },
+  });
+  return { commandBytes, testBytes, check };
 });
+const { commandBytes, testBytes, check } = result;
 const passed = check.status === 0 && !check.error;
-const revision = spawnSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" });
 const evidence = {
   schemaVersion: 1, issueId, runId, agentId, cwd,
   check: "python3 -m unittest tests.test_project_git_docs -v",
-  gitHead: revision.status === 0 ? revision.stdout.trim() : null,
+  ...handoff,
+  validationSource: "isolated_commit_copy",
   commandSha256: createHash("sha256").update(commandBytes).digest("hex"),
   testSha256: createHash("sha256").update(testBytes).digest("hex"),
   exitCode: check.status,
@@ -51,7 +53,7 @@ const response = await fetch(`${api}/api/issues/${issueId}`, {
   method: "PATCH", headers: { ...headers, "x-paperclip-run-id": runId },
   body: JSON.stringify({
     status: passed ? "done" : "in_progress",
-    comment: `Deterministic first-task validation ${evidence.verdict}; evidence=file://${artifactPath} sha256=${digest}`,
+    comment: `Deterministic first-task validation ${evidence.verdict}; gitHead=${handoff.gitHead} gitTree=${handoff.gitTree}; evidence=file://${artifactPath} sha256=${digest}`,
   }),
 });
 if (!response.ok) throw new Error(`Paperclip rejected validator decision: ${response.status}`);

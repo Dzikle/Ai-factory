@@ -174,3 +174,76 @@ providers, buy credits, or call the raw OpenSearch API to simulate this result.
 Then finish reliable Git handoff and the second independently accepted task
 with conditional QA. Milestone 2 remains **IN PROGRESS**; the trusted-only
 runner's isolated `seccomp=unconfined` exception also remains.
+
+## Git handoff implementation, 2026-09-27
+
+The Codex quota blocks AIF-44 only; independent Milestone 2 implementation
+continues. The source checkout's `origin` was still the initial offline
+`/paperclip/m1-first-task.bundle`. It is now
+`https://github.com/Dzikle/Ai-factory.git`, matching the owned repository.
+The existing Paperclip `git_worktree` policy and `milestone1-contracts` base
+branch are unchanged. Fetching updated the remote-tracking ref without moving
+the shared checkout or any existing task branch. After restoring an old backup,
+verify this origin before admitting another new task; do not use an old bundle
+as a moving branch's authority.
+
+Paperclip created AIF-45's isolated worktree at then-current published commit
+`15660c717f00f12f097cd13644c9c1b753b4a1ae`, independently confirmed with Git.
+The diagnostic process itself failed because its explicit cwd was `/paperclip`,
+not that worktree; no successful agent run is claimed. The read-only diagnostic
+was cancelled and its agent paused. This is workspace-source evidence, not a
+second accepted engineering task. Nine selected upstream workspace-runtime
+regressions passed in the pinned image as non-root: fresh remote bases, clean
+idle-worktree refresh, and preservation of existing task work (152 other cases
+not selected).
+
+The existing Git-doc Validator now requires Paperclip's recorded branch,
+a clean committed worktree, and an unchanged commit before/after validation.
+It tests a temporary **non-hardlinked copy of the captured commit**, then checks
+both the copy and original before submitting a decision. This also avoids
+testing transient edits made and restored in the original checkout. The copy
+is removed afterward; it is a test input, not a second operational workspace
+manager or a security sandbox. Trusted-repository execution restrictions remain.
+
+Validation evidence and the stage comment carry `gitHead`, `gitTree`, and
+`branchName`; evidence also names `validationSource: isolated_commit_copy`.
+Reviewer instructions require comparing the current clean branch with those
+identities before a verdict. This is not deterministic enforcement of a future
+human merge: final approval and integration remain human-owned. Nothing commits,
+pushes, or merges the task automatically.
+
+Verification: 28 Node unit/fixture tests and nine disposable Linux validator
+integration cases pass. The integration tests execute the real Validator,
+Git and Python against a test HTTP API; they are not live Paperclip approvals.
+They cover clean approval, dirty input, dirty/committed changes to both the
+copy and original during tests, wrong branch, failed tests, and a synchronized outside edit/restore. The last
+case failed before isolated-copy validation was added. The Python suite still
+passes 52 tests with two opt-in live skips.
+
+Run the unit checks with `node --test milestone1/fixtures/git-handoff.test.mjs
+milestone1/fixtures/git-doc-validator-identity.test.mjs`. Run the opt-in
+integration file **only in a disposable container with no live storage mounted**:
+
+```powershell
+$repo = (Get-Location).Path
+docker run --rm --network none --mount "type=bind,source=$repo/milestone1/fixtures,target=/fixtures,readonly" --env AIF_VALIDATOR_INTEGRATION=1 --entrypoint node ghcr.io/dzikle/paperclip@sha256:95f6708217d9b34b10c9a3637d024e121a2bdaf6fa0008eb3fca5983b80f1676 --test /fixtures/git-doc-validator.integration.test.mjs
+```
+
+The Validator/identity/helper/Reviewer runtime copies under `/paperclip` were
+updated while no runs were active and verified byte-for-byte against source.
+Their previous copies are backed up in ignored
+`.milestone0/m2-validator-prehandoff-20260927/`. Native end-to-end handoff and
+the second independently accepted task with conditional QA are still open;
+these deterministic changes do not close them.
+
+Live deployment smoke **AIF-46**, run
+`4009d95b-6e42-42d0-97c5-5f36db062baf`, succeeded using the existing Validator
+agent and real Paperclip API. Its isolated-copy test suite passed 10/10;
+the issue is `done` with clear execution/checkout locks. Stored artifact
+`/paperclip/milestone1-validation/4009d95b-6e42-42d0-97c5-5f36db062baf.json`
+independently hashes to
+`24010c74f2cba47246bdb58344729a6507eb13095147a0d4c94daa7eb74b8a04`
+and records commit `15660c717f00f12f097cd13644c9c1b753b4a1ae`, tree
+`454b0382254312e55c3eda58793343ee5ff62ed3`, and `isolated_commit_copy`.
+This verifies the deployed deterministic stage, not independent model review
+or human acceptance of a new engineering task.
