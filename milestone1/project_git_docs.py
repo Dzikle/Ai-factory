@@ -17,7 +17,7 @@ import sys
 import yaml
 
 from .git_projection import collect_snapshot
-from .opensearch_projection import HttpClient, reconcile_documents
+from .opensearch_projection import HttpClient, preview_documents, reconcile_documents
 
 
 def _committed_overlay(root: Path, overlay_path: str) -> tuple[dict, str]:
@@ -56,6 +56,7 @@ def project_once(
     reader,
     writer,
     expected_revision: str | None = None,
+    dry_run: bool = False,
 ) -> dict:
     """Reconcile one repository snapshot; return an evidence-friendly summary."""
     if not repository_id:
@@ -106,6 +107,19 @@ def project_once(
             "canonical paths contain no eligible committed document: "
             + ", ".join(repr(path) for path in missing_paths)
         )
+    if dry_run:
+        planned = preview_documents(
+            reader, documents, overlay["project_id"], repository_id, revision
+        )
+        return {
+            "project_id": overlay["project_id"],
+            "repository_id": repository_id,
+            "revision": revision,
+            "documents": len(documents),
+            "dry_run": True,
+            "planned_writes": planned,
+            "writes": 0,
+        }
     writes = reconcile_documents(
         reader, writer, documents, overlay["project_id"], repository_id, revision
     )
@@ -126,8 +140,27 @@ def run(argv: list[str] | None = None, environ: dict[str, str] | None = None) ->
     parser.add_argument("--expect-revision", help="required full Git commit SHA")
     parser.add_argument("--ca-file")
     parser.add_argument("--insecure-localhost", action="store_true", help="local test cluster only")
+    parser.add_argument("--dry-run", action="store_true", help="preview planned writes with searches only")
     args = parser.parse_args(argv)
     env = os.environ if environ is None else environ
+    options = {"cafile": args.ca_file, "insecure_localhost": args.insecure_localhost}
+    if args.dry_run:
+        required = ("AIF_DOCS_URL", "AIF_DOCS_READER_USER", "AIF_DOCS_READER_PASSWORD")
+        if any(not env.get(name) for name in required):
+            raise ValueError("OpenSearch reader credentials are required")
+        reader_user = env["AIF_DOCS_READER_USER"]
+        if not reader_user or reader_user.lower() == "admin":
+            raise ValueError("reader must be a non-admin principal")
+        reader = HttpClient(env["AIF_DOCS_URL"], reader_user, env["AIF_DOCS_READER_PASSWORD"], **options)
+        return project_once(
+            args.repo_root,
+            args.overlay,
+            args.repository,
+            reader,
+            None,
+            expected_revision=args.expect_revision,
+            dry_run=True,
+        )
     required = (
         "AIF_DOCS_URL", "AIF_DOCS_READER_USER", "AIF_DOCS_READER_PASSWORD",
         "AIF_DOCS_WRITER_USER", "AIF_DOCS_WRITER_PASSWORD",
@@ -138,7 +171,6 @@ def run(argv: list[str] | None = None, environ: dict[str, str] | None = None) ->
     writer_user = env["AIF_DOCS_WRITER_USER"]
     if reader_user == writer_user or any(user.lower() == "admin" for user in (reader_user, writer_user)):
         raise ValueError("reader and writer must be distinct non-admin principals")
-    options = {"cafile": args.ca_file, "insecure_localhost": args.insecure_localhost}
     reader = HttpClient(env["AIF_DOCS_URL"], reader_user, env["AIF_DOCS_READER_PASSWORD"], **options)
     writer = HttpClient(env["AIF_DOCS_URL"], writer_user, env["AIF_DOCS_WRITER_PASSWORD"], **options)
     return project_once(
