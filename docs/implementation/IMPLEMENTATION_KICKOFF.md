@@ -458,6 +458,17 @@ This completes **one Milestone 2 reliability slice**, not the Milestone 2 exit.
 Next: clean native harness MCP entries, make Git handoff repeatable, then run
 the second independently accepted task with conditional QA evidence.
 
+**Native-catalog hardening in progress, 2026-09-27:** The owner Paperclip fork
+commit `c2f23c81` corrects the managed Codex MCP header key to `http_headers`;
+focused red/green test, adapter typecheck, and independent Codex CLI parsing
+support it. The exact native-catalog gate still fails on the active `62760ac`
+image because five historical named gateways remain visible. A normal local
+image build failed its generated protocol-manifest check from Windows CRLF
+checkout bytes; a clean-archive retry was stopped for disk safety. The patch
+is **not deployed** and the admitted image/pin is unchanged. See
+[`milestone2/README.md`](../../milestone2/README.md) for the evidence and
+remaining Linux-build, backup, gateway-cleanup, and native-run gates.
+
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
 Add only capabilities required by a second representative task or a demonstrated
 failure of the first:

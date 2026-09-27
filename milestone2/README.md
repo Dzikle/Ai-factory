@@ -1,4 +1,4 @@
-# Milestone 2 — OpenSearch MCP supervision slice
+# Milestone 2 — MCP supervision and native-catalog hardening
 
 This is one reliability slice of Milestone 2, not the Milestone 2 exit. The
 official OpenSearch MCP server remains the provider; Paperclip remains the
@@ -67,6 +67,38 @@ workspace was seeded from the already accepted AI Factory commit because the
 globally enabled Milestone 1 pre-run plugin requires a Git source. This is a
 test fixture, not a new Context Resolver or workflow implementation.
 
-Still open: native-harness MCP home cleanup, reliable Git handoff, and a
-second independently accepted task with conditional QA. The trusted-only
-runner still has its isolated `seccomp=unconfined` exception.
+## Native Codex MCP catalog: fix prepared, not deployed
+
+Paperclip fork branch `ai-factory/milestone2-codex-mcp-headers`, commit
+`c2f23c8102461a93cb07d294748c32f185d8ecdd`, changes its managed Codex
+MCP writer from `headers` to Codex's supported `http_headers` field. A focused
+regression failed before and passed after the change; the adapter typecheck
+passed. Codex CLI 0.154.0 independently parsed `http_headers.Authorization`
+but ignored `headers.Authorization`. The full test file on Windows had 29
+passes and 24 unrelated symlink/permission failures; its Linux suite remains
+to be run in the image build.
+
+`scripts/verify_native_codex_mcp.mjs` asserts the exact Codex-visible server
+names and recognized bearer headers without printing tokens. Feed it to the
+controller with `docker exec -i <controller> node - <company-codex-home>
+paperclip-projects paperclip-connections paperclip-assigned`. Against the
+current image it correctly failed: five historical `native-*` servers were
+also visible. The currently running image remains
+`aif-paperclip-fork:62760ac` (`sha256:2c574c948ce21a22cf6e8bbcf136b99b8e55bd2d460042ec69fa62bbbc224455`).
+Do not disable historical gateways or claim corrected runtime authorization
+until the patched image and a native run pass this assertion.
+
+The attempted normal local source build did **not** produce an image. Docker
+build record `var0uzzifz2e2eqio8n9vaydf` failed at the runner's generated
+protocol-manifest check. The Windows checkout has CRLF working-tree bytes for
+generated files whose Git blobs are LF. An exact Git-archive retry avoided
+checkout conversion but missed Docker's package-install cache; it was stopped
+at about 7 GB remaining host space to protect other running work. No live
+controller, database, or storage was changed. Next build must run from clean
+Git bytes on a Linux builder with enough space, then take a paired DB/storage
+backup before any controller switch. This fork revision is **not** the active
+Paperclip dependency pin.
+
+Still open: native-harness MCP home cleanup and live verification, reliable
+Git handoff, and a second independently accepted task with conditional QA.
+The trusted-only runner still has its isolated `seccomp=unconfined` exception.
