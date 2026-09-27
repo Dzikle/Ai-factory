@@ -67,26 +67,28 @@ workspace was seeded from the already accepted AI Factory commit because the
 globally enabled Milestone 1 pre-run plugin requires a Git source. This is a
 test fixture, not a new Context Resolver or workflow implementation.
 
-## Native Codex MCP catalog: fork image built, not deployed
+## Native Codex MCP catalog: deployed; final search blocked on quota
 
 Paperclip fork branch `ai-factory/milestone2-codex-mcp-headers`, commit
 `c2f23c8102461a93cb07d294748c32f185d8ecdd`, changes its managed Codex
 MCP writer from `headers` to Codex's supported `http_headers` field. A focused
 regression failed before and passed after the change; the adapter typecheck
 passed. Codex CLI 0.154.0 independently parsed `http_headers.Authorization`
-but ignored `headers.Authorization`. The full test file on Windows had 29
-passes and 24 unrelated symlink/permission failures; its Linux suite remains
-to be run in the image build.
+but ignored `headers.Authorization`. The Windows run had unrelated symlink/
+permission failures. On 2026-09-27 the complete `codex-home.test.ts` file ran
+inside the exact Linux production image below: **53/53 passed**.
 
 `scripts/verify_native_codex_mcp.mjs` asserts the exact Codex-visible server
 names and recognized bearer headers without printing tokens. Feed it to the
 controller with `docker exec -i <controller> node - <company-codex-home>
-paperclip-projects paperclip-connections paperclip-assigned`. Against the
-current image it correctly failed: five historical `native-*` servers were
-also visible. The currently running image remains
-`aif-paperclip-fork:62760ac` (`sha256:2c574c948ce21a22cf6e8bbcf136b99b8e55bd2d460042ec69fa62bbbc224455`).
-Do not disable historical gateways or claim corrected runtime authorization
-until the patched image and a native run pass this assertion.
+paperclip-projects paperclip-connections paperclip-assigned`. The initial
+saved home contained five historical `native-*` entries. A new native run
+regenerated its managed block automatically; no manual TOML deletion or
+named-gateway disabling was needed. The assertion now **passes**, including
+after controller restart: exactly three servers with recognized bearer headers
+under controller Codex 0.157.1. This proves CLI parsing, not a successful
+model-initiated MCP call. The SSH runner remains on its existing pinned image
+with Codex 0.156.1.
 
 The attempted normal local source build did **not** produce an image. Docker
 build record `var0uzzifz2e2eqio8n9vaydf` failed at the runner's generated
@@ -103,18 +105,72 @@ image on manual branch builds. [Run 36332581214](https://github.com/Dzikle/paper
 passed both production architecture builds, manifest merge, and the published
 image's PID-1 orphan-reaping check. Immutable multi-arch image:
 `ghcr.io/dzikle/paperclip@sha256:95f6708217d9b34b10c9a3637d024e121a2bdaf6fa0008eb3fca5983b80f1676`.
-This is a build result, **not** a local runtime admission or the active
-Paperclip dependency pin. The Linux `codex-home.test.ts` suite was not run by
-that Docker workflow.
+The image is **deployed locally**, but the native end-to-end gate is incomplete.
+The Milestone 0 admitted/rollback pin is retained separately from this active
+Milestone 2 candidate in `milestone0/dependencies.lock.yaml`.
 
-Local Docker Desktop then failed to start its engine because its inference
-manager could not remove a stale `dockerInference` runtime socket. No reset,
-image/volume prune, or data deletion was performed. Once Docker is available,
-take a paired Paperclip DB/storage backup before switching the controller to
-the immutable image; then assert the exact effective native MCP catalog and
-bearer headers and run a real native task. Until those gates pass, the admitted
-image remains `aif-paperclip-fork:62760ac` and the fix is **not deployed**.
+### Controlled cutover and evidence, 2026-09-27
 
-Still open: native-harness MCP home cleanup and live verification, reliable
-Git handoff, and a second independently accepted task with conditional QA.
-The trusted-only runner still has its isolated `seccomp=unconfined` exception.
+Docker recovered after the owner restarted Desktop; no purge was performed.
+Before cutover, the stopped controller's PostgreSQL database and storage volume
+were backed up together under ignored `.milestone0/m2-precutover-20260927/`:
+
+| Backup | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `paperclip_fork_m0.dump` | 3613915 | `ccfcced7b3b2ec1e65e3bdcde3872927932751408ec79c8a585337a094c37aba` |
+| `paperclip-storage.tar` | 421519360 | `3764b58e848c6f57608033b31f2efdc01350eebc3949163730bf32c13b66d5b2` |
+
+Matching PostgreSQL 17 `pg_restore -l` read 2142 entries; the storage tar listed
+11526 entries. These are archive checks, **not a new restore rehearsal**. The
+earlier Windows directory copy failed on symlinks; the Linux tar is the storage
+backup. Backups contain credentials and must never be committed.
+
+Use `compose/paperclip-native-mcp.yaml` after
+`milestone0/compose/paperclip-fork-readmission.yaml`. Supply the existing
+`AIF_M0_POSTGRES_PASSWORD`, `AIF_M0_BETTER_AUTH_SECRET`,
+`AIF_M0_AGENT_JWT_SECRET`, and `AIF_M0_SECRETS_MASTER_KEY` in the invoking shell
+from the local secret store (or an explicitly supplied ignored `--env-file`).
+Do not generate replacements or commit/display the values. The override preserves the native runner network,
+previously attached manually. Cutover used `up -d --no-build --pull never
+--no-deps paperclip-fork` after verifying rendered environment values matched
+the saved controller. The PostgreSQL and storage volumes were not replaced.
+Immediate before/after counts matched: 202 runs, 43 issues, 91 agents.
+PostgreSQL remains 17.11; the Drizzle journal remains 283 rows, latest
+`1790018362070`. The fork diff introduces no schema/migration changes.
+
+- Health reports exact commit `d57c0b7c5cbd2e29c25363df7dc30531e44f5ad1`.
+- Linux adapter regressions: 53/53. Exact direct MCP catalog, Developer/Reviewer
+  search-only effective profiles, live searches and MCP child-kill/restart: PASS.
+- Repository validation: 52 Python tests run, 2 opt-in live tests skipped, no
+  failures, using the documented pinned `uv` dependencies; 18 Node fixture tests
+  passed. The separate live MCP checks above did run. Bare system Python lacked
+  `jsonschema`; it was not used for the successful suite.
+- Read-only probe **AIF-44** (`a73c46a0-8900-401c-bc3b-6a9af3db7f4d`) first
+  failed before provider invocation: the project template's old
+  `origin/milestone1-contracts` ref produced a workspace behind the indexed Git
+  source. The clean probe worktree alone was fast-forwarded to existing source
+  commit `4f50570ae6a8efb67ff7840d629ad2fb3dd6a0c3`. No prior task or projection
+  was changed. Repeatable source-ref/Git handoff remains separate work.
+- Run `6f410fba-5852-4835-9722-a4df0e02ff30` then completed governed enrichment,
+  wrote the exact three-server configuration, synced it to the existing SSH
+  runner, and launched the original native `codex_local` adapter. Codex returned
+  **`provider_quota` before a model tool call**. This is not a successful native
+  search, completed task, or full native authorization admission.
+- The run snapshot retains
+  `file:///paperclip/milestone1-context/6f410fba-5852-4835-9722-a4df0e02ff30.json`,
+  3545 bytes, SHA-256
+  `1c07706becbd54e5aee27e533d55cf247c58a18823a5f77310aca7db88e530e1`.
+  Actual bytes independently matched the digest before and after restart.
+  Lease `341f3bc5-c5d8-48ab-a3a5-3a861e916472` is terminal (`failed`) with stable
+  release receipt `2026-09-27T18:57:35.096Z`; task execution/checkout locks cleared.
+- Developer is paused, queued retries cancelled, AIF-44 explicitly blocked on
+  provider quota. No active/queued/scheduled-retry runs remained at the final
+  check. Historical named gateways remain unchanged pending the native search.
+
+**Next:** when Codex quota is available, resume this same read-only AIF-44 probe
+with a fresh session, reassert the exact catalog/profile, and require a real
+governed search in its native event log before closing this gate. Do not change
+providers, buy credits, or call the raw OpenSearch API to simulate this result.
+Then finish reliable Git handoff and the second independently accepted task
+with conditional QA. Milestone 2 remains **IN PROGRESS**; the trusted-only
+runner's isolated `seccomp=unconfined` exception also remains.

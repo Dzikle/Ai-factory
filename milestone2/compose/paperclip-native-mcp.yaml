@@ -1,0 +1,14 @@
+# Deployed Milestone 2 candidate; final native search gate is quota-blocked.
+# Use after the paired DB/storage backup
+# with milestone0/compose/paperclip-fork-readmission.yaml as the first Compose file.
+services:
+  paperclip-fork:
+    image: ghcr.io/dzikle/paperclip@sha256:95f6708217d9b34b10c9a3637d024e121a2bdaf6fa0008eb3fca5983b80f1676
+    networks:
+      - baseline-postgres
+      - native-runner
+
+networks:
+  native-runner:
+    external: true
+    name: aif-m1-runner-net

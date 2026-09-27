@@ -458,18 +458,30 @@ This completes **one Milestone 2 reliability slice**, not the Milestone 2 exit.
 Next: clean native harness MCP entries, make Git handoff repeatable, then run
 the second independently accepted task with conditional QA evidence.
 
-**Native-catalog hardening in progress, 2026-09-27:** The owner Paperclip fork
+**Native-catalog hardening deployed; final probe quota-blocked, 2026-09-27:** The owner Paperclip fork
 commit `c2f23c81` corrects the managed Codex MCP header key to `http_headers`;
 focused red/green test, adapter typecheck, and independent Codex CLI parsing
 support it. Fork commit `d57c0b7c` also fixes GHCR naming for a mixed-case
 owner; its normal Linux production-image workflow passed at immutable digest
 `sha256:95f6708217d9b34b10c9a3637d024e121a2bdaf6fa0008eb3fca5983b80f1676`.
-The exact native-catalog gate still fails on the active `62760ac` image because
-five historical named gateways remain visible. Docker Desktop is currently
-unavailable locally, so no paired backup, controller cutover, Linux adapter
-test, or real native-run gate has passed. The patch is **not deployed** and the
-admitted image/pin is unchanged. See [`milestone2/README.md`](../../milestone2/README.md)
-for the CI record and remaining gates.
+After a paired PostgreSQL/storage backup, this immutable image replaced the
+local controller without replacing its volumes or changing its 283-row migration
+journal. Linux adapter tests passed 53/53. The new native run regenerated the
+Codex home: exactly three intended servers with recognized bearer headers;
+the five stale entries disappeared without manual edits. MCP child-crash
+recovery and effective search-only profiles passed again.
+
+Read-only AIF-44 required fast-forwarding its clean probe worktree to the
+already-indexed Git source because the project template's remote ref was stale.
+Run `6f410fba-5852-4835-9722-a4df0e02ff30` then persisted verified context,
+synced the home, and launched native Codex over SSH, but stopped with
+`provider_quota` before a model-initiated search. Its artifact digest and terminal
+lease release receipt survived controller restart. AIF-44 is blocked and the
+Developer paused; retries are cancelled. The active candidate is recorded
+separately from the unchanged Milestone 0 admitted/rollback pin. Resume the same
+probe after quota becomes available; **do not count this as the native-search
+gate or Milestone 2 exit**. See [`milestone2/README.md`](../../milestone2/README.md)
+for backup hashes, exact versions, run evidence and remaining gates.
 
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
 Add only capabilities required by a second representative task or a demonstrated
