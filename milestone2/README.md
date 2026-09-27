@@ -250,13 +250,19 @@ or human acceptance of a new engineering task.
 
 ## Second task: preview and independent QA, 2026-09-27
 
-**AIF-47 is awaiting human approval**, not `done` and not a Milestone 2 exit.
+**AIF-47 is owner-approved, `done`, and integrated**, not a Milestone 2 exit.
 Issue `bf01619d-4359-423e-bc58-36362ddf6c99` implements a reader-only
 `--dry-run` for the existing Git-doc projector. Native OpenCode
 `opencode/muse-spark-1.3-contributor-free` implemented and separately reviewed
 the change. Candidate commit `43a379add55538cdf8a2e3e87e5c7c25d045e28a`, tree
 `50ea2aa7138f6bb5e336ab5b11f2af395f54dbf4`, is on the owned repository branch
-`milestone2-projection-preview`; it is **not merged** into `milestone1-contracts`.
+`milestone2-projection-preview`. The owner explicitly approved this exact commit
+with `approve AIF-47`. Paperclip recorded human approval at
+`2026-09-27T20:33:53.753Z`, decision
+`172a5c0f-f97b-423e-bf76-4f4dba0c9047`; all four policy stages are completed and
+execution/checkout locks are clear. Merge
+`52dee7fa2d1d8b298dff8e43a56bca010fa4f558` integrates the candidate into
+`milestone1-contracts`, preserving its task branch and workspace history.
 
 The command previews upserts and tombstones using the existing reconciliation
 algorithm, accepts only reader credentials, reports actual `writes: 0`, and
@@ -290,11 +296,14 @@ Actual artifact bytes independently verified:
 - `/paperclip/milestone2-qa/bbbb0b44-0cd3-4945-88f5-c0827c0c70b0.json`:
   `6a29f1eb5aa9f64df91e19fcf44511922fa1de86fd2a785d0103255a160149c6`.
 
-The candidate full suite passes **59 tests, two opt-in live skips**, using the
+The candidate full suite runs **59 tests: 57 passed, two opt-in live skips**, using the
 pinned `uv` dependencies in a real Git clone. The native model runtimes lacked
 `jsonschema`, so their claimed full-suite attempts were incomplete; they are not
 the full-suite evidence. An archive-only host test also failed its Git-snapshot
 case; the successful repeat used a Git clone, not modified tests.
+After integration, the full Python suite repeated with the same result; all six
+independent CLI QA checks and all 29 Node context/handoff/Validator tests passed.
+`git diff --check` passed. No opt-in live test is counted as executed here.
 
 A separate real OpenSearch check loaded candidate code, previewed the published
 `c85738a` source twice with only the existing non-admin reader credentials, and
@@ -303,6 +312,9 @@ including sequence/primary-term metadata, were unchanged (snapshot SHA-256
 `ae67a3b3a65048e0b42a33e2c2adfc4d6cad8d70220f2e89cf6f53919537e42d`).
 The offline QA covers nonzero planned writes without mutation. This is projector
 verification, not a replacement for the still-open native Codex MCP-search gate.
+The merged CLI also previewed merge revision `52dee7f` against the real cluster
+with reader credentials only: 49 documents, 49 planned writes, zero actual
+writes. This covers a real pending refresh without granting preview a writer.
 
 Two launch issues were corrected without relaxing security checks:
 
@@ -329,8 +341,15 @@ with `issue_reassigned`, not a failed review or a fabricated successful run.
 All seven task leases are terminal with release timestamps; issue checkout and
 execution locks are clear. The three task-specific agents are paused again.
 
-The existing policy now holds at its fourth, human approval stage with all three
-review stages recorded. No board approval or task merge was simulated. Next:
-obtain owner acceptance of this exact candidate, integrate it, refresh the Git
-projection, then continue remaining Milestone 2 work. Preserve the current
-`c85738a` projection while this task awaits acceptance.
+The existing policy has completed its fourth, human approval stage after the
+explicit owner decision; no autonomous board approval was substituted. This
+closes the second accepted task and conditional functional-QA slice. Publish the
+integration and refresh Git-docs at the published HEAD; verify apply/replay and
+a zero-write preview, then fetch the source checkout's remote tracking ref
+without moving completed task branches. The final publication/projection receipt
+belongs in the Paperclip issue history.
+
+Milestone 2 remains **IN PROGRESS**: generic native OpenCode directory binding,
+skill/capability synchronization, task-history projections, model-change recovery
+and active-projection restore/rebuild are still open. The native Codex MCP-search
+probe remains separately quota-blocked; accepting AIF-47 does not waive it.

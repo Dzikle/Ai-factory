@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 MCP supervision slice passed (V1 workflow still incomplete)
+**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 IN PROGRESS — second task AIF-47 accepted and integrated (V1 workflow still incomplete)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -26,7 +26,7 @@ complete; harden that loop before adding breadth.
 | --- | --- | --- |
 | 0 — admit dependencies | **Done** | Pinned Paperclip fork passed migration, crash/security/enrichment, and restore gates. |
 | 1 — first runnable task | **Done** | AIF-42 completed Developer → Validator → Reviewer → human approval; AIF-43 survived a native child kill and resumed under a different native adapter. Evidence below. |
-| 2 — harden and broaden | **Next** | Make the working loop repeatable: supervised MCP, clean native runtime tool catalogs, active-source projections, capability compilation, conditional QA, and backup/rebuild. |
+| 2 — harden and broaden | **In progress** | Second task and conditional functional QA accepted; finish runtime/catalog hardening, active-source projections, capability compilation, and backup/rebuild. |
 | 3 — useful memory | **Later** | One proven experience is stored with provenance, retrieved by a later task, and cannot override current Git. |
 | 4 — measure and operate | **Later** | Compare accepted-task quality/cost against a baseline; run bounded failure/rollback drills and promote improvements only through review. |
 
@@ -499,18 +499,21 @@ See [`milestone2/README.md`](../../milestone2/README.md) for precise evidence an
 the remaining native-search/conditional-QA gates.
 
 Start from the **working Milestone 1 task**, not a second greenfield workflow.
-**Second task reached human approval (2026-09-27):** AIF-47 adds read-only
+**Second task accepted and integrated (2026-09-27):** AIF-47 adds read-only
 projection preview. Native OpenCode Developer and separate Reviewer, the existing
 Validator, and independent functional CLI QA all recorded evidence for commit
-`43a379add55538cdf8a2e3e87e5c7c25d045e28a`. The candidate passes 59 Python
-tests (two opt-in live skips) and six independent QA cases; a real reader-only
-preview leaves all 49 indexed documents unchanged. It is on
-`milestone2-projection-preview`, awaiting owner acceptance and integration, not
-a second **accepted** task yet. Launch fixes use verified Git text after
+`43a379add55538cdf8a2e3e87e5c7c25d045e28a`. The owner explicitly approved that
+commit; Paperclip decision `172a5c0f-f97b-423e-bf76-4f4dba0c9047` completed the
+human stage and issue. Merge `52dee7fa2d1d8b298dff8e43a56bca010fa4f558` integrates
+it into `milestone1-contracts`. Post-merge validation: 59 Python tests run
+(57 passed, two opt-in live skips), six independent QA cases and 29 Node tests
+passed. Real reader-only previews exercised both unchanged and pending-refresh
+states without writes. This closes the second accepted task and conditional
+functional-QA slice, not all Milestone 2 gates. Launch fixes use verified Git text after
 metadata-only governed retrieval and task-specific native OpenCode `--dir`;
 they do not close the native Codex quota gate or generic runtime binding work.
 See [`milestone2/README.md`](../../milestone2/README.md) for exact runs, artifacts,
-limitations and the held human approval stage.
+limitations and the completed human approval stage.
 
 Add only capabilities required by a second representative task or a demonstrated
 failure of the first:
@@ -519,7 +522,8 @@ failure of the first:
    role/project/task/skill capability intersection into Paperclip MCP profiles;
    missing capabilities block, and effective catalogs—not configuration alone—
    prove deny-default access for Developer, Reviewer, and conditional QA.
-2. Add a task class where independent QA/UX is genuinely required. Reuse the
+2. **Completed for CLI functional QA by accepted AIF-47.** Add independent UX
+   checks when a UI task genuinely requires them. Reuse the
    Paperclip execution policy; keep Developer, Reviewer, and QA as distinct
    logical agents with separate evidence and no self-approval.
 3. Project Paperclip task/run/review/cost/artifact metadata needed for task
