@@ -130,21 +130,11 @@ def install_docs_index(admin) -> None:
             raise RuntimeError(f"OpenSearch {alias} points at another physical index")
 
 
-def reconcile_documents(
-    reader,
-    writer,
+def _validate_documents(
     desired: list[dict],
     project_id: str,
     repository_id: str,
-    revision: str,
-) -> int:
-    """Reconcile one repository snapshot using separate read and write clients.
-
-    A failed bulk raises; a later invocation retries from Git and OpenSearch.
-    Neither the caller nor this function persists a second cursor or task state.
-    """
-    if not project_id or not repository_id or not revision:
-        raise ValueError("project, repository and revision are required")
+) -> None:
     for document in desired:
         path = document.get("path")
         if (
@@ -157,6 +147,8 @@ def reconcile_documents(
         ):
             raise ValueError("Git projection document identity escapes its repository scope")
 
+
+def _fetch_existing(reader, project_id: str, repository_id: str) -> list[dict]:
     existing: list[dict] = []
     cursor = None
     while True:
@@ -183,6 +175,44 @@ def reconcile_documents(
         if len(hits) < 500:
             break
         cursor = hits[-1]["sort"]
+    return existing
+
+
+def preview_documents(
+    reader,
+    desired: list[dict],
+    project_id: str,
+    repository_id: str,
+    revision: str,
+) -> int:
+    """Count planned writes using the reconciliation algorithm without mutating.
+
+    Performs searches only; never issues bulk, indexing, alias or other writes.
+    """
+    if not project_id or not repository_id or not revision:
+        raise ValueError("project, repository and revision are required")
+    _validate_documents(desired, project_id, repository_id)
+    existing = _fetch_existing(reader, project_id, repository_id)
+    return len(plan_reconciliation(desired, existing, revision=revision))
+
+
+def reconcile_documents(
+    reader,
+    writer,
+    desired: list[dict],
+    project_id: str,
+    repository_id: str,
+    revision: str,
+) -> int:
+    """Reconcile one repository snapshot using separate read and write clients.
+
+    A failed bulk raises; a later invocation retries from Git and OpenSearch.
+    Neither the caller nor this function persists a second cursor or task state.
+    """
+    if not project_id or not repository_id or not revision:
+        raise ValueError("project, repository and revision are required")
+    _validate_documents(desired, project_id, repository_id)
+    existing = _fetch_existing(reader, project_id, repository_id)
 
     actions = plan_reconciliation(desired, existing, revision=revision)
     if not actions:

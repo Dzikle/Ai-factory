@@ -235,5 +235,108 @@ class ProjectGitDocsTests(unittest.TestCase):
         self.assertIn("credentials are required", result.stderr)
 
 
+class DryRunPreviewTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self._git("init", "-q")
+        self._git("config", "user.email", "fixture@example.test")
+        self._git("config", "user.name", "Fixture")
+        (self.root / "docs").mkdir()
+        (self.root / "docs/one.md").write_text("# One\nFirst\n", encoding="utf-8")
+        (self.root / "overlay.yaml").write_text(
+            "schema_version: 1\nproject_id: example\nrepositories:\n"
+            "  - id: source\n    remote: https://example.test/source.git\n"
+            "    canonical_paths: [docs/]\n",
+            encoding="utf-8",
+        )
+        self._git("add", ".")
+        self._git("commit", "-qm", "initial")
+        self.documents = {}
+        self.reader = SearchClient(self.documents)
+        self.writer = BulkClient(self.documents)
+
+    def _git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.root, check=True, capture_output=True)
+
+    def test_dry_run_reports_planned_writes_without_mutation(self):
+        result = project_git_docs.project_once(
+            self.root, "overlay.yaml", "source", self.reader, None, dry_run=True
+        )
+        self.assertTrue(result["dry_run"])
+        self.assertEqual(1, result["planned_writes"])
+        self.assertEqual(0, result["writes"])
+        self.assertEqual("example", result["project_id"])
+        self.assertEqual("source", result["repository_id"])
+        self.assertIn("revision", result)
+        self.assertEqual(1, result["documents"])
+        self.assertEqual({}, self.documents)
+        self.assertTrue(all(path == "/ai_factory_docs/_search" for _, path in self.reader.calls))
+        self.assertEqual([], self.writer.calls)
+
+    def test_repeated_dry_run_does_not_change_index(self):
+        first = project_git_docs.project_once(
+            self.root, "overlay.yaml", "source", self.reader, None, dry_run=True
+        )
+        reader_calls = len(self.reader.calls)
+        second = project_git_docs.project_once(
+            self.root, "overlay.yaml", "source", self.reader, None, dry_run=True
+        )
+        self.assertEqual(first, second)
+        self.assertEqual({}, self.documents)
+        self.assertGreater(len(self.reader.calls), reader_calls)
+
+    def test_run_dry_run_requires_only_reader_credentials(self):
+        env = {
+            "AIF_DOCS_URL": "https://127.0.0.1:19200",
+            "AIF_DOCS_READER_USER": "reader",
+            "AIF_DOCS_READER_PASSWORD": "reader-secret",
+        }
+        created = []
+
+        def client(*args, **kwargs):
+            created.append((args, kwargs))
+            return self.reader
+
+        with patch.object(project_git_docs, "HttpClient", side_effect=client):
+            result = project_git_docs.run(
+                ["--repo-root", str(self.root), "--overlay", "overlay.yaml",
+                 "--repository", "source", "--dry-run"],
+                env,
+            )
+        self.assertTrue(result["dry_run"])
+        self.assertEqual(1, result["planned_writes"])
+        self.assertEqual(0, result["writes"])
+        self.assertEqual(1, len(created))
+        self.assertEqual("reader", created[0][0][1])
+        self.assertEqual({}, self.documents)
+
+    def test_dry_run_searches_only_even_when_writer_credentials_present(self):
+        env = {
+            "AIF_DOCS_URL": "https://127.0.0.1:19200",
+            "AIF_DOCS_READER_USER": "reader",
+            "AIF_DOCS_READER_PASSWORD": "reader-secret",
+            "AIF_DOCS_WRITER_USER": "writer",
+            "AIF_DOCS_WRITER_PASSWORD": "writer-secret",
+        }
+        created = []
+
+        def client(*args, **kwargs):
+            created.append((args, kwargs))
+            return self.reader
+
+        with patch.object(project_git_docs, "HttpClient", side_effect=client):
+            result = project_git_docs.run(
+                ["--repo-root", str(self.root), "--overlay", "overlay.yaml",
+                 "--repository", "source", "--dry-run"],
+                env,
+            )
+        self.assertTrue(result["dry_run"])
+        self.assertEqual(1, len(created))
+        self.assertEqual("reader", created[0][0][1])
+
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -177,5 +177,58 @@ class OpenSearchProjectionTests(unittest.TestCase):
         self.assertEqual([], writer.calls)
 
 
+class PreviewDocumentsTests(unittest.TestCase):
+    def test_preview_counts_planned_upsert_with_searches_only(self) -> None:
+        from milestone1.opensearch_projection import preview_documents
+
+        document = {
+            "id": DOC_ID, "project_id": "project-a", "repository_id": "repo-a",
+            "path": "docs/a.md",
+            "source_system": "git", "source_id": "repo-a:docs/a.md",
+            "source_revision": "commit-2", "source_version": "blob-2",
+            "status": "canonical", "canonical": True, "content": "new",
+        }
+        old = {**document, "source_revision": "commit-1", "source_version": "blob-1", "content": "old"}
+        reader = Reader([{"hits": {"hits": [{"_source": old, "sort": [DOC_ID]}]}}])
+
+        class NoWriter:
+            def request(self, *args, **kwargs):
+                raise AssertionError("preview must not issue mutation requests")
+
+        planned = preview_documents(reader, [document], "project-a", "repo-a", "commit-2")
+
+        self.assertEqual(1, planned)
+        self.assertEqual("POST", reader.calls[0][0])
+        self.assertEqual("/ai_factory_docs/_search", reader.calls[0][1])
+
+    def test_preview_counts_stale_document_tombstone(self) -> None:
+        from milestone1.opensearch_projection import preview_documents
+
+        stale_candidate = {
+            "id": DOC_ID, "project_id": "project-a", "repository_id": "repo-a",
+            "path": "docs/a.md",
+            "source_system": "git", "source_id": "repo-a:docs/a.md",
+            "source_revision": "commit-1", "source_version": "blob-1",
+            "status": "canonical", "canonical": True, "content": "old",
+        }
+        reader = Reader([{"hits": {"hits": [{"_source": stale_candidate, "sort": [DOC_ID]}]}}])
+
+        class NoWriter:
+            def request(self, *args, **kwargs):
+                raise AssertionError("preview must not issue mutation requests")
+
+        planned = preview_documents(reader, [], "project-a", "repo-a", "commit-2")
+
+        self.assertEqual(1, planned)
+
+    def test_preview_malformed_search_fails_closed(self) -> None:
+        from milestone1.opensearch_projection import preview_documents
+
+        reader = Reader([{"hits": {}}])
+        with self.assertRaisesRegex(RuntimeError, "malformed"):
+            preview_documents(reader, [], "project-a", "repo-a", "commit-2")
+
+
+
 if __name__ == "__main__":
     unittest.main()
