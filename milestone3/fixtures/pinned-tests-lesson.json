@@ -1,0 +1,30 @@
+{
+  "record": {
+    "schema_version": 1,
+    "memory_id": "lesson-python-test-dependencies-v2",
+    "project_id": "ai-factory",
+    "scope": "agent",
+    "specialist_role": "developer",
+    "kind": "lesson",
+    "status": "active",
+    "content_ref": "sha256:6e48bb8f31d90f395452cee7be3a9ca26489373ecb48ebe0fe6633d05d0f2e40",
+    "content_sha256": "6e48bb8f31d90f395452cee7be3a9ca26489373ecb48ebe0fe6633d05d0f2e40",
+    "observed_at": "2026-09-28T20:15:00Z",
+    "review_after": "2026-10-28T20:15:00Z",
+    "retention_until": "2027-03-28T20:15:00Z",
+    "supersedes": ["lesson-python-test-dependencies-v1"],
+    "source_refs": [
+      {
+        "source_system": "git",
+        "source_id": "milestone2/README.md",
+        "source_version": "d54cbaa4de7d9df2b3b38e7f9cabe3c33cd91565"
+      },
+      {
+        "source_system": "paperclip",
+        "source_id": "5284995a-ee36-4b8d-9841-e9f00b7fc21e",
+        "source_version": "9b75e70e-1af8-477e-b488-52bbbe7603fa"
+      }
+    ]
+  },
+  "content": "In AIF-47 and AIF-48, missing jsonschema or PyYAML caused import failures that looked like application/test defects. Rerunning with the pinned dependencies passed without application changes. Before debugging a test failure, verify the current Git test command and interpreter environment. On this checkout use uv run --offline --no-project --with jsonschema[format]==4.25.1 --with PyYAML==6.0.2 python -m unittest discover -s tests -q. Native Paperclip checks use the preinstalled /paperclip/m1-python-libs through PYTHONPATH. Promote this repeated lesson into a credential-free deterministic check command; do not install arbitrary packages or treat this historical command as overriding current Git."
+}
