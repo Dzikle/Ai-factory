@@ -14,19 +14,19 @@ project. The owner closed the former upstream PRs; do not submit upstream work
 without separate approval. See
 [`MILESTONE_0_DEPENDENCY_ADMISSION.md`](MILESTONE_0_DEPENDENCY_ADMISSION.md).
 
-## Delivery order — revised 2026-09-25
+## Delivery order — revised 2026-09-28
 
 The earlier plan made every projection and policy integration a prerequisite
 for the first working task. That was too much horizontal infrastructure before
 user-visible proof. The dependency decisions and authority boundaries remain;
 their implementation order changes. The first reviewed coding task is now
-complete; harden that loop before adding breadth.
+complete; make that loop easy to use before adding breadth.
 
 | Milestone | Deliverable | Exit evidence |
 | --- | --- | --- |
 | 0 — admit dependencies | **Done** | Pinned Paperclip fork passed migration, crash/security/enrichment, and restore gates. |
 | 1 — first runnable task | **Done** | AIF-42 completed Developer → Validator → Reviewer → human approval; AIF-43 survived a native child kill and resumed under a different native adapter. Evidence below. |
-| 2 — harden and broaden | **In progress** | Second task and conditional functional QA accepted; finish runtime/catalog hardening, active-source projections, capability compilation, and backup/rebuild. |
+| 2 — usable engineering loop | **In progress** | Second task and functional QA accepted; add reusable task submission/progress commands and use the existing native stage flow for useful work. |
 | 3 — useful memory | **Later** | One proven experience is stored with provenance, retrieved by a later task, and cannot override current Git. |
 | 4 — measure and operate | **Later** | Compare accepted-task quality/cost against a baseline; run bounded failure/rollback drills and promote improvements only through review. |
 
@@ -36,6 +36,17 @@ complete a checklist; add it when the next demonstration needs it. A blocked
 dependency is reported as a blocker, not disguised with a second authority or
 an admin credential in the runtime. The current architecture remains the V1
 target, but its full breadth is not the gate for the **first** useful task.
+
+**Current owner decision — functionality first (2026-09-28):** Use the existing
+Paperclip task/run ledger and native adapters, not a replacement engine. The
+next bounded feature is a small task submission/status command reusing the
+existing engineering execution policy. No new Docker build or framework is
+required. Additional runner isolation, generic capability compilation, broad
+event projections, image slimming and new fault/restore drills are deferred
+until demonstrated need or production rollout. Known isolation gaps remain
+documented; deferral is not a PASS. Keep credential containment, scoped MCP,
+independent tests/review and explicit human integration approval. Enable only
+agents selected for an actual task; the other admission fixtures stay paused.
 
 ## 1. Non-negotiable implementation boundaries
 
@@ -427,7 +438,7 @@ artifact-lineage clarification below**):
   repeatable production runtime. The trusted-only runner still has an isolated
   `seccomp=unconfined` exception; it is not approved for untrusted repositories.
 
-## 5. Milestone 2 — repeatable, hardened engineering loop
+## 5. Milestone 2 — usable, repeatable engineering loop
 
 **First reliability slice, 2026-09-26:** The official OpenSearch MCP server
 `0.11.0`/`fcb23ec` now runs from pinned source and `uv.lock` in a supervised
@@ -531,8 +542,12 @@ pending the relevant execution/access-boundary verification before their next
 task. The Codex search probe is still quota-blocked and Milestone 2 is not complete.
 See [`milestone2/README.md`](../../milestone2/README.md) for evidence and limitations.
 
-Add only capabilities required by a second representative task or a demonstrated
-failure of the first:
+The 2026-09-28 functionality-first decision supersedes the earlier requirement
+to finish every hardening item before another local task. Immediate acceptance:
+submit a task with the existing independent stages, show authoritative progress,
+and run useful work without hand-written orchestration per task. The following
+broader integrations remain the longer-term backlog, not prerequisites for that
+trusted local demonstration:
 
 1. Validate and sync the applicable Agent Skills packages. Compile the
    role/project/task/skill capability intersection into Paperclip MCP profiles;
@@ -556,9 +571,11 @@ failure of the first:
    **active** OpenSearch index from its named authority, and prove a duplicate
    event changes no document identity or task state.
 
-Milestone 2 exits with a second accepted task, conditional QA evidence, a
-model-change recovery receipt, effective role catalogs, and a successful
-restore/rebuild of active projections. No inactive index is a prerequisite.
+Milestone 2 local-demo exit: reusable submission/progress commands and a useful
+task through distinct Developer, tests, Reviewer, optional QA and human approval.
+AIF-47 supplies the prior independent task/QA evidence. Full production
+restore/rebuild, expanded catalogs and additional isolation remain deferred;
+the local milestone does not claim production readiness.
 
 ## 6. Milestone 3 — experiential memory loop
 

@@ -1,8 +1,66 @@
-# Milestone 2 — MCP supervision and native-catalog hardening
+# Milestone 2 — usable local engineering loop
 
 This is one reliability slice of Milestone 2, not the Milestone 2 exit. The
 official OpenSearch MCP server remains the provider; Paperclip remains the
 runtime catalog, profile, and run authority.
+
+## Current direction: useful local functions
+
+The owner approved functionality-first development on 2026-09-28. Extra runner
+isolation and production hardening are deferred, not passed. The older isolation
+gate recommendation below is superseded for this trusted local prototype.
+Keep credential containment, existing scoped MCP, separate tests/review and owner
+integration approval. No new image, scheduler or task database is needed.
+
+## Submit a task and see progress
+
+From the repository root, use Python 3.11+ (or prefix commands with
+`uv run --offline --no-project`). Authentication stays in the existing ignored
+board state file, never in a task, workflow preset or command-line token.
+
+```powershell
+$env:AIF_PAPERCLIP_STATE = '.milestone0/fork-readmission-20260923/paperclip-state-readmission-20260925.json'
+python -m milestone2.task status AIF-47
+python -m milestone2.task submit --workflow milestone2/config/ai-factory-projection-workflow.json --task milestone2/tasks/projection-help.json --dry-run
+python -m milestone2.task submit --workflow milestone2/config/ai-factory-projection-workflow.json --task milestone2/tasks/projection-help.json
+```
+
+Submission defaults to **backlog**, without requesting agent dispatch. Add
+`--start` at creation to submit as `todo`; task-selected agents must already be
+active in Paperclip. The command never silently resumes paused agents, changes
+model bindings or approves integration. A task already saved in backlog is
+started through Paperclip; resubmitting its key is a replay, not a start action.
+Keep the same `requestKey` when retrying an uncertain submission: Paperclip owns
+deduplication. Use a new key for a different task. No automatic POST retry.
+
+The workflow preset reuses the AIF-47 projection-task roles in this local
+instance. Their Validator/QA are task-class-specific; use appropriate existing
+agent bindings for another repository or task class. Omit `qaAgentId` for a
+task that does not require QA. Developer, tests, Reviewer and optional QA must
+remain distinct. Both commands accept global `--json` before the subcommand.
+`status` reports Paperclip's saved stage; it does not poll, advance stages or
+read private run logs.
+
+### Task-command verification — 2026-09-28
+
+- Full Python suite: **70 tests, OK, 2 opt-in live tests skipped**. The 11 new
+  subprocess/HTTP-boundary tests cover submission, independent native stages,
+  optional QA, company checks, paused-agent handling, redaction and no POST retry.
+- CLI help and the actual local preset/task `--dry-run` passed without a server.
+  Paperclip's pinned source confirms identifier resolution and native issue-create
+  idempotency; runtime deduplication is not claimed from the boundary tests.
+- Live submission is **NOT RUN**; the live status attempt could not connect. Docker
+  Desktop 4.55.0 failed startup at its stale `run/dockerInference` socket.
+  A recoverable rename failed; this session's policy blocked targeted cleanup.
+  No image rebuild, reset, volume deletion or task dispatch was performed.
+- The optional OpenCode free-model reviewer rejected CLI access to its free
+  tier; no independent model-review result is claimed for this command.
+
+Next verification: start the existing Docker runtime, read AIF-47, submit the
+sample once as backlog, replay its `requestKey` and assert the same issue ID,
+then read its native stages. Only after that, resume the task-selected agents
+and execute useful work through the existing independent approval flow.
+Milestone 2 remains in progress; a dry-run does not demonstrate live dispatch.
 
 ## Local deployment
 

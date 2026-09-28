@@ -1,0 +1,5 @@
+{
+  "title": "Make projection preview help usable",
+  "requestKey": "aif-projection-help-v1",
+  "description": "Improve --help for milestone1/project_git_docs.py with a reader-only --dry-run example and a clear distinction from --apply. Only change milestone1/project_git_docs.py and tests/test_project_git_docs.py. Preserve existing flags, JSON output and default behavior. Prove --help works without credentials or a running OpenSearch instance, and add a CLI regression test for the example. No index writes, new dependencies, controller changes or infrastructure hardening. Commit in the assigned task worktree; independent tests, Reviewer and functional QA must pass before owner approval."
+}

@@ -43,8 +43,10 @@ Phase 0.5 and the Paperclip Milestone 0 dependency gate are complete. Milestone 
 proved one real, independently reviewed native coding task and model-change
 recovery. Milestone 2 is in progress; the supervised OpenSearch MCP slice and
 second accepted task (AIF-47), including independent functional QA, have passed.
-Execution/access isolation and the remaining repeatability gates are not yet
-complete; agents stay paused until their execution boundary is verified.
+The owner's 2026-09-28 decision prioritizes the trusted local task workflow.
+Extra execution/network isolation is deferred, not passed; keep the deployed
+credential fix, existing scoped MCP profiles, separate review and human approval.
+Resume only task-selected agents; admission fixtures stay paused.
 Keep the selected integration boundaries and see
 `docs/implementation/IMPLEMENTATION_KICKOFF.md` for current receipts and exit gates.
 

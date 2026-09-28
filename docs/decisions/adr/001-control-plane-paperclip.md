@@ -4,6 +4,19 @@
 
 **Date:** 2026-09-15
 
+## Trusted local functionality-first amendment — 2026-09-28
+
+The owner prioritizes useful delegation over further infrastructure admission.
+Keep Paperclip as the sole task/run/workspace ledger and dispatcher; thin scripts
+may submit its existing engineering policy and read progress, but do not own
+transitions or create another task database. Defer extra runner isolation and
+image optimization for this trusted single-user local prototype. Preserve the
+credential fix, authentication, scoped MCP, independent tests/review and human
+integration approval. A reachable database TCP port is recorded risk, not a
+passed isolation test or evidence of authenticated access. No hostile-code or
+production-readiness claim follows from this deferral. Revisit before untrusted
+repository execution or a production/multi-user deployment.
+
 ## Milestone 0 final admission — 2026-09-25 (current)
 
 The owner-maintained fork is admitted as the **sole task/run/workspace and active

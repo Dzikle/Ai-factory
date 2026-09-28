@@ -38,5 +38,7 @@ Milestone 2 restart checks on 2026-09-28 confirmed a separate PID namespace,
 private `/paperclip` tmpfs and no controller storage/Docker socket mount, but
 the runner could connect directly to PostgreSQL's IP on TCP 5432 despite the
 negative DNS check. DNS separation is not network enforcement. This proves TCP
-reachability, not authenticated database access. Keep agents paused pending the
-execution/access gate in [`milestone2/README.md`](../../milestone2/README.md).
+reachability, not authenticated database access. The owner's subsequent
+2026-09-28 functionality-first decision defers this additional isolation gate
+for trusted local tasks; see [`milestone2/README.md`](../../milestone2/README.md).
+This deferral does not admit untrusted repository execution or mark isolation PASS.
