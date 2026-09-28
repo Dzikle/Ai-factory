@@ -349,14 +349,15 @@ a zero-write preview, then fetch the source checkout's remote tracking ref
 without moving completed task branches. The final publication/projection receipt
 belongs in the Paperclip issue history.
 
-Milestone 2 remains **IN PROGRESS**: generic native OpenCode directory binding,
-skill/capability synchronization, task-history projections, model-change recovery
+Milestone 2 remains **IN PROGRESS**: skill/capability synchronization,
+task-history projections, model-change recovery
 and active-projection restore/rebuild are still open. The native Codex MCP-search
 probe remains separately quota-blocked; accepting AIF-47 does not waive it.
 
 ## Automatic OpenCode worktree binding, 2026-09-27
 
-**Implemented and source-validated, not deployed.** Owner-fork commit
+**Source-validation checkpoint; subsequently deployed on 2026-09-28 in `6f19a0d0`
+(see the containment/cutover evidence below).** Owner-fork commit
 `379fe383d0e21a8e6194e799ba224762f7245cf4`, branch
 `ai-factory/milestone2-opencode-workspace`, builds on active source `d57c0b7c`.
 No upstream PR, new runtime, schema change, or live-controller modification.
@@ -397,19 +398,104 @@ docker run --rm --network none --mount "type=bind,source=$fixture,target=/probe.
 ```
 
 Omit the adapter mount to reproduce the old failure. The source-overlay image
-is test evidence only; active/rollback image pins remain unchanged. A separate
+is test evidence only; image pins were unchanged at this checkpoint. A separate
 free-model probe was rejected by the provider with 403; no access workaround
 was attempted and no successful inference is claimed.
 
-### Security follow-up before further native agent work
+### Native-child credential containment, 2026-09-28
 
 Historical AIF-47 local-agent output contains a controller database credential
 in inherited `DATABASE_URL`. Do not copy raw output or its value into Git,
-issues, public artifacts or model prompts. Local child-process spawning merges
-the controller environment; the directory correction does **not** isolate
-secrets. The task-specific agents remain paused. Next: remove privileged
-controller credentials from agent environments with focused regression tests,
-then perform owner-approved credential rotation and controlled restart while
-preserving data. Review stored-log redaction separately without silently
-changing hashed validation artifacts. Normal candidate image build/cutover and
-a new governed task can follow containment; no live rollout is claimed here.
+issues, public artifacts or model prompts. A value-comparison scan of seven
+AIF-47 stored logs reported only the database credential; authentication,
+signing and encryption keys are not rotated without evidence of exposure.
+Historical hashed artifacts are preserved, not silently scrubbed.
+
+Owner-fork commit `6f19a0d07f02fdaaca4085b07bb32b3f7b260383` replaces ambient
+child-environment inheritance with a closed OS/startup allowlist. Explicit
+agent/project/run bindings still win, including run identity, scoped API/MCP
+tokens and deliberately assigned provider credentials. Native execution,
+preflight, model discovery, quota helpers, provider-placeholder expansion and
+local GitHub credential discovery use the same boundary. Ambient private
+variables, provider definitions/keys, proxies and executable startup options
+are no longer forwarded; integrations relying on them must bind them explicitly.
+Native credential-file/home behavior is unchanged. No schema, adapter identity,
+task engine or permission authority changes.
+
+Validation before rollout:
+
+- Failing-before/passing-after shared-boundary, provider/model and local GitHub
+  tests. Two independent scoped reviews identified bypasses; each finding was
+  corrected and regression-tested.
+- Linux non-root targeted run across adapter utilities and all 13 native
+  adapters: 1,246 tests, 1,239 passed, six skipped, one failed. The failure is an
+  existing Cursor managed-sandbox archive-size fixture, reproduced on the
+  unmodified previous image; this is **not** an all-green repo-wide test claim.
+  All touched package typechecks and normal Linux package builds pass.
+- Normal production amd64/arm64 builds and PID-1 orphan-reaping check pass in
+  [the owner workflow](https://github.com/Dzikle/paperclip/actions/runs/36381672435).
+  Published image: `ghcr.io/dzikle/paperclip@sha256:37ab79a0ea5da736bb32cded7d82a1c47873369fdc711d43e5ecec22f2797b0a`;
+  amd64 manifest: `sha256:c9ae6864d9ce8ec9a5ab5ae2b64a4ce583ed30171ab3f5799634b4adc26b3bb7`.
+  This includes the automatic OpenCode directory correction above; no source
+  overlay or hybrid build is used for deployment.
+- `fixtures/native-agent-env-probe.mjs` checks actual child `/proc` environments
+  through built-in process and native OpenCode adapters, without logging values.
+  Source-overlay sentinels pass; the original image fails. The deliberately
+  nonexistent model prevents inference. Fixture tokens are fake, not a claim of
+  a durable Paperclip run or an actual minted capability profile.
+- Three operator-transport regressions pass: password stays in stdin, real TCP
+  authentication is used, and failed driver output is not disclosed. Live
+  preflight correctly stopped before mutation when a loopback probe accepted a
+  random password: this cluster's initdb rules trust Unix sockets **and** loopback.
+  A failing-before/passing-after regression now requires the exact controller
+  service address, `aif-m0-paperclip-postgres-1:5432`, which uses SCRAM. No HBA
+  rules or migration journals were modified to obtain a pass.
+
+**Deployed and password rotated; bounded security gate PASS.** The immutable
+published image passed 97/97 focused tests with no source overlays, plus both
+real-native environment and directory fixtures. Runtime versions: Node 24.21.0,
+Codex CLI 0.158.0, OpenCode 1.18.33. The latter recorded native session
+`ses_f194647ecffefJgScSQQCTuOUY` in the fixture task directory despite supplied
+`PWD=/app`; the nonexistent model was rejected before inference.
+
+The owner-approved `scripts/rotate_local_paperclip_database.py` backed up
+PostgreSQL and paired storage, rotated only the exposed local database password,
+and restarted only PostgreSQL and the fork controller. Controller downtime:
+28.4 seconds. Old-password authentication fails and new-password authentication
+succeeds through the service address, before and after restart. Other
+authentication/signing/encryption keys remain unchanged. PostgreSQL 17.11 and
+Drizzle journal `283|1790018362070` are unchanged; no migration was required.
+
+Complete authoritative-row checksums match before/after for 1 company, 95
+agents, 47 issues, 217 runs, 1 project workspace, 12 execution workspaces and
+204 leases, including run context snapshots and lease receipts. Protected
+recovery material is in Git-ignored `.milestone0/m2-security-rotation-20260928/`:
+
+- PostgreSQL dump SHA-256:
+  `2aa6e2e89479578ed45022cb0ffa048e93823cd3d1036fc2ef9c95761c1aced1`
+  (2,142 validated archive-list entries).
+- Storage tar SHA-256:
+  `a823b618cfeecc0f71370826ac1524bc5c3ae66064aae25b8a82bfc13e81297c`
+  (12,710 readable archive entries).
+- `receipt.json` contains row checksums and authentication assertions without
+  credentials. `previous.env` / `rotated.env` are private recovery inputs, never
+  publication material. Archive validation is **not** a new restore rehearsal.
+
+Post-restart, both services are healthy. The same native-child fixture passes
+inside the real controller, observing no forbidden inherited variable names
+while preserving explicitly assigned run/MCP bindings; no values are printed.
+All 95 saved agent configurations were also checked: no explicit binding
+contains the controller credentials. The supervised MCP catalog is exactly
+`ListIndexTool`, `IndexMappingTool`, `SearchIndexTool`, `MsearchTool`; Developer
+and Reviewer retain search-only effective profiles, allowed searches pass and
+denied operations remain denied. AIF-47 remains `done` with both issue locks
+clear, and six persisted context artifacts independently match SHA-256 and
+byte-size assertions after restart. Zero queued/running runs; all agents paused.
+
+This closes an **environment/configuration inheritance** defect, not filesystem,
+`/proc`, container-root or hostile-code isolation. Do not infer that native agents
+cannot read controller-accessible files or privileged process state. Keep agents
+paused until the relevant execution/access boundary is verified for their next
+task. Stored-log access/redaction remains separate work; do not re-enable it by
+rolling back to a pre-containment image. Milestone 2 is still in progress and the
+native Codex search probe remains quota-blocked.

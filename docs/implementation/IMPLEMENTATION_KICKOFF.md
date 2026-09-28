@@ -515,16 +515,21 @@ they do not close the native Codex quota gate or generic runtime binding work.
 See [`milestone2/README.md`](../../milestone2/README.md) for exact runs, artifacts,
 limitations and the completed human approval stage.
 
-**Automatic OpenCode worktree binding implemented, not deployed (2026-09-27):**
-Owner-fork `379fe383d0e21a8e6194e799ba224762f7245cf4` passes 58 Linux adapter
-tests, package typecheck/build, independent review, and a real model-free native
-session regression. Explicit resolved `--dir` prevents inherited controller
-`PWD` from selecting `/app`. Active image and Milestone 0 pins are unchanged;
-normal image rollout remains open. Historical local-agent output also exposed
-an inherited controller database credential. **Before further native work**,
-contain privileged environment inheritance, obtain owner-approved credential
-rotation with data preserved, and revalidate effective capabilities. Task agents
-remain paused; see the Milestone 2 README for evidence and the bounded follow-up.
+**OpenCode directory binding and native-child credential containment deployed
+(2026-09-28):** Owner-fork `6f19a0d07f02fdaaca4085b07bb32b3f7b260383` includes
+the `379fe383` directory correction and a closed inherited-environment allowlist;
+explicit run/project/provider bindings remain supported. Its normal published
+image is pinned in the dependency lock and Compose override. Exact-image focused
+tests pass 97/97, and real OpenCode 1.18.33 verifies task-directory binding and
+secret-free child environments without inference. The exposed database password
+was rotated with paired backups; the old credential fails SCRAM authentication,
+the new one works, authoritative record hashes/schema are unchanged, and live
+effective MCP checks pass. All six AIF-47 context artifacts still match their
+stored hashes; the issue stays accepted and unlocked. This is environment/config
+containment, not filesystem or hostile-code isolation. All agents remain paused
+pending the relevant execution/access-boundary verification before their next
+task. The Codex search probe is still quota-blocked and Milestone 2 is not complete.
+See [`milestone2/README.md`](../../milestone2/README.md) for evidence and limitations.
 
 Add only capabilities required by a second representative task or a demonstrated
 failure of the first:
