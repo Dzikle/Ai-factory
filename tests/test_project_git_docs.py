@@ -245,6 +245,23 @@ class ProjectGitDocsTests(unittest.TestCase):
         self.assertIn("reader-only", result.stdout.lower())
         self.assertIn("no --apply", result.stdout.lower())
         self.assertIn("default", result.stdout.lower())
+        lines = result.stdout.splitlines()
+        preview_lines = [
+            line for line in lines
+            if "milestone1.project_git_docs" in line and "--dry-run" in line
+        ]
+        self.assertTrue(
+            preview_lines,
+            "expected one single-line reader-only preview example containing --dry-run",
+        )
+        preview = preview_lines[0]
+        for token in ("--repo-root", "--overlay", "--repository", "--dry-run"):
+            self.assertIn(token, preview)
+        self.assertIn("overlay.yaml", preview)
+        self.assertFalse(
+            preview.rstrip().endswith("\\") or preview.rstrip().endswith("`"),
+            "preview example must not use shell continuation",
+        )
 
 
 class DryRunPreviewTests(unittest.TestCase):

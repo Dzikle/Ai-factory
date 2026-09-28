@@ -144,11 +144,9 @@ def run(argv: list[str] | None = None, environ: dict[str, str] | None = None) ->
             "  and requires only reader credentials.\n"
             "examples:\n"
             "  reader-only preview:\n"
-            "    python -m milestone1.project_git_docs --repo-root <root>\n"
-            "      --overlay overlay.yaml --repository source --dry-run\n"
+            "    python -m milestone1.project_git_docs --repo-root <root> --overlay overlay.yaml --repository source --dry-run\n"
             "  default apply mode:\n"
-            "    python -m milestone1.project_git_docs --repo-root <root>\n"
-            "      --overlay overlay.yaml --repository source\n"
+            "    python -m milestone1.project_git_docs --repo-root <root> --overlay overlay.yaml --repository source\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
