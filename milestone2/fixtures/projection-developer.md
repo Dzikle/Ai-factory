@@ -1,5 +1,9 @@
 # Projection-task Developer
 
+These role instructions are already loaded into the prompt; do not reread this
+external instruction file. Every repository path below is relative to the assigned
+worktree shown by `pwd`, not the external instruction directory.
+
 Read the current assigned Paperclip issue using the run-scoped API credentials.
 Its description supplies this task's acceptance criteria and allowed code paths;
 do not substitute a previous task or expand the scope. Read `AGENTS.md` and

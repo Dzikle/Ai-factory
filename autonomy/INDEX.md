@@ -47,6 +47,10 @@ The owner's 2026-09-28 decision prioritizes the trusted local task workflow.
 Extra execution/network isolation is deferred, not passed; keep the deployed
 credential fix, existing scoped MCP profiles, separate review and human approval.
 Resume only task-selected agents; admission fixtures stay paused.
+The task submission/status commands are verified live. AIF-48's corrected
+candidate passed fresh tests, independent review and functional QA; it awaits
+owner approval/integration. Cancelled-handoff recovery still needs supervised
+reconciliation; see `milestone2/README.md`. Milestone 2 is not marked complete.
 Keep the selected integration boundaries and see
 `docs/implementation/IMPLEMENTATION_KICKOFF.md` for current receipts and exit gates.
 

@@ -43,24 +43,133 @@ read private run logs.
 
 ### Task-command verification — 2026-09-28
 
-- Full Python suite: **70 tests, OK, 2 opt-in live tests skipped**. The 11 new
+- Full Python suite after review: **71 tests, OK, 2 opt-in live tests skipped**. The 12 new
   subprocess/HTTP-boundary tests cover submission, independent native stages,
-  optional QA, company checks, paused-agent handling, redaction and no POST retry.
+  optional QA, company checks, paused/error-agent handling, redaction and no POST retry.
 - CLI help and the actual local preset/task `--dry-run` passed without a server.
   Paperclip's pinned source confirms identifier resolution and native issue-create
   idempotency; runtime deduplication is not claimed from the boundary tests.
-- Live submission is **NOT RUN**; the live status attempt could not connect. Docker
+- The initial live status attempt could not connect. Docker
   Desktop 4.55.0 failed startup at its stale `run/dockerInference` socket.
   A recoverable rename failed; this session's policy blocked targeted cleanup.
   No image rebuild, reset, volume deletion or task dispatch was performed.
 - The optional OpenCode free-model reviewer rejected CLI access to its free
   tier; no independent model-review result is claimed for this command.
 
-Next verification: start the existing Docker runtime, read AIF-47, submit the
-sample once as backlog, replay its `requestKey` and assert the same issue ID,
-then read its native stages. Only after that, resume the task-selected agents
-and execute useful work through the existing independent approval flow.
-Milestone 2 remains in progress; a dry-run does not demonstrate live dispatch.
+**Live continuation:** Docker recovered after preserving and atomically renaming
+only its stale runtime socket folders; no reset or data deletion. The five
+existing AI Factory services restarted without a build. The CLI read AIF-47 as
+`done`, 4/4 gates. It created **AIF-48**
+(`5284995a-ee36-4b8d-9841-e9f00b7fc21e`) as backlog; replay returned the same ID.
+The actual issue has distinct tests, Reviewer, QA and owner-approval participants.
+All 95 agents were still paused and no runs were active before dispatch.
+
+Preparation commit `408fabdb654dcb2a3bba91ad96ce422f67c53182` corrects the
+example task's nonexistent `--apply` flag, rejects `error` agents before
+`--start` POST, and supplies reusable current-issue Developer/Reviewer instructions.
+The review fix had an observed RED and 12-test GREEN; independent re-review
+found no remaining CLI or role-instruction findings. Dry-run intentionally displays the locally
+supplied task payload; normal/status output does not disclose API descriptions.
+
+The existing source snapshot fast-forwarded from `4f50570` to `408fabd` using
+a 79,802-byte Git bundle. An old empty Git index lock (2026-09-27) was preserved
+only after confirming no Git process, active run or unpaused agent owned it.
+The existing one-shot projector refreshed 49 canonical documents at `02d80f1`;
+reader-only replay planned zero writes. No new projection worker was introduced.
+
+The same native Developer/Reviewer bindings use `/paperclip/m2-projection-roles`
+with `developer.md` / `reviewer.md` (external instruction bundles); stale AIF-47
+`--dir` overrides were removed. Initially deployed bytes matched the Git fixtures:
+Developer SHA-256 `df5c73c78fbabbe1e3babe8e1e6ffcf4f847239cea34e591bde4d102ce6cb80e`;
+Reviewer `182933316887a760396975ebc7bf6940d2f8bc99b0aa207023c9c48c4ede8d1c`.
+Only the four selected agents were resumed, with timer execution still disabled.
+Paperclip's native backlog-to-todo transition dispatched AIF-48. No custom stage
+advancer, model gateway or scheduler was added; final approval remains the owner.
+Milestone 2 stays in progress until the native task evidence is collected.
+
+The first three AIF-48 runs failed **before provider work**: the project had no
+explicit source ref, so its new worktree used stale `origin/milestone1-contracts`
+at `8955be9`, although the local source branch was current. The enrichment plugin
+correctly rejected the newer indexed revision as not an ancestor. Automatic
+retries were paused; the clean, untouched task branch fast-forwarded to `408fabd`.
+The existing project's `repoRef` and `defaultRef` now explicitly select
+`milestone1-contracts`. The same task/workspace was resumed, without disabling
+provenance validation or changing provider/permission bindings.
+
+Run `f77ef2d6-f398-41d2-890b-0da66969153c` then persisted a verified context
+artifact, but stopped after OpenCode denied a redundant reread of its external
+role file. Native continuation `e8a150fb-2a3b-4670-9fc3-be2111cb7dae` produced
+candidate `7fd60f8`. The role fixtures now explicitly say they are already
+injected and resolve repository paths from the assigned worktree. Updated,
+independently verified deployment hashes: Developer
+`bf1d782a6504cf2ae3bd3eb5d11ac7b013c8f8b0154ba2f4950840b2a726ea90`;
+Reviewer `af03cade5d6c426fd7b5ab5c330174694876560e77b098a08254c3c9975962b7`.
+No external-directory permission was added.
+
+The existing Python test-library directory initially lacked `jsonschema`.
+Installing Linux/Python 3.13 wheels for the existing test requirements
+`jsonschema[format]==4.25.1` and `PyYAML==6.0.2` into that directory, without
+an image build or repository dependency change, made the full candidate suite
+pass: **72 tests, OK, 2 opt-in live tests skipped**. Independent Validator and
+Reviewer passed `7fd60f8`; a subsequent integration check found that its displayed
+examples split shell commands across lines without continuation. A supported
+board reassignment returned AIF-48 to its Developer and reset the review round,
+preserving all four participants and final human approval. No old approval
+may qualify the corrected candidate.
+
+### AIF-48 final candidate — owner approval pending
+
+Candidate **`36bc6cc293f8e99b21c742858d05df7933ff4896`**, tree
+`a8cba28abfb9a1076060a28eb77e8a15bc2916df`, adds complete single-line help
+examples and a credential-free CLI regression. Only the original two allowed
+files differ from base `408fabd`. The native task worktree is clean. Its two
+commits were fetched by Git bundle into the same named branch in this owned
+repository; they are **not merged or pushed**.
+
+| Gate | Exact corrected-candidate evidence | Result |
+| --- | --- | --- |
+| Developer | `959995da-ee06-4403-907f-0149bc3ccb29`; observed stronger-test RED, then GREEN | Committed handoff |
+| Deterministic tests | `aa15ac84-0900-438a-a29a-93a4bd7b3a6c`; immutable commit copy, 15 targeted tests | PASS |
+| Independent Reviewer | `22d6e76d-d296-4bf4-88f0-8b69491c9b6a`; verified candidate/tree, help output and full 72-test suite | PASS |
+| Independent QA | `a9d13d12-da0e-49f7-ac78-586ef9749602`; six black-box preview/apply/replay/failure checks, no live credentials or index writes | PASS |
+| Human integration | Native owner-approval stage, no agent assignee | **PENDING** |
+
+An independent full-suite rerun on the final candidate passed **72 tests,
+2 opt-in live tests skipped**. Validator receipt SHA-256:
+`aa32260f4694b84888b217f33d189b4fea99def9277d6f4f40eea5a7f0578439`;
+QA receipt: `25d7ba4566e45c9f6516e193729af14abba37a28bd6fdd048aaf0a8a3468f328`.
+Their actual artifact bytes were independently hashed and identify the final
+candidate/tree. Developer context artifact SHA-256:
+`9cb0de582b953ef65d6c5818713e3fa5b578f6456af974e528157888ddbdd592`;
+Reviewer context: `13140999b7ce42fe85a186b03ab57f8a01bd6d0914badfc7be8ef4a6933cf629`.
+These remain in each original native run's durable enrichment snapshot.
+
+**Observed runtime limitation:** Paperclip marks these run-scoped handoffs
+`cancelled / issue_reassigned` while separately persisting their successful
+decisions and receipts. Re-entering validation encountered a hold for earlier
+run `8ea979ae-1539-49e5-8893-421fab3b96fb`. Its stopped-provider acknowledgment,
+successful immutable receipt and prior native decision were verified. Recovery
+action `72604bfd-c5cb-4248-b767-47ed920a9a6f` was reconciled through the supported
+API with `actionOutcome: completed`, after aborting the incomplete review round.
+The attempted direct restoration returned 409 (pending review); the first
+fresh-round assignment attempt returned 422. Dispatch configuration was restored
+in `finally`; Paperclip's durable continuation then executed fresh tests and
+review, followed by an explicit native QA wake. No SQL edits, run-status rewrite,
+approval impersonation, new scheduler or control-plane patch was used.
+
+After recovery, Paperclip's review return-assignee is the Validator rather than
+the original Developer. Rejection therefore requires an explicit board hand-back
+to the Developer; do not claim unattended correction-loop support. The current
+candidate still has separate Developer, Validator, Reviewer and QA evidence, all
+three independent gates completed, no execution/checkout lock or recovery hold,
+and the original human owner as the final approver. Native cost/usage fields on
+cancelled handoff runs are unavailable; do not infer savings or completed-run
+telemetry from model names. Milestone 2 local-demo acceptance remains pending
+the owner's approval and integration of this exact candidate.
+Final live check: four selected agents idle, 91 admission agents paused, no
+queued/running/retry runs, and the four core services healthy (existing SSH
+runner also running). The repository checkpoint suite passed 71 tests with
+two live skips; the unmerged candidate has the additional help regression.
 
 ## Local deployment
 

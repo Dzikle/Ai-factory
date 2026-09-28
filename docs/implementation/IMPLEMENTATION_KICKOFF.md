@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 IN PROGRESS — second task AIF-47 accepted and integrated (V1 workflow still incomplete)
+**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 IN PROGRESS — task commands verified live; AIF-48 awaiting owner approval (V1 workflow still incomplete)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -576,6 +576,19 @@ task through distinct Developer, tests, Reviewer, optional QA and human approval
 AIF-47 supplies the prior independent task/QA evidence. Full production
 restore/rebuild, expanded catalogs and additional isolation remain deferred;
 the local milestone does not claim production readiness.
+
+**Local-demo checkpoint (2026-09-28):** Existing services are running; the thin
+submission/status CLI created AIF-48 and replayed its key without duplication.
+Candidate `36bc6cc293f8e99b21c742858d05df7933ff4896` adds usable projection help;
+fresh deterministic tests, independent Reviewer and six functional QA checks
+passed on that same commit/tree. The full suite passed 72 tests with two live
+skips. Paperclip now waits at the original owner's approval stage; no merge or
+approval was performed. Source-ref, instruction-reread and test-library issues
+were corrected without new infrastructure. Recovery of a cancelled handoff
+needed explicit receipt reconciliation; its return-assignee/telemetry limitation
+is recorded in [`milestone2/README.md`](../../milestone2/README.md). Do not claim
+an unattended correction loop or mark the local-demo exit complete before
+approval and integration.
 
 ## 6. Milestone 3 — experiential memory loop
 
