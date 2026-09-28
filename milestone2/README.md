@@ -499,3 +499,49 @@ paused until the relevant execution/access boundary is verified for their next
 task. Stored-log access/redaction remains separate work; do not re-enable it by
 rolling back to a pre-containment image. Milestone 2 is still in progress and the
 native Codex search probe remains quota-blocked.
+
+### Implementation restart checkpoint, 2026-09-28
+
+After the owner completed Docker disk cleanup, restarted only the five current
+services: fork controller, PostgreSQL, OpenSearch, supervised OpenSearch MCP and
+native SSH runner. Reused existing containers, images and volumes; no image
+build, migration, new dependency or model invocation. Old admission stacks and
+other projects remain stopped.
+
+Fresh checks:
+
+- Controller, PostgreSQL, OpenSearch and MCP are healthy; runner SSH is running
+  and its `codex sandbox` / `unshare -Ur` mechanics pass.
+- Authoritative counts remain 1 company, 95 agents, 47 issues, 217 runs,
+  1 project workspace, 12 execution workspaces and 204 environment leases.
+  Schema journal remains `283|1790018362070`. AIF-47 is still `done`, with
+  checkout/execution locks clear. All agents are paused; zero queued/running runs.
+- Live MCP search and the exact four-tool catalog pass; Developer/Reviewer
+  effective profiles remain search-only. The deployed native environment probe
+  passes without inference or printing secret values.
+- Offline Python suite: 59 tests, 57 passed / 2 live tests skipped. Targeted
+  Node Git-handoff/validator-identity suites: 15/15 passed.
+
+**Execution/access gate remains OPEN.** The non-root runner has zero effective
+Linux capabilities, a read-only root, a separate controller PID namespace and
+private `/paperclip` tmpfs rather than controller storage. Its `/paperclip/.codex`
+temporary launch files are runner-local, not proof of a controller-volume leak.
+However, the negative database DNS lookup passes while direct TCP connection to
+PostgreSQL `172.20.0.2:5432` succeeds from runner `172.24.0.2`. Current engine:
+Docker Desktop 29.1.3; both networks are non-internal bridges. No authentication
+attempt or database read was performed from the runner. This is a demonstrated
+network-boundary gap, not evidence of authenticated database access or a newly
+exposed credential.
+
+Minimal TCP-only reproduction with the recorded database IP (re-inspect the
+address after any container recreation):
+
+```powershell
+docker exec --user node aif-m1-codex-ssh-runner node -e 'const s=require("net").connect(5432,"172.20.0.2");s.setTimeout(2500);s.on("connect",()=>{console.log("DATABASE_TCP_REACHABLE");s.destroy();process.exitCode=1});s.on("error",()=>{console.log("DATABASE_TCP_DENIED");s.destroy()});s.on("timeout",()=>{console.log("DATABASE_TCP_TIMEOUT");s.destroy()});'
+```
+
+Next slice: enforce and verify the intended runner access boundary without
+changing other projects' Docker settings, then prove the governed native SSH
+task path (workspace/context/MCP bindings and cleanup) before unpausing the
+selected task agents. Do not mark isolation complete from DNS or container
+configuration alone. Milestone 0/1 stay complete; Milestone 2 remains in progress.
