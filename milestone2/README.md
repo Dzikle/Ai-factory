@@ -1,8 +1,10 @@
 # Milestone 2 — usable local engineering loop
 
-This is one reliability slice of Milestone 2, not the Milestone 2 exit. The
-official OpenSearch MCP server remains the provider; Paperclip remains the
-runtime catalog, profile, and run authority.
+**Status: trusted-local Milestone 2 demonstration COMPLETE (2026-09-28).**
+Reusable task commands and owner-approved AIF-48 satisfy the revised local-demo
+exit. This is not full V1 or production readiness. The official OpenSearch MCP
+server remains the provider; Paperclip remains the runtime catalog, profile,
+and run authority. Broader integration and hardening work remains deferred.
 
 ## Current direction: useful local functions
 
@@ -117,14 +119,16 @@ board reassignment returned AIF-48 to its Developer and reset the review round,
 preserving all four participants and final human approval. No old approval
 may qualify the corrected candidate.
 
-### AIF-48 final candidate — owner approval pending
+### AIF-48 final candidate — owner-approved and integrated
 
 Candidate **`36bc6cc293f8e99b21c742858d05df7933ff4896`**, tree
 `a8cba28abfb9a1076060a28eb77e8a15bc2916df`, adds complete single-line help
 examples and a credential-free CLI regression. Only the original two allowed
 files differ from base `408fabd`. The native task worktree is clean. Its two
 commits were fetched by Git bundle into the same named branch in this owned
-repository; they are **not merged or pushed**.
+repository. The owner explicitly approved AIF-48 in this chat on 2026-09-28.
+Merge **`b78b4c53e7808aab414dee2817a5c8a850dce69a`** integrates that exact
+candidate into `milestone1-contracts`; the task branch is retained for provenance.
 
 | Gate | Exact corrected-candidate evidence | Result |
 | --- | --- | --- |
@@ -132,7 +136,23 @@ repository; they are **not merged or pushed**.
 | Deterministic tests | `aa15ac84-0900-438a-a29a-93a4bd7b3a6c`; immutable commit copy, 15 targeted tests | PASS |
 | Independent Reviewer | `22d6e76d-d296-4bf4-88f0-8b69491c9b6a`; verified candidate/tree, help output and full 72-test suite | PASS |
 | Independent QA | `a9d13d12-da0e-49f7-ac78-586ef9749602`; six black-box preview/apply/replay/failure checks, no live credentials or index writes | PASS |
-| Human integration | Native owner-approval stage, no agent assignee | **PENDING** |
+| Human integration | Owner approval `9b75e70e-1af8-477e-b488-52bbbe7603fa` at `2026-09-28T20:08:07.236Z`; merge `b78b4c5` | PASS |
+
+Paperclip records AIF-48 as **`done`, 4/4 gates**, with checkout/execution locks
+clear. Before approval, the stored Validator and QA artifact bytes were hashed
+again and both matched the exact approved commit/tree and recorded digests.
+The two integrated implementation/test files are byte-identical to the candidate.
+Fresh verification before integration and on the merged result:
+
+- Full Python suite: **72 tests run, 70 passed, 2 opt-in live tests skipped**.
+- Independent functional CLI QA: **6/6 passed** on the merged result.
+- Context, Git handoff and Validator identity Node suites: **26/26 passed**.
+- `git diff --check` passed. No new image, service, schema or model invocation.
+
+Python checks use the existing offline `uv` environment with
+`jsonschema[format]==4.25.1` and `PyYAML==6.0.2`. An initial QA invocation omitted
+these dependencies and failed at import; the corrected invocation passed without
+changing application or test code. No skipped live test is counted as executed.
 
 An independent full-suite rerun on the final candidate passed **72 tests,
 2 opt-in live tests skipped**. Validator receipt SHA-256:
@@ -164,8 +184,10 @@ candidate still has separate Developer, Validator, Reviewer and QA evidence, all
 three independent gates completed, no execution/checkout lock or recovery hold,
 and the original human owner as the final approver. Native cost/usage fields on
 cancelled handoff runs are unavailable; do not infer savings or completed-run
-telemetry from model names. Milestone 2 local-demo acceptance remains pending
-the owner's approval and integration of this exact candidate.
+telemetry from model names. Owner approval and integration now complete the
+revised **trusted-local** Milestone 2 demonstration, not an unattended correction
+loop or the deferred production gates. Milestone 3's next bounded demonstration
+is one provenance-backed lesson retrieved by a later task without overriding Git.
 Final live check: four selected agents idle, 91 admission agents paused, no
 queued/running/retry runs, and the four core services healthy (existing SSH
 runner also running). The repository checkpoint suite passed 71 tests with

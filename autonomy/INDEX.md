@@ -41,16 +41,20 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 
 Phase 0.5 and the Paperclip Milestone 0 dependency gate are complete. Milestone 1
 proved one real, independently reviewed native coding task and model-change
-recovery. Milestone 2 is in progress; the supervised OpenSearch MCP slice and
+recovery. Milestone 2's revised trusted-local demonstration is complete; the supervised OpenSearch MCP slice and
 second accepted task (AIF-47), including independent functional QA, have passed.
 The owner's 2026-09-28 decision prioritizes the trusted local task workflow.
 Extra execution/network isolation is deferred, not passed; keep the deployed
 credential fix, existing scoped MCP profiles, separate review and human approval.
 Resume only task-selected agents; admission fixtures stay paused.
 The task submission/status commands are verified live. AIF-48's corrected
-candidate passed fresh tests, independent review and functional QA; it awaits
-owner approval/integration. Cancelled-handoff recovery still needs supervised
-reconciliation; see `milestone2/README.md`. Milestone 2 is not marked complete.
+candidate passed fresh tests, independent review and functional QA; the owner
+approved it and merge `b78b4c53` integrated the exact candidate. Paperclip records
+`done`, 4/4 gates, with clear locks; post-merge tests and QA passed.
+Cancelled-handoff recovery still needs supervised reconciliation; see
+`milestone2/README.md`. This closes the local demo, not full V1 or production
+readiness. Next: Milestone 3, one provenance-backed memory used by a later task
+without overriding current Git. No new memory implementation is claimed.
 Keep the selected integration boundaries and see
 `docs/implementation/IMPLEMENTATION_KICKOFF.md` for current receipts and exit gates.
 
