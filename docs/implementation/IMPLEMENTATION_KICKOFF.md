@@ -27,7 +27,7 @@ complete; make that loop easy to use before adding breadth.
 | 0 — admit dependencies | **Done** | Pinned Paperclip fork passed migration, crash/security/enrichment, and restore gates. |
 | 1 — first runnable task | **Done** | AIF-42 completed Developer → Validator → Reviewer → human approval; AIF-43 survived a native child kill and resumed under a different native adapter. Evidence below. |
 | 2 — usable engineering loop | **Local demo complete** | Reusable submission/status commands created AIF-48 and replayed its key; distinct tests, Reviewer, QA and owner approval completed; exact candidate integrated and reverified. |
-| 3 — useful memory | **In progress** | Real MemPalace/OpenSearch capture, scoped recall, stale-source rejection and dependency-loss fallback pass; native promotion and owner approval remain. |
+| 3 — useful memory | **Owner approval pending** | Real scoped memory and native AIF-49 promotion pass tests, independent Reviewer and QA; integration/approved rollout remain. |
 | 4 — measure and operate | **Later** | Compare accepted-task quality/cost against a baseline; run bounded failure/rollback drills and promote improvements only through review. |
 
 Every milestone must end with a runnable demonstration and recorded acceptance
@@ -606,8 +606,13 @@ Git bytes, exact owner-approved source decision, scope and retention are checked
 before at most one 2,400-byte historical prompt is prepared. Real dependency-loss
 tests degrade to no advice without modifying Paperclip task state. This is not
 an automatic per-run freshness guarantee or a complete Context Resolver. The
-native follow-up proposes a deterministic test-environment check; its independent
-review, QA, explicit owner approval and rollout remain mandatory.
+native follow-up AIF-49 produced candidate `68344b66` and passed 100 tests
+(98 passed/two skipped), full foundation/promotion re-review and 3/3 functional
+QA. Actual controller restart preserved the task/run context and artifact digests.
+It is held at the native owner stage, 3/4 gates, not merged/published. Explicit
+owner approval, merged validation and versioned rollout/rollback remain mandatory.
+Provider usage/cost is unavailable on cancelled handoff runs; the 314-token
+memory estimate is context sizing, not a billed-model metric.
 
 Add memory only after the engineering loop runs without it. Begin with **one**
 real, reviewed lesson from a completed task or incident, not seven simulated

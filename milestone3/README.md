@@ -1,8 +1,9 @@
 # Milestone 3 — one useful memory
 
-**Status: IN PROGRESS.** The supervised memory slice passes local regression and
-real MemPalace/OpenSearch checks. The subsequent native coding task and final
-owner-approved promotion must pass before this milestone closes.
+**Status: READY FOR AIF-49 OWNER APPROVAL (2026-09-29 local).** The supervised
+memory slice and subsequent native coding task pass independent tests, Reviewer
+and functional QA. Integration, approved rollout/rollback and milestone closure
+remain pending; no owner approval has been simulated.
 
 ## Implemented boundary
 
@@ -87,7 +88,7 @@ Retention/review dates suppress retrieval; automated pruning is not implemented.
 - Existing production MemPalace 3.9.0 image and offline embeddinggemma q8 cache
   were reused, with `sqlite_exact`, CPU/2 threads and 384 dimensions. Exact image,
   source and embedding snapshot pins remain in `milestone0/dependencies.lock.yaml`
-  and `compose/mempalace-production-embedding.yaml`; no build or model download.
+  and `milestone0/compose/mempalace-production-embedding.yaml`; no build or model download.
 - Live current drawer: `drawer_ai-factory_engineering-lessons_6dd8217e3859401d9ca6aa20`;
   lesson SHA-256 `6e48bb8f31d90f395452cee7be3a9ca26489373ecb48ebe0fe6633d05d0f2e40`.
   Superseded predecessor: `drawer_ai-factory_engineering-lessons_7727ead0fc060c3126a908d0`.
@@ -102,8 +103,61 @@ Retention/review dates suppress retrieval; automated pruning is not implemented.
   expiry and malformed-response regressions are covered by deterministic tests.
 - Independent review reproduced four edge cases; RED regressions preceded fixes
   for hidden dirty Git bytes, logical self-supersession, successor-status replay
-  and malformed responses. Native-task use, provider token/cost accounting,
-  approval and rollout/rollback are not yet claimed.
+  and malformed responses. The quota-blocked Codex re-review was not counted as
+  a pass; the separate native OpenCode Reviewer completed foundation re-review.
+
+### Native later-task receipt
+
+AIF-49 (`b83ef44c-09ab-4c92-8265-c946d85986d9`) is at **owner approval, 3/4 gates**.
+Candidate `68344b66c24cd3b506b26b65c99915a892660641`, tree
+`ec31f82baf2c07b39f90fe3634df6064b8cac286`, adds only `milestone3/check.py` and
+`tests/test_check.py` over foundation `14e304d253a69c3258139f723505b81725c387b4`.
+The candidate branch is preserved in Paperclip and fetched locally; it is **not
+merged or published**. The checker targets the existing supported Python 3.11+
+environment and installs nothing.
+
+| Stage | Native run | Verified result |
+| --- | --- | --- |
+| Developer | `19a5a140-99ce-4ccc-a985-7ddf9489acb5` | Explicit handoff cites the retrieved memory ID/digest; observed RED, then seven check-command regressions passed. |
+| Independent tests | `2d6807e3-b4f7-4c08-906e-d5eddcf9e9f5` | 100 tests run: 98 passed, two opt-in live tests skipped; isolated committed copy. |
+| Reviewer | `64d300d9-8a85-40ce-8bbb-670510c75b76` | Approved exact commit/tree, including the full memory foundation against `1c41e40`; no remaining Important/Critical finding. |
+| Functional QA | `ccda0fb8-9671-4d54-9916-628d1cc40395` | 3/3 credential-free black-box checks passed, including missing-dependency failure before tests. |
+
+The coordinator independently reran the candidate through `python -m
+milestone3.check` in an isolated committed copy: 100 tests, 98 passed/two skipped,
+then 3/3 QA. Saved test/QA bytes match their comments and issue/run/agent/commit/
+tree identities. SHA-256: tests
+`24d18190a282f0084bef440d334bd24bae4ee34bcba4f18a3354a0fc92727631`;
+QA `1c0e7fb1eaa67b82facbb8e34a7668a3d55eccbbec4b786902f9743e8387720d`.
+
+The same Developer run durably stores the memory prompt/refs in
+`contextSnapshot.paperclipIssue.description`; its separately verified canonical
+Git enrichment artifact is 3,545 bytes, SHA-256
+`f5e6765ad86fda524a3d83dbe1f01ca57cee0a4dbd2edc408ef0236441a0ad25`.
+These are distinct sources: memory advice was prepared before submission, not
+fetched by a new automatic runtime resolver. With zero live runs, an actual
+controller restart preserved the task's approval state and complete run snapshot
+exactly, and all three saved context/test/QA artifacts retained their digests.
+Checkout/execution locks remain clear. Combined task/run snapshot digest:
+`8fd230886cd64ac8def0c4949f4405707bbd47e32c92043966d78b3f16cbd861`.
+
+Operational limits are explicit: Paperclip initially materialized the worktree
+at the older `1c41e40` checkpoint. Enrichment stopped those attempts before
+provider work; retries were paused and only the untouched task branch was
+fast-forwarded to `14e304d`. One incorrectly shaped manual wake lacked its issue
+payload and also stopped before provider work; the corrected native wake used
+`payload.issueId`. No provenance check, participant or approval policy was removed.
+All four successful handoffs retain Paperclip's known `cancelled/issue_reassigned`
+run semantics; durable stage decisions and independently checked receipts qualify
+them. Native provider usage/cost fields are **unavailable**, not zero. Developer
+and Reviewer used the existing `opencode/muse-spark-1.3-contributor-free` bindings;
+no measured token/cost saving is claimed. The one-lesson/three-candidate recall
+limit can miss relevant lessons as history grows; broader retrieval evaluation
+and role-aware candidate indexing remain later work.
+
+Next: explicit owner approval of AIF-49's exact candidate, integrate it into the
+original implementation branch, rerun the merged check, and record versioned
+rollout plus a Git-revert rollback. Only then mark Milestone 3 complete.
 
 Later organizational retrieval-quality measurement and automatic freshness,
 pruning, general projections and self-improvement are outside this first loop.
