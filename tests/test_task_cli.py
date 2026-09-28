@@ -130,6 +130,14 @@ class TaskCliTests(unittest.TestCase):
         self.assertIn("paused", result.stderr)
         self.assertFalse(any(request[0] != "GET" for request in self.requests))
 
+    def test_start_rejects_error_status_agent_before_submission(self):
+        self.agents[AGENTS[0]]["status"] = "error"
+        result = self.submit("--start")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("error", result.stderr)
+        self.assertIn("resume the selected agent in Paperclip", result.stderr)
+        self.assertFalse(any(request[0] == "POST" for request in self.requests))
+
     def test_qa_adds_a_distinct_native_participant(self):
         self.workflow["qaAgentId"] = AGENTS[3]
         result = self.submit("--dry-run")

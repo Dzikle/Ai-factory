@@ -68,7 +68,7 @@ def preflight(client, company_id, payload, *, start):
             raise ValueError("Workflow agent does not belong to the configured company")
         if agent.get("status") == "terminated":
             raise ValueError(f"Workflow agent {agent_id} is terminated")
-        if start and agent.get("status") not in {"idle", "running", "error"}:
+        if start and agent.get("status") not in {"idle", "running"}:
             raise ValueError(f"Workflow agent {agent_id} is {agent.get('status')}; resume the selected agent in Paperclip before --start")
 
 
