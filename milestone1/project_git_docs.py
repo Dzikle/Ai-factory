@@ -133,14 +133,30 @@ def project_once(
 
 
 def run(argv: list[str] | None = None, environ: dict[str, str] | None = None) -> dict:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog=(
+            "modes:\n"
+            "  default apply mode reconciles the snapshot and requires separate\n"
+            "  reader/writer credentials; there is no --apply flag, so omitting\n"
+            "  --dry-run selects apply mode.\n"
+            "  --dry-run is a reader-only preview: searches only, no writes,\n"
+            "  and requires only reader credentials.\n"
+            "examples:\n"
+            "  reader-only preview:\n"
+            "    python -m milestone1.project_git_docs --repo-root <root> --overlay overlay.yaml --repository source --dry-run\n"
+            "  default apply mode:\n"
+            "    python -m milestone1.project_git_docs --repo-root <root> --overlay overlay.yaml --repository source\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("--repo-root", type=Path, required=True)
     parser.add_argument("--overlay", required=True, help="committed path relative to repo root")
     parser.add_argument("--repository", required=True, help="repository id in the overlay")
     parser.add_argument("--expect-revision", help="required full Git commit SHA")
     parser.add_argument("--ca-file")
     parser.add_argument("--insecure-localhost", action="store_true", help="local test cluster only")
-    parser.add_argument("--dry-run", action="store_true", help="preview planned writes with searches only")
+    parser.add_argument("--dry-run", action="store_true", help="reader-only preview of planned writes with searches only")
     args = parser.parse_args(argv)
     env = os.environ if environ is None else environ
     options = {"cafile": args.ca_file, "insecure_localhost": args.insecure_localhost}

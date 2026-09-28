@@ -234,6 +234,35 @@ class ProjectGitDocsTests(unittest.TestCase):
         self.assertNotEqual(0, result.returncode)
         self.assertIn("credentials are required", result.stderr)
 
+    def test_help_documents_reader_only_dry_run_example_without_credentials(self):
+        env = {key: value for key, value in os.environ.items() if not key.startswith("AIF_DOCS_")}
+        result = subprocess.run(
+            [sys.executable, "-m", "milestone1.project_git_docs", "--help"],
+            cwd=Path(__file__).resolve().parents[1], env=env, capture_output=True, text=True,
+        )
+        self.assertEqual(0, result.returncode)
+        self.assertIn("--dry-run", result.stdout)
+        self.assertIn("reader-only", result.stdout.lower())
+        self.assertIn("no --apply", result.stdout.lower())
+        self.assertIn("default", result.stdout.lower())
+        lines = result.stdout.splitlines()
+        preview_lines = [
+            line for line in lines
+            if "milestone1.project_git_docs" in line and "--dry-run" in line
+        ]
+        self.assertTrue(
+            preview_lines,
+            "expected one single-line reader-only preview example containing --dry-run",
+        )
+        preview = preview_lines[0]
+        for token in ("--repo-root", "--overlay", "--repository", "--dry-run"):
+            self.assertIn(token, preview)
+        self.assertIn("overlay.yaml", preview)
+        self.assertFalse(
+            preview.rstrip().endswith("\\") or preview.rstrip().endswith("`"),
+            "preview example must not use shell continuation",
+        )
+
 
 class DryRunPreviewTests(unittest.TestCase):
     def setUp(self):
