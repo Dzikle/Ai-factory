@@ -234,6 +234,18 @@ class ProjectGitDocsTests(unittest.TestCase):
         self.assertNotEqual(0, result.returncode)
         self.assertIn("credentials are required", result.stderr)
 
+    def test_help_documents_reader_only_dry_run_example_without_credentials(self):
+        env = {key: value for key, value in os.environ.items() if not key.startswith("AIF_DOCS_")}
+        result = subprocess.run(
+            [sys.executable, "-m", "milestone1.project_git_docs", "--help"],
+            cwd=Path(__file__).resolve().parents[1], env=env, capture_output=True, text=True,
+        )
+        self.assertEqual(0, result.returncode)
+        self.assertIn("--dry-run", result.stdout)
+        self.assertIn("reader-only", result.stdout.lower())
+        self.assertIn("no --apply", result.stdout.lower())
+        self.assertIn("default", result.stdout.lower())
+
 
 class DryRunPreviewTests(unittest.TestCase):
     def setUp(self):
