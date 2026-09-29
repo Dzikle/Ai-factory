@@ -192,6 +192,15 @@ or authorization to erase MemPalace/Paperclip records. Deploy accepted Git chang
 through the existing source checkout and one-shot document projector; no new
 image, service, migration, scheduler or approval mechanism is introduced.
 
+Live rollout at closure checkpoint `d7c869a9cbcb6c51532911501359a080bc165edb`
+also passed: the existing Paperclip source checkout was clean on
+`milestone1-contracts`, with matching workspace `repoRef`/`defaultRef` and zero
+live runs. Its credential-stripped checker ran 100 tests (two skips). The
+existing one-shot projector updated 49 canonical Git documents; reader-only
+replay planned zero writes. Primary-verified memory recall still selected the
+same current drawer and returned 1,253 bytes. This receipt-only update changes
+no approved code; advance the same source/projection to the final receipt commit.
+
 Next: Milestone 4's bounded measurement of accepted-task quality, context use,
 latency and available model telemetry against a baseline. No Milestone 4
 implementation is included in this approval.
