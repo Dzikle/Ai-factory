@@ -105,6 +105,8 @@ def main(argv=None):
     submit.add_argument("--dry-run", action="store_true", help="show the payload without contacting Paperclip")
     status = commands.add_parser("status", help="show Paperclip's authoritative task progress")
     status.add_argument("issue", help="issue UUID or identifier, e.g. AIF-47")
+    scorecard = commands.add_parser("scorecard", help="read native task quality, timings and usage coverage; no writes")
+    scorecard.add_argument("issue", help="issue UUID or identifier, e.g. AIF-49")
     args = parser.parse_args(argv)
     try:
         if not args.state:
@@ -125,6 +127,11 @@ def main(argv=None):
             _, issue = client.request("POST", f"/api/companies/{company_id}/issues", payload, expected=(200, 201))
         else:
             _, issue = client.request("GET", f"/api/issues/{args.issue}")
+        if args.command == "scorecard":
+            from milestone2.scorecard import collect, format_scorecard
+            report = collect(client, issue, company_id)
+            print(json.dumps(report, allow_nan=False) if args.json else format_scorecard(report))
+            return 0
         report = progress(issue, company_id)
         if args.json:
             print(json.dumps(report))
