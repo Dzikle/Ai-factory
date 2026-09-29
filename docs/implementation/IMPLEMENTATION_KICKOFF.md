@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 trusted-local demonstration COMPLETE; Milestone 3 next (full V1 and production gates remain incomplete)
+**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestone 2 trusted-local demonstration COMPLETE; Milestone 3 IN PROGRESS (full V1 and production gates remain incomplete)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -27,7 +27,7 @@ complete; make that loop easy to use before adding breadth.
 | 0 — admit dependencies | **Done** | Pinned Paperclip fork passed migration, crash/security/enrichment, and restore gates. |
 | 1 — first runnable task | **Done** | AIF-42 completed Developer → Validator → Reviewer → human approval; AIF-43 survived a native child kill and resumed under a different native adapter. Evidence below. |
 | 2 — usable engineering loop | **Local demo complete** | Reusable submission/status commands created AIF-48 and replayed its key; distinct tests, Reviewer, QA and owner approval completed; exact candidate integrated and reverified. |
-| 3 — useful memory | **Later** | One proven experience is stored with provenance, retrieved by a later task, and cannot override current Git. |
+| 3 — useful memory | **Owner approval pending** | Real scoped memory and native AIF-49 promotion pass tests, independent Reviewer and QA; integration/approved rollout remain. |
 | 4 — measure and operate | **Later** | Compare accepted-task quality/cost against a baseline; run bounded failure/rollback drills and promote improvements only through review. |
 
 Every milestone must end with a runnable demonstration and recorded acceptance
@@ -597,6 +597,22 @@ Milestone 3 may now start with one reviewed experiential-memory lesson; no
 memory implementation was added by this integration.
 
 ## 6. Milestone 3 — experiential memory loop
+
+**Current implementation:** [`../../milestone3/README.md`](../../milestone3/README.md)
+records the first supervised slice. One real AIF-47/AIF-48 dependency-environment
+lesson is held in the existing production MemPalace service; only metadata is
+projected into the existing OpenSearch docs mapping. Primary status, current
+Git bytes, exact owner-approved source decision, scope and retention are checked
+before at most one 2,400-byte historical prompt is prepared. Real dependency-loss
+tests degrade to no advice without modifying Paperclip task state. This is not
+an automatic per-run freshness guarantee or a complete Context Resolver. The
+native follow-up AIF-49 produced candidate `68344b66` and passed 100 tests
+(98 passed/two skipped), full foundation/promotion re-review and 3/3 functional
+QA. Actual controller restart preserved the task/run context and artifact digests.
+It is held at the native owner stage, 3/4 gates, not merged/published. Explicit
+owner approval, merged validation and versioned rollout/rollback remain mandatory.
+Provider usage/cost is unavailable on cancelled handoff runs; the 314-token
+memory estimate is context sizing, not a billed-model metric.
 
 Add memory only after the engineering loop runs without it. Begin with **one**
 real, reviewed lesson from a completed task or incident, not seven simulated
