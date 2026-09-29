@@ -159,5 +159,66 @@ def collect(client, issue, company_id):
 
 
 def format_scorecard(report):
-    """Initial machine-shaped output; the paired task will improve readability."""
-    return json.dumps(report, indent=2, allow_nan=False)
+    """Readable task scorecard; None is unknown, never zero."""
+    quality = report.get("quality") if isinstance(report.get("quality"), dict) else {}
+    timing = report.get("timing") if isinstance(report.get("timing"), dict) else {}
+    usage = report.get("usage") if isinstance(report.get("usage"), dict) else {}
+
+    def yes_no(value):
+        return "yes" if value is True else "no"
+
+    def yes_no_unknown(value):
+        if value is True:
+            return "yes"
+        if value is False:
+            return "no"
+        return "unknown"
+
+    def count(value):
+        return "unknown" if value is None else f"{value}"
+
+    def tokens(value):
+        return "unknown" if value is None else f"{value}"
+
+    def seconds(value):
+        if value is None:
+            return "unknown"
+        return f"{value / 1000:.3f}"
+
+    def usd(value):
+        if value is None:
+            return "unknown"
+        return f"{value:.6f}"
+
+    identifier = report.get("identifier") or report.get("issueId") or "unknown"
+    status = report.get("status") or "unknown"
+    run_count = report.get("runCount")
+    lines = [
+        f"Task: {identifier} ({status})",
+        f"Owner accepted: {yes_no(quality.get('ownerAccepted'))}",
+        f"Independent participants: {yes_no_unknown(quality.get('independentParticipants'))}",
+        f"Gates: {count(quality.get('completedStages'))}/{count(quality.get('totalStages'))}",
+        f"Runs: {count(run_count)}; failed: {count(report.get('failedRuns'))}; "
+        f"retries: {count(report.get('recordedRetries'))}; "
+        f"handoff cancellations: {count(report.get('handoffCancellations'))}",
+        f"Runtime: {seconds(timing.get('runtimeMs'))} s; "
+        f"coverage: {count(timing.get('coveredRuns'))}/{count(run_count)}",
+        f"Execution window: {seconds(timing.get('executionWindowMs'))} s",
+        f"Known runtime subtotal: {seconds(timing.get('knownRuntimeMs'))} s",
+        f"Tokens: input {tokens(usage.get('inputTokens'))}; "
+        f"cached {tokens(usage.get('cachedInputTokens'))}; "
+        f"output {tokens(usage.get('outputTokens'))}; "
+        f"coverage: {count(usage.get('coveredRuns'))}/{count(run_count)}",
+        f"Reported cost: {usd(usage.get('reportedCostUsd'))} USD; "
+        f"coverage: {count(usage.get('costCoveredRuns'))}/{count(run_count)}",
+        f"Known subtotal: input {count(usage.get('knownInputTokens'))}; "
+        f"cached {count(usage.get('knownCachedInputTokens'))}; "
+        f"output {count(usage.get('knownOutputTokens'))}; "
+        f"reported {usd(usage.get('knownReportedCostUsd'))} USD",
+        f"Reported cost per owner-accepted task: "
+        f"{usd(usage.get('reportedCostPerOwnerAcceptedTaskUsd'))} USD",
+        "Caution: non-atomic readback, declared participant separation is not execution proof, "
+        "native reported cost is not invoice evidence, and correctness requires independent "
+        "validation/review/QA.",
+    ]
+    return "\n".join(lines)
