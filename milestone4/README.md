@@ -1,6 +1,6 @@
 # Milestone 4 — bounded task measurement
 
-Status: **FIRST SLICE VERIFIED — awaiting owner approval/integration. Full
+Status: **FIRST SLICE OWNER-APPROVED AND INTEGRATED. Full
 Milestone 4 remains incomplete; no performance/cost improvement is claimed.**
 
 Owner-approved scope: a read-only task scorecard and one small serial pair of
@@ -69,7 +69,8 @@ must not be counted as accepted correct tasks or integrated.
 [Machine-readable receipt](results/pair-20260929.json) contains the exact native
 task/run/commit/tree identities, context and independent receipt digests, model
 bindings and observed scorecards. It is an experiment snapshot, never task truth.
-Live task state remains exclusively in Paperclip.
+Live task state remains exclusively in Paperclip. The table below preserves
+the pre-approval observation; the later approval/integration receipt follows.
 
 | Observed metric | AIF-50: baseline | AIF-51: memory advice |
 | --- | --- | --- |
@@ -123,23 +124,49 @@ remains unavailable, not zero; no cost-per-accepted-correct-task metric or token
 saving can be computed. Manual setup/orchestration/review costs are also outside
 the native scorecard. Do not expand automatic memory injection on this evidence.
 
-Recommended integration candidate: **AIF-50**, commit
+Owner-selected integration candidate: **AIF-50**, commit
 `4afce50c325129ad0ad8168c146b3fad7dd8d302`, with its smaller formatter body and
 equivalent checked contract. Its original commit is preserved on local branch
 `m4-aif50-candidate`; the alternate `c653361216a9c2333f5695346feb5da3c73dfc87`
 is preserved on `m4-aif51-candidate`. The independently reviewed foundation and
-evaluator corrections are on `milestone4-scorecard`; no candidate has been
-merged into accepted `milestone1-contracts` or primary `main`.
+evaluator corrections remain in its history on `milestone4-scorecard`.
+AIF-50 is integrated into accepted `milestone1-contracts`; AIF-51 is not.
+Primary `main` remains unchanged.
 
 Foundation validation: **130 run, 128 passed/two optional live skips**, including
 24 CLI/API scorecard tests and six evaluator regressions; existing context,
 committed-handoff and identity Node regressions **26/26**. Candidate validation
 counts differ because the evaluator corrections remain outside their frozen
-task trees. The full current foundation and candidate must be tested together
-again after approved integration. No skipped test is counted as live evidence.
+task trees. Fresh combined validation is recorded below; no skipped test is
+counted as live evidence.
 
-Next: owner selects/approves one candidate, then integrate that exact commit,
-retest and deploy through the existing source checkout. Full Milestone 4 remains
+### Approved integration — 2026-09-29
+
+The owner's explicit **Merge** instruction selected AIF-50. Its three stored
+context/Tests/QA artifacts were rechecked against actual bytes and native run
+identities before relaying approval. Paperclip recorded owner decision
+`d725d2e4-147b-42e5-a69b-ada774c0c37d` at `2026-09-29T06:34:46.730Z`:
+`done`, 4/4 gates, verified user actor, clear execution/checkout locks.
+AIF-51 remains unapproved at 3/4; the original paired snapshot is unchanged.
+
+Candidate merge `bd139d1dd9d6877f8cfc01807f2eac048316e8a4` preserves the native
+commit. Accepted integration `03e443a5218032a2bbc55a1cfda29ce6b9368262` has tree
+`2d45cd7285e84b4de0f7987ef8d9d706a52e96ca`. Fresh combined and accepted-branch
+checks ran **139 Python tests: 137 passed, two optional live skips**; external
+presentation QA **9/9** and context/handoff/identity Node regressions **26/26**
+passed. No skipped test is counted as live evidence.
+
+The existing controller source checkout was advanced to that accepted revision
+on `milestone1-contracts`; workspace refs and the native project base matched.
+Its credential-stripped checker repeated 139 tests (two skips) and QA 9/9.
+Live read-only scorecard reports AIF-50 accepted, 4/4, with tokens/cost still
+unknown. Zero company live runs were observed. Existing one-shot projection
+updated 49 canonical documents; reader-only replay planned zero writes.
+The subsequent receipt-only commit is carried through the same checkout and
+projector. No image, service, credential, model binding or migration changed.
+This is a **local merge**, not a push or PR; primary `main` stays at `71b5a5d`.
+
+Next: trustworthy native handoff usage/cost evidence. Full Milestone 4 remains
 open for trustworthy native handoff telemetry, broader retrieval judgments and
 recorded bounded operations/drills. Do not add another observability platform
 or routing/healing system merely to fill this telemetry gap.

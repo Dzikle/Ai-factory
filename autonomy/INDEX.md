@@ -61,9 +61,12 @@ gates, with clear locks. Integration `a46ec83` retains the exact candidate on
 `milestone1-contracts`; fresh merged checks and isolated Git rollback/reapply
 passed. Milestone 4's owner-approved bounded measurement slice is verified:
 a read-only native task scorecard and one serial baseline/memory task pair,
-without additional services. Candidate integration still requires the native
-owner gate. AIF-50/AIF-51 passed Tests/Reviewer/QA, 3/4 pending owner approval;
-recommend AIF-50's smaller formatter. This pair shows no demonstrated memory
+without additional services. The owner selected AIF-50 with the explicit Merge
+instruction; Paperclip records `done`, 4/4 gates. Integration `03e443a` preserves
+the original candidate on `milestone1-contracts`; 139 Python tests (two optional
+skips), 9/9 QA and 26/26 Node checks passed. The existing source checkout is
+updated; primary `main` is unchanged. AIF-51 remains unapproved, not integrated.
+This pair shows no demonstrated memory
 benefit; missing telemetry is not zero or evidence of cost savings. Full
 Milestone 4 remains incomplete. See
 `milestone3/README.md` and `milestone4/README.md`.

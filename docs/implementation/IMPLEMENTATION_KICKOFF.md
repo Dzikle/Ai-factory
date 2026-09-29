@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestones 2 and 3 trusted-local demonstrations COMPLETE; Milestone 4 first measurement slice VERIFIED, awaiting owner approval/integration (full Milestone 4, V1 and production gates remain incomplete)
+**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestones 2 and 3 trusted-local demonstrations COMPLETE; Milestone 4 first measurement slice OWNER-APPROVED AND INTEGRATED (full Milestone 4, V1 and production gates remain incomplete)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -28,7 +28,7 @@ complete; make that loop easy to use before adding breadth.
 | 1 — first runnable task | **Done** | AIF-42 completed Developer → Validator → Reviewer → human approval; AIF-43 survived a native child kill and resumed under a different native adapter. Evidence below. |
 | 2 — usable engineering loop | **Local demo complete** | Reusable submission/status commands created AIF-48 and replayed its key; distinct tests, Reviewer, QA and owner approval completed; exact candidate integrated and reverified. |
 | 3 — useful memory | **Local demo complete** | Real scoped memory informed AIF-49's deterministic checker; native tests, Reviewer, QA and actual owner approval completed; exact candidate integrated, merged checks and isolated Git rollback/reapply passed. |
-| 4 — measure and operate | **Later** | Compare accepted-task quality/cost against a baseline; run bounded failure/rollback drills and promote improvements only through review. |
+| 4 — measure and operate | **First slice integrated; full milestone open** | AIF-50's read-only scorecard is accepted and deployed. The serial pair demonstrates no memory benefit; missing native tokens/cost and broader operations/eval gates remain open. |
 
 Every milestone must end with a runnable demonstration and recorded acceptance
 evidence. Do not add an index, service, generic adapter, or framework merely to
@@ -657,12 +657,19 @@ and canonical Git enrichment; only experiential advice differs. A single,
 non-randomized pair cannot establish general improvement or savings.
 
 AIF-50/AIF-51 each ran 133 Python tests (131 passed/two optional live skips),
-passed independent Reviewer assessment and 9/9 presentation QA; both are 3/4 at the owner gate.
+passed independent Reviewer assessment and 9/9 presentation QA. The owner then
+selected AIF-50 with **Merge**; native decision
+`d725d2e4-147b-42e5-a69b-ada774c0c37d` records `done`, 4/4. AIF-51 remains
+unapproved at 3/4 and is not integrated. Accepted merge `03e443a` preserves
+candidate `4afce50`; fresh combined checks passed 139 Python tests (137 passed,
+two optional live skips), QA 9/9 and Node 26/26. Existing runtime source and
+workspace refs were updated without a new image; primary `main` is unchanged.
 The memory trial added 1,254 description bytes and used 311.160 s active native
 runtime versus 226.396 s for baseline; the baseline wall window includes a
 supervised evaluator-correction hold. No causal speed/cost benefit is proven;
-tokens/cost have zero covered runs and remain unknown. Recommend AIF-50's
-smaller formatter, subject to explicit owner approval before accepted integration.
+tokens/cost have zero covered runs and remain unknown. AIF-50's smaller
+formatter is integrated locally on `milestone1-contracts`, not pushed or PRed.
+Next bounded measurement need: reliable native handoff usage/cost evidence.
 
 The broader items below remain backlog/exit criteria, **not work added to this
 first slice**:

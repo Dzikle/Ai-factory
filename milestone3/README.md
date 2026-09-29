@@ -4,7 +4,8 @@
 approved AIF-49's exact reviewed candidate; it is integrated into
 `milestone1-contracts`. Fresh merged checks and isolated Git rollback/reapply
 passed. This closes the supervised Milestone 3 loop, not full V1 or production
-readiness. Milestone 4 is next and has not started.
+readiness. Milestone 4's first approved measurement slice is now integrated;
+see [`../milestone4/README.md`](../milestone4/README.md) for its remaining gates.
 
 ## Implemented boundary
 
