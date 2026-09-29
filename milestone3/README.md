@@ -1,9 +1,10 @@
 # Milestone 3 — one useful memory
 
-**Status: READY FOR AIF-49 OWNER APPROVAL (2026-09-29 local).** The supervised
-memory slice and subsequent native coding task pass independent tests, Reviewer
-and functional QA. Integration, approved rollout/rollback and milestone closure
-remain pending; no owner approval has been simulated.
+**Status: TRUSTED-LOCAL DEMONSTRATION COMPLETE (2026-09-29 local).** The owner
+approved AIF-49's exact reviewed candidate; it is integrated into
+`milestone1-contracts`. Fresh merged checks and isolated Git rollback/reapply
+passed. This closes the supervised Milestone 3 loop, not full V1 or production
+readiness. Milestone 4 is next and has not started.
 
 ## Implemented boundary
 
@@ -39,7 +40,7 @@ or memory change. Current task instructions and Git remain authoritative. No
 queued/unattended freshness guarantee is claimed. Future run-time lookup must
 use Paperclip-governed read-only MCP, not an agent-held MemPalace server token.
 
-## First experience and proposed promotion
+## First experience and approved promotion
 
 `fixtures/pinned-tests-lesson.json` is a reviewed capture input, not live memory
 truth. It cites AIF-48's owner-approved decision and the committed Milestone 2
@@ -48,10 +49,10 @@ AIF-47/AIF-48. The live authority is MemPalace. The earlier incomplete wording
 is retained as superseded history; a deliberately stale active OpenSearch
 projection cannot reactivate it.
 
-`tasks/pinned-check.json` proposes the smallest deterministic promotion: a
+`tasks/pinned-check.json` specified the smallest deterministic promotion: a
 credential-free test entry point that checks the pinned dependencies before
 running tests, or prints an actionable recovery command. The native Developer
-may change only `milestone3/check.py` and `tests/test_check.py`. It cannot approve,
+could change only `milestone3/check.py` and `tests/test_check.py`. It cannot approve,
 publish or merge its result. `fixtures/check-stage.mjs` reuses the established
 Paperclip issue identity/committed-copy helpers for independent full-suite and
 three black-box CLI QA checks; no separate stage state or scheduler.
@@ -108,13 +109,16 @@ Retention/review dates suppress retrieval; automated pruning is not implemented.
 
 ### Native later-task receipt
 
-AIF-49 (`b83ef44c-09ab-4c92-8265-c946d85986d9`) is at **owner approval, 3/4 gates**.
+AIF-49 (`b83ef44c-09ab-4c92-8265-c946d85986d9`) is **done, 4/4 gates**. The actual
+owner approval was recorded at `2026-09-29T00:42:52.429Z`, decision
+`ca59d628-e234-4314-bda2-7ec4b4855e2f`, after the user's explicit approval and
+fresh verification of the unchanged candidate, independent receipts and stage.
 Candidate `68344b66c24cd3b506b26b65c99915a892660641`, tree
 `ec31f82baf2c07b39f90fe3634df6064b8cac286`, adds only `milestone3/check.py` and
 `tests/test_check.py` over foundation `14e304d253a69c3258139f723505b81725c387b4`.
-The candidate branch is preserved in Paperclip and fetched locally; it is **not
-merged or published**. The checker targets the existing supported Python 3.11+
-environment and installs nothing.
+The exact candidate is retained in the integration history; the native task
+branch is preserved unchanged for audit. The checker targets the existing
+supported Python 3.11+ environment and installs nothing.
 
 | Stage | Native run | Verified result |
 | --- | --- | --- |
@@ -138,7 +142,7 @@ These are distinct sources: memory advice was prepared before submission, not
 fetched by a new automatic runtime resolver. With zero live runs, an actual
 controller restart preserved the task's approval state and complete run snapshot
 exactly, and all three saved context/test/QA artifacts retained their digests.
-Checkout/execution locks remain clear. Combined task/run snapshot digest:
+Checkout/execution locks remain clear. The pre-approval combined task/run snapshot digest was:
 `8fd230886cd64ac8def0c4949f4405707bbd47e32c92043966d78b3f16cbd861`.
 
 Operational limits are explicit: Paperclip initially materialized the worktree
@@ -155,9 +159,42 @@ no measured token/cost saving is claimed. The one-lesson/three-candidate recall
 limit can miss relevant lessons as history grows; broader retrieval evaluation
 and role-aware candidate indexing remain later work.
 
-Next: explicit owner approval of AIF-49's exact candidate, integrate it into the
-original implementation branch, rerun the merged check, and record versioned
-rollout plus a Git-revert rollback. Only then mark Milestone 3 complete.
+### Approved integration and rollback — 2026-09-29
+
+Candidate merge `dee3cf46833378d91b12f0c1ef5bea3fda300910` preserves the original
+native commit. Feature integration `a46ec83bb2788b5d6cb297b7fd3004792f2c90ce` on
+the original `milestone1-contracts` branch has tree
+`91954fec6eded14d29a65a5a5b97aeafadc62985`; its first parent is the previously
+accepted `1c41e40d47337b5418b87ed70c7292694c61a272`. The primary `main` checkout
+is unchanged. The subsequent closure commit changes only the existing reports.
+
+Fresh merged validation: `python -m milestone3.check` ran **100 tests: 98 passed,
+two opt-in live tests skipped**; functional CLI QA **3/3**; existing native
+context/committed-handoff/identity Node regressions **26/26**. Fixture syntax and
+`git diff --check` passed. No skipped test is counted as live evidence; earlier
+real-service and restart receipts above remain the integration evidence.
+
+An ignored isolated Git copy exercised full-feature `git revert -m 1 a46ec83`
+and reapplication. Revert restored the exact prior accepted tree
+`ccdf74d49fe53d294d57cefecccc46c81a079f01`; reapply restored the exact integration
+tree and reran the 100-test checker successfully (two skips). A second isolated
+check reverted/reapplied just the promotion merge and matched the exact
+pre-promotion foundation and accepted trees. The live branch, task and memory
+were not rolled back during these checks.
+
+For a **subsequently approved promotion-only backout**, use
+`git revert -m 1 dee3cf46833378d91b12f0c1ef5bea3fda300910`, then validate and update
+the acceptance report before deploying. This removes only the checker and its
+seven tests, retaining the memory slice and durable task history. A whole-feature
+backout uses `git revert -m 1 a46ec83bb2788b5d6cb297b7fd3004792f2c90ce`; reconcile
+later report edits rather than force-resetting Git. Neither command is automatic
+or authorization to erase MemPalace/Paperclip records. Deploy accepted Git changes
+through the existing source checkout and one-shot document projector; no new
+image, service, migration, scheduler or approval mechanism is introduced.
+
+Next: Milestone 4's bounded measurement of accepted-task quality, context use,
+latency and available model telemetry against a baseline. No Milestone 4
+implementation is included in this approval.
 
 Later organizational retrieval-quality measurement and automatic freshness,
 pruning, general projections and self-improvement are outside this first loop.

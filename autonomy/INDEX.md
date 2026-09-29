@@ -53,11 +53,13 @@ approved it and merge `b78b4c53` integrated the exact candidate. Paperclip recor
 `done`, 4/4 gates, with clear locks; post-merge tests and QA passed.
 Cancelled-handoff recovery still needs supervised reconciliation; see
 `milestone2/README.md`. This closes the local demo, not full V1 or production
-readiness. Milestone 3 is ready for AIF-49 owner approval: supervised MemPalace
+readiness. Milestone 3's supervised trusted-local demonstration is complete: MemPalace
 capture/recall and native later-task use pass real-service checks, independent
 tests, full Reviewer assessment and functional QA. Restart preserved context and
-receipts. The exact candidate is unmerged, with 3/4 native gates; approval and
-versioned rollout/rollback remain. See `milestone3/README.md`.
+receipts. The owner approved AIF-49 on 2026-09-29; Paperclip records `done`, 4/4
+gates, with clear locks. Integration `a46ec83` retains the exact candidate on
+`milestone1-contracts`; fresh merged checks and isolated Git rollback/reapply
+passed. Milestone 4 is next and has not started. See `milestone3/README.md`.
 Keep the selected integration boundaries and see
 `docs/implementation/IMPLEMENTATION_KICKOFF.md` for current receipts and exit gates.
 
