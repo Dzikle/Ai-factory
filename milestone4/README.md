@@ -45,6 +45,17 @@ existing canonical Git pre-run enrichment. The treatment adds only one bounded
 primary-verified MemPalace lesson prepared by the existing supervised recall.
 No privileged memory credentials enter agent execution.
 
+The task base is `e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a`, passed explicitly
+to the independent stage checker. Its reference comes from that committed tree,
+not the controller source checkout's mutable HEAD/working files. Only one
+formatter's body is normalized; signatures/decorators and all other AST nodes
+remain protected. Independent review found these two initial guard weaknesses;
+six focused regressions reproduced four failures and pass after correction.
+The external presentation contract now includes complete nonzero accounting
+as well as missing/zero/partial cases. Evaluator corrections are separate from
+the frozen candidate base. AIF-50 was held before validation during this fix;
+that supervised interruption must be recorded, not credited to either model.
+
 This is one serial pair, not randomized or statistically conclusive. Provider
 cache, ordering, free-tier variability and Reviewer behavior can affect timing.
 Supplied context is verified separately from inferred use; output similarity or

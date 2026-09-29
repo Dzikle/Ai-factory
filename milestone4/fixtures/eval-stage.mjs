@@ -10,7 +10,9 @@ import { validateCommittedTask } from "../../milestone1/fixtures/git-handoff.mjs
 const { PAPERCLIP_API_URL: api, PAPERCLIP_API_KEY: token, PAPERCLIP_RUN_ID: runId,
   PAPERCLIP_AGENT_ID: agentId, PAPERCLIP_TASK_ID: configuredIssueId } = process.env;
 const mode = process.argv[2];
-if (!api || !token || !runId || !agentId || !["tests", "qa"].includes(mode)) throw new Error("missing evaluation stage identity");
+const baseGitHead = process.argv[3];
+if (!api || !token || !runId || !agentId || !["tests", "qa"].includes(mode)
+    || !/^[a-f0-9]{40}$/.test(baseGitHead ?? "")) throw new Error("missing evaluation stage identity or pinned base");
 const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
 const issueId = await resolveRunIssueId({ api, token, runId, configuredIssueId });
 const { cwd, branchName } = await resolveRunWorkspace({ api, token, runId, issueId, agentId });
@@ -25,26 +27,12 @@ async function requireStage() {
   }
 }
 await requireStage();
-const source = fileURLToPath(new URL("../../", import.meta.url));
 const qaScript = fileURLToPath(new URL("./scorecard_qa.py", import.meta.url));
+const guardScript = fileURLToPath(new URL("./eval_guard.py", import.meta.url));
 const candidateFile = "milestone2/scorecard.py";
 const { handoff, result } = await validateCommittedTask({ cwd, expectedBranch: branchName }, async (snapshot) => {
-  const base = spawnSync("git", ["rev-parse", "HEAD"], { cwd: source, encoding: "utf8", timeout: 10_000 });
-  if (base.status !== 0) throw new Error("evaluation base lookup failed");
-  const baseGitHead = base.stdout.trim();
-  const scopeScript = `import ast, pathlib, subprocess, sys
-base, reference = sys.argv[1:]
-subprocess.run(['git','merge-base','--is-ancestor',base,'HEAD'],check=True,capture_output=True)
-changed=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
-assert changed and set(changed)<= {'milestone2/scorecard.py','tests/test_scorecard_format.py'}, 'candidate scope changed'
-def protected(p):
-    tree=ast.parse(pathlib.Path(p).read_text())
-    tree.body=[n for n in tree.body if not isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) or n.name!='format_scorecard']
-    return ast.dump(tree,include_attributes=False)
-assert protected('milestone2/scorecard.py')==protected(reference), 'collector was modified'
-`;
   const env = { PATH: process.env.PATH, PYTHONPATH: `/paperclip/m1-python-libs:${snapshot}` };
-  const scope = spawnSync("python3", ["-c", scopeScript, baseGitHead, path.join(source, candidateFile)], {
+  const scope = spawnSync("python3", [guardScript, baseGitHead], {
     cwd: snapshot, encoding: "utf8", timeout: 15_000, maxBuffer: 8192, env,
   });
   const check = scope.status === 0 && !scope.error ? spawnSync("python3",
@@ -57,6 +45,7 @@ const passed = result.check.status === 0 && !result.check.error;
 const evidence = { schemaVersion: 1, issueId, runId, agentId, ...handoff,
   validationSource: "isolated_commit_copy", check: `scorecard ${mode}`,
   baseGitHead: result.baseGitHead, commandSha256: result.commandSha256,
+  guardScriptSha256: createHash("sha256").update(await readFile(guardScript)).digest("hex"),
   qaScriptSha256: mode === "qa" ? createHash("sha256").update(await readFile(qaScript)).digest("hex") : null,
   exitCode: result.check.status, errorCode: result.check.error?.code ?? null,
   output: `${result.check.stdout ?? ""}\n${result.check.stderr ?? ""}`.slice(-6000), verdict: passed ? "passed" : "failed" };

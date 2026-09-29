@@ -51,6 +51,17 @@ class ScorecardPresentationQA(unittest.TestCase):
         self.assertIn("Reported cost: unknown USD; coverage: 1/2", text)
         self.assertIn("Known subtotal: input 20; cached 5; output 3; reported 0.250000 USD", text)
 
+    def test_complete_nonzero_usage_and_accepted_task_cost(self):
+        value = report()
+        value["usage"].update(inputTokens=50, cachedInputTokens=10, outputTokens=6,
+                              reportedCostUsd=.5, reportedCostPerOwnerAcceptedTaskUsd=.5,
+                              coveredRuns=2, costCoveredRuns=2, knownInputTokens=50,
+                              knownCachedInputTokens=10, knownOutputTokens=6, knownReportedCostUsd=.5)
+        text = format_scorecard(value)
+        self.assertIn("Tokens: input 50; cached 10; output 6; coverage: 2/2", text)
+        self.assertIn("Reported cost: 0.500000 USD; coverage: 2/2", text)
+        self.assertIn("Reported cost per owner-accepted task: 0.500000 USD", text)
+
     def test_partial_timings_do_not_become_complete_timings(self):
         value = report()
         value["timing"].update(runtimeMs=None, executionWindowMs=None, coveredRuns=1, knownRuntimeMs=2000)
