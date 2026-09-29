@@ -196,6 +196,52 @@ class ScorecardCliTests(unittest.TestCase):
         self.assertEqual(.25, usage["knownReportedCostUsd"])
         self.assertEqual(1, usage["coveredRuns"])
 
+    def test_interrupted_accounting_is_an_observed_subtotal_not_a_complete_total(self):
+        self.measured()
+        for run in self.runs:
+            run.update(status="cancelled", errorCode="issue_reassigned")
+            run["usageJson"]["usageCompleteness"] = "partial"
+        usage = self.report()["usage"]
+        self.assertIsNone(usage["inputTokens"])
+        self.assertIsNone(usage["reportedCostUsd"])
+        self.assertEqual(50, usage["knownInputTokens"])
+        self.assertEqual(.5, usage["knownReportedCostUsd"])
+        self.assertEqual(0, usage["coveredRuns"])
+        self.assertEqual(0, usage["costCoveredRuns"])
+        self.assertEqual(2, usage["partialCoveredRuns"])
+        self.assertEqual(2, usage["partialCostCoveredRuns"])
+        human = self.cli(as_json=False)
+        self.assertEqual(0, human.returncode, human.stderr)
+        self.assertIn("Observed partial accounting: usage 2; cost 2", human.stdout)
+
+    def test_one_partial_record_prevents_a_mixed_complete_total(self):
+        self.measured()
+        self.runs[0]["usageJson"]["usageCompleteness"] = "complete"
+        self.runs[1]["usageJson"]["usageCompleteness"] = "partial"
+        usage = self.report()["usage"]
+        self.assertIsNone(usage["outputTokens"])
+        self.assertIsNone(usage["reportedCostPerOwnerAcceptedTaskUsd"])
+        self.assertEqual(50, usage["knownInputTokens"])
+        self.assertEqual(1, usage["coveredRuns"])
+        self.assertEqual(1, usage["partialCoveredRuns"])
+
+    def test_unrecognized_completeness_is_not_promoted_to_full_coverage(self):
+        self.measured()
+        self.runs[0]["usageJson"]["usageCompleteness"] = "unverified"
+        usage = self.report()["usage"]
+        self.assertIsNone(usage["inputTokens"])
+        self.assertIsNone(usage["reportedCostUsd"])
+        self.assertEqual(1, usage["coveredRuns"])
+        self.assertEqual(30, usage["knownInputTokens"])
+
+    def test_malformed_completeness_is_unknown_without_crashing(self):
+        self.measured()
+        self.runs[0]["usageJson"]["usageCompleteness"] = {"untrusted": True}
+        usage = self.report()["usage"]
+        self.assertIsNone(usage["inputTokens"])
+        self.assertEqual(1, usage["coveredRuns"])
+        self.assertEqual(30, usage["knownInputTokens"])
+
     def test_unpriced_zero_does_not_become_reported_free_cost(self):
         self.measured()
         self.runs[1]["usageJson"].update(costUsd=0, costStatus="unpriced")

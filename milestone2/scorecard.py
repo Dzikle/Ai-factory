@@ -106,7 +106,8 @@ def collect(client, issue, company_id):
         raise ValueError("Native activity scope mismatch")
 
     native_quality = quality(issue, runs, activity)
-    timings, token_records, costs = [], [], []
+    timings, token_records, known_token_records, costs, known_costs = [], [], [], [], []
+    partial_token_runs = partial_cost_runs = 0
     for run in runs:
         start, end = timestamp(run.get("startedAt")), timestamp(run.get("finishedAt"))
         if start is not None and end is not None and end >= start:
@@ -114,20 +115,31 @@ def collect(client, issue, company_id):
         usage = run.get("usageJson")
         if not isinstance(usage, dict):
             continue
+        completeness = usage.get("usageCompleteness", "complete")
+        if not isinstance(completeness, str) or completeness not in {"complete", "partial"}:
+            continue
         tokens = [number(usage.get(k), integer=True) for k in ("inputTokens", "cachedInputTokens", "outputTokens")]
         if all(t is not None for t in tokens):
-            token_records.append(tokens)
+            known_token_records.append(tokens)
+            if completeness == "complete":
+                token_records.append(tokens)
+            else:
+                partial_token_runs += 1
         cost = number(usage.get("costUsd"))
         if cost is not None and usage.get("costStatus") == "reported":
-            costs.append(cost)
+            known_costs.append(cost)
+            if completeness == "complete":
+                costs.append(cost)
+            else:
+                partial_cost_runs += 1
     count = len(runs)
     settled = bool(runs) and all(r.get("status") in {"succeeded", "failed", "cancelled", "timed_out", "skipped"}
                                  for r in runs)
     started_count = sum(timestamp(r.get("startedAt")) is not None for r in runs)
     consistent_count = number(ledger.get("runCount"), integer=True) == started_count
     covered = settled and consistent_count
-    token_totals = [sum(t[index] for t in token_records) for index in range(3)]
-    known_cost = math.fsum(costs)
+    token_totals = [sum(t[index] for t in known_token_records) for index in range(3)]
+    known_cost = math.fsum(known_costs)
     reported_cost = known_cost if covered and len(costs) == count else None
     runtime = math.fsum((end - start).total_seconds() * 1000 for start, end in timings)
     final_timing = covered and len(timings) == count
@@ -144,6 +156,7 @@ def collect(client, issue, company_id):
                    "executionWindowMs": round((max(t[1] for t in timings) - min(t[0] for t in timings)).total_seconds() * 1000, 3)
                    if final_timing else None},
         "usage": {"coveredRuns": len(token_records), "costCoveredRuns": len(costs),
+                  "partialCoveredRuns": partial_token_runs, "partialCostCoveredRuns": partial_cost_runs,
                   "knownInputTokens": token_totals[0], "knownCachedInputTokens": token_totals[1],
                   "knownOutputTokens": token_totals[2], "knownReportedCostUsd": known_cost,
                   "inputTokens": token_totals[0] if covered and len(token_records) == count else None,
@@ -208,6 +221,8 @@ def format_scorecard(report):
         f"cached {count(usage.get('knownCachedInputTokens'))}; "
         f"output {count(usage.get('knownOutputTokens'))}; "
         f"reported {usd(usage.get('knownReportedCostUsd'))} USD",
+        f"Observed partial accounting: usage {count(usage.get('partialCoveredRuns'))}; "
+        f"cost {count(usage.get('partialCostCoveredRuns'))}",
         f"Reported cost per owner-accepted task: "
         f"{usd(usage.get('reportedCostPerOwnerAcceptedTaskUsd'))} USD",
         "Caution: non-atomic readback; declared participant separation is not execution proof; "

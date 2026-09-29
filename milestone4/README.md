@@ -170,3 +170,36 @@ Next: trustworthy native handoff usage/cost evidence. Full Milestone 4 remains
 open for trustworthy native handoff telemetry, broader retrieval judgments and
 recorded bounded operations/drills. Do not add another observability platform
 or routing/healing system merely to fill this telemetry gap.
+
+### Native handoff accounting repair candidate — 2026-09-29
+
+The owner Paperclip fork branch `ai-factory/milestone4-handoff-usage` at
+`3ef2f39c4ff0e7fd11b31bf472df09f36839195d` retains
+a successful process-Stop settlement until its exact executor writes late
+metadata, while failed Stops remain immediately retryable. Cancelled/failed
+usage is marked `partial`. OpenCode no longer fabricates zero usage/cost from
+an unfinished stream, and its finished-step usage is explicitly per-run.
+The AI Factory branch `milestone4-handoff-usage` shows partial observations as
+known subtotals, never as complete task totals. No new authority or service was
+introduced; the running controller was **not** replaced or modified.
+
+Test-first evidence: the handoff regression failed with `usageJson=null` before
+the fix and passed **2/2** on a separate migrated PostgreSQL database; the
+failed-Stop retry reproduced a regression during the first correction and
+passed after preserving its retry path. Adjacent live-DB checks passed **5/5**,
+and the existing owned-Stop matrix passed **16/16**. OpenCode parser checks
+passed **14/14**, targeted adapter-result checks **3/3**, adapter typecheck and
+isolated Linux server `tsc --noEmit` passed. Scorecard checks passed **43/43**;
+independent formatter QA passed **9/9**. Local host server typecheck remains
+blocked by a pre-existing stale generated runner manifest; the complete Python
+suite ran 143 tests with two optional live skips and one unrelated, unchanged
+provenance-schema test failure. The disposable test database and source shadow
+were removed after verification.
+
+This is a candidate, **not live cost coverage**. The observed OpenCode handoff
+streams each had an unfinished last step, so finished-step tokens and reported
+cost are lower-bound observations; full totals and cost-per-accepted-task remain
+unknown. Historical AIF-50/AIF-51 receipts were not backfilled. Next, review
+the fork patch, deploy it through the existing supported controller build only
+when storage permits, and run one new bounded native handoff to confirm persisted
+partial usage and read-only scorecard coverage. Milestone 4 remains open.
