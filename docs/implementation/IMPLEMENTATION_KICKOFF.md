@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestones 2 and 3 trusted-local demonstrations COMPLETE; Milestone 4 next, not started (full V1 and production gates remain incomplete)
+**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestones 2 and 3 trusted-local demonstrations COMPLETE; Milestone 4 first measurement slice VERIFIED, awaiting owner approval/integration (full Milestone 4, V1 and production gates remain incomplete)
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -616,7 +616,7 @@ gates, decision `ca59d628-e234-4314-bda2-7ec4b4855e2f`, with clear locks. Integr
 3 CLI QA checks and 26 Node regressions. Isolated Git revert/reapply matched exact
 prior/accepted trees; the reapplied checker passed again. Rollback commands and
 scope are recorded in the existing Milestone 3 report. This completes only the
-supervised trusted-local demonstration; Milestone 4 has not started.
+supervised trusted-local demonstration; Milestone 4's separately approved measurement slice is now in progress.
 Provider usage/cost is unavailable on cancelled handoff runs; the 314-token
 memory estimate is context sizing, not a billed-model metric.
 
@@ -645,6 +645,27 @@ Use the seven adoption scenarios as later regression/evaluation cases, not as
 prerequisites for the first task or first useful memory.
 
 ## 7. Milestone 4 — measurable improvement and bounded operations
+
+**Current bounded slice (owner-approved 2026-09-29):**
+[`../../milestone4/README.md`](../../milestone4/README.md). Read native task
+quality/timing/usage through the existing CLI and run one serial pair of the
+same small formatter task, with/without one verified memory lesson. No new
+containers, stores or evaluation platform. Native Tests → Reviewer → QA → owner
+gates remain required; candidate integration is not approved by scope approval.
+Missing telemetry stays unknown. Both trials retain ordinary repository access
+and canonical Git enrichment; only experiential advice differs. A single,
+non-randomized pair cannot establish general improvement or savings.
+
+AIF-50/AIF-51 each ran 133 Python tests (131 passed/two optional live skips),
+passed independent Reviewer assessment and 9/9 presentation QA; both are 3/4 at the owner gate.
+The memory trial added 1,254 description bytes and used 311.160 s active native
+runtime versus 226.396 s for baseline; the baseline wall window includes a
+supervised evaluator-correction hold. No causal speed/cost benefit is proven;
+tokens/cost have zero covered runs and remain unknown. Recommend AIF-50's
+smaller formatter, subject to explicit owner approval before accepted integration.
+
+The broader items below remain backlog/exit criteria, **not work added to this
+first slice**:
 
 - Build retrieval query sets/judgments/experiments in OpenSearch Search Relevance
   Workbench and keep expected outcomes/promotion thresholds in Git.

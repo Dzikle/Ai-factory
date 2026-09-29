@@ -1,0 +1,405 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-29T05:46:56.599964+00:00",
+  "status": "SLICE_VERIFIED_AWAITING_OWNER_APPROVAL",
+  "snapshotOnly": true,
+  "operationalAuthority": "paperclip",
+  "fullMilestone4Complete": false,
+  "performanceImprovementProven": false,
+  "acceptedCorrectTrials": 0,
+  "taskBaseRevision": "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a",
+  "externalEvaluatorRevision": "002d7b886c4fb6a1458fcfb5fd00dee83c710b79",
+  "paperclipImage": "ghcr.io/dzikle/paperclip@sha256:37ab79a0ea5da736bb32cded7d82a1c47873369fdc711d43e5ecec22f2797b0a",
+  "selectedAgentBindings": [
+    {
+      "agentId": "2ef551a8-e8e0-4cfe-855c-bf78f795c3a0",
+      "adapterType": "opencode_local",
+      "configuredModel": "opencode/muse-spark-1.3-contributor-free",
+      "command": null,
+      "args": null
+    },
+    {
+      "agentId": "e86e8b20-2f2c-44c3-8279-27c6378ed98d",
+      "adapterType": "process",
+      "configuredModel": null,
+      "command": "node",
+      "args": [
+        "/paperclip/m1-first-task-source/milestone4/fixtures/eval-stage.mjs",
+        "tests",
+        "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a"
+      ]
+    },
+    {
+      "agentId": "55f721f8-54d4-4f02-ba19-f55fb24c501e",
+      "adapterType": "opencode_local",
+      "configuredModel": "opencode/muse-spark-1.3-contributor-free",
+      "command": null,
+      "args": null
+    },
+    {
+      "agentId": "4964fe25-762e-41ff-a780-d5ee8f17e472",
+      "adapterType": "process",
+      "configuredModel": null,
+      "command": "node",
+      "args": [
+        "/paperclip/m1-first-task-source/milestone4/fixtures/eval-stage.mjs",
+        "qa",
+        "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a"
+      ]
+    }
+  ],
+  "memory": {
+    "memoryId": "lesson-python-test-dependencies-v2",
+    "drawerId": "drawer_ai-factory_engineering-lessons_6dd8217e3859401d9ca6aa20",
+    "contentSha256": "6e48bb8f31d90f395452cee7be3a9ca26489373ecb48ebe0fe6633d05d0f2e40",
+    "preparedAdviceBytes": 1253,
+    "preparedAdviceSha256": "5527338f54167f5c41847cfa2648c067f9234cef47c8401f6be4397a08250138",
+    "suppliedAdviceBytes": 1252,
+    "suppliedAdviceSha256": "b4c563671fc1b0975d2f06b56045213c9835eaaec7a230a6860e555d3174421d",
+    "addedDescriptionBytes": 1254
+  },
+  "confounds": [
+    "single serial non-randomized pair",
+    "baseline Validator hold and blocked-state resume during evaluator correction",
+    "supervised native QA wakeups in both trials",
+    "provider/cache/order variability",
+    "both trials already received explicit Python dependency setup and canonical Git context",
+    "native handoff usage/cost unavailable",
+    "manual orchestration/setup/review time and cost not included"
+  ],
+  "recommendedCandidate": "AIF-50",
+  "trials": [
+    {
+      "condition": "no_experiential_recall",
+      "identifier": "AIF-50",
+      "issueId": "b41cb7b3-fc7b-4c25-82b3-2e8fc038ebe2",
+      "title": "Readable task scorecard CLI output",
+      "descriptionBytes": 3237,
+      "descriptionSha256": "03a3f0bab605ea07c9b76c7aeb3d008c0334892ef39ad2aee0d06ebc3906dc1d",
+      "developerRunId": "26d762c4-d718-41ba-8e02-bbc288f8d23f",
+      "reviewerRunId": "ce8dc1c1-1ef2-4587-b4fd-c8e14705f500",
+      "freshNativeSession": true,
+      "candidateGitHead": "4afce50c325129ad0ad8168c146b3fad7dd8d302",
+      "candidateGitTree": "bd5df562812c3f3b8bda1c93d713c470e55e5692",
+      "canonicalContextArtifact": {
+        "ref": "file:///paperclip/milestone1-context/26d762c4-d718-41ba-8e02-bbc288f8d23f.json",
+        "sha256": "194e09b54e7f54cb0ecad2e7b81d43515d084cb4fedf63662b413531ced7ddb1",
+        "byteSize": 3545,
+        "mediaType": "application/json"
+      },
+      "canonicalContextSources": [
+        {
+          "projectId": "ai-factory",
+          "repositoryId": "ai-factory",
+          "path": "docs/implementation/IMPLEMENTATION_KICKOFF.md",
+          "sourceRevision": "3da27d685977ceb1c69074996b6b83260c54bfc5",
+          "verifiedAtRevision": "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a",
+          "sourceVersion": "0445fb2392d27338a62645ad163b5ad2e7d822d3",
+          "contentSha256": "08aa7f2116b921fbfdbb857cdd359b2572d455d7d984605d2350ff9f96cd0d44",
+          "authority": "canonical"
+        }
+      ],
+      "independentReceipts": [
+        {
+          "ref": "file:///paperclip/milestone4-validation/480589e0-3cf9-4514-b035-b1bff5c216a6.json",
+          "sha256": "02e6651d149bfb23cdc2d25d19ce1dc5d1f4c92e18219a9d25539ff2cc52fc55",
+          "byteSize": 2053,
+          "runId": "480589e0-3cf9-4514-b035-b1bff5c216a6",
+          "agentId": "4964fe25-762e-41ff-a780-d5ee8f17e472",
+          "gitHead": "4afce50c325129ad0ad8168c146b3fad7dd8d302",
+          "gitTree": "bd5df562812c3f3b8bda1c93d713c470e55e5692",
+          "branchName": "AIF-50-readable-task-scorecard-cli-output",
+          "baseGitHead": "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a",
+          "commandSha256": "3cf8b824137f1025411ca0f28e373ebcfda00f1897aba878a2786feba8a13273",
+          "guardScriptSha256": "356545197798fada3d06c0ea21add76eabe5dd0a423407559927f903364c7112",
+          "qaScriptSha256": "8b50951d95087d59f8190cc274d465747e8417d62f11661872ae0f409499a2e8",
+          "verdict": "passed",
+          "testSummary": [
+            "Ran 9 tests in 0.001s",
+            "OK"
+          ]
+        },
+        {
+          "ref": "file:///paperclip/milestone4-validation/1415be9b-8cf9-4649-9902-749e856a8784.json",
+          "sha256": "0ec8ad6382ca701273fa2cc46b3afce4fbd57e8d043374a3339b0240086d646e",
+          "byteSize": 823,
+          "runId": "1415be9b-8cf9-4649-9902-749e856a8784",
+          "agentId": "e86e8b20-2f2c-44c3-8279-27c6378ed98d",
+          "gitHead": "4afce50c325129ad0ad8168c146b3fad7dd8d302",
+          "gitTree": "bd5df562812c3f3b8bda1c93d713c470e55e5692",
+          "branchName": "AIF-50-readable-task-scorecard-cli-output",
+          "baseGitHead": "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a",
+          "commandSha256": "3cf8b824137f1025411ca0f28e373ebcfda00f1897aba878a2786feba8a13273",
+          "guardScriptSha256": "356545197798fada3d06c0ea21add76eabe5dd0a423407559927f903364c7112",
+          "qaScriptSha256": null,
+          "verdict": "passed",
+          "testSummary": [
+            "Ran 133 tests in 8.616s",
+            "OK (skipped=2)"
+          ]
+        }
+      ],
+      "runTiming": [
+        {
+          "runId": "480589e0-3cf9-4514-b035-b1bff5c216a6",
+          "agentId": "4964fe25-762e-41ff-a780-d5ee8f17e472",
+          "runtimeMs": 1082
+        },
+        {
+          "runId": "ce8dc1c1-1ef2-4587-b4fd-c8e14705f500",
+          "agentId": "55f721f8-54d4-4f02-ba19-f55fb24c501e",
+          "runtimeMs": 77472
+        },
+        {
+          "runId": "1415be9b-8cf9-4649-9902-749e856a8784",
+          "agentId": "e86e8b20-2f2c-44c3-8279-27c6378ed98d",
+          "runtimeMs": 12114
+        },
+        {
+          "runId": "26d762c4-d718-41ba-8e02-bbc288f8d23f",
+          "agentId": "2ef551a8-e8e0-4cfe-855c-bf78f795c3a0",
+          "runtimeMs": 135728
+        }
+      ],
+      "locksClear": true,
+      "scorecard": {
+        "schemaVersion": 1,
+        "sourceSystem": "paperclip",
+        "issueId": "b41cb7b3-fc7b-4c25-82b3-2e8fc038ebe2",
+        "identifier": "AIF-50",
+        "status": "in_review",
+        "observedAt": "2026-09-29T05:46:54.424808+00:00",
+        "consistency": "non_atomic_GETs",
+        "quality": {
+          "ownerAccepted": false,
+          "independentParticipants": true,
+          "independenceBasis": "declared_review_participants_vs_run_linked_first_stage_request_actors; not_execution_proof",
+          "completedStages": 3,
+          "totalStages": 4,
+          "changesRequestedRounds": 0,
+          "correctness": "not_inferred_from_status; requires_validation_review_and_QA_evidence"
+        },
+        "runCount": 4,
+        "failedRuns": 0,
+        "handoffCancellations": 4,
+        "recordedRetries": 0,
+        "timing": {
+          "coveredRuns": 4,
+          "knownRuntimeMs": 226396,
+          "runtimeMs": 226396,
+          "executionWindowMs": 792944
+        },
+        "usage": {
+          "coveredRuns": 0,
+          "costCoveredRuns": 0,
+          "knownInputTokens": 0,
+          "knownCachedInputTokens": 0,
+          "knownOutputTokens": 0,
+          "knownReportedCostUsd": 0,
+          "inputTokens": null,
+          "cachedInputTokens": null,
+          "outputTokens": null,
+          "reportedCostUsd": null,
+          "reportedCostPerOwnerAcceptedTaskUsd": null,
+          "costBasis": "native_reported_USD_not_invoice; missing_is_unknown"
+        },
+        "nativeLedger": {
+          "costCents": 0,
+          "inputTokens": 0,
+          "cachedInputTokens": 0,
+          "outputTokens": 0,
+          "runCount": 4,
+          "runtimeMs": 226396
+        },
+        "runs": [
+          {
+            "id": "480589e0-3cf9-4514-b035-b1bff5c216a6",
+            "agentId": "4964fe25-762e-41ff-a780-d5ee8f17e472",
+            "status": "cancelled"
+          },
+          {
+            "id": "ce8dc1c1-1ef2-4587-b4fd-c8e14705f500",
+            "agentId": "55f721f8-54d4-4f02-ba19-f55fb24c501e",
+            "status": "cancelled"
+          },
+          {
+            "id": "1415be9b-8cf9-4649-9902-749e856a8784",
+            "agentId": "e86e8b20-2f2c-44c3-8279-27c6378ed98d",
+            "status": "cancelled"
+          },
+          {
+            "id": "26d762c4-d718-41ba-8e02-bbc288f8d23f",
+            "agentId": "2ef551a8-e8e0-4cfe-855c-bf78f795c3a0",
+            "status": "cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "condition": "primary_verified_memory",
+      "identifier": "AIF-51",
+      "issueId": "1541b324-7a5a-47f0-b9b3-2c1b74820a71",
+      "title": "Readable task scorecard CLI output",
+      "descriptionBytes": 4491,
+      "descriptionSha256": "b8864df6ed62ec8c146b9ab6094d25706f480028a93f9039431d90f9401ead53",
+      "developerRunId": "d914a9f0-3d30-440c-96d6-b56c45a9e35d",
+      "reviewerRunId": "9f01100d-e668-49b4-bdda-81362500ec61",
+      "freshNativeSession": true,
+      "candidateGitHead": "c653361216a9c2333f5695346feb5da3c73dfc87",
+      "candidateGitTree": "6a789cd04ebc7cc349effa782a212bf6b3cb9935",
+      "canonicalContextArtifact": {
+        "ref": "file:///paperclip/milestone1-context/d914a9f0-3d30-440c-96d6-b56c45a9e35d.json",
+        "sha256": "26d9833db81b7d6f0eeb6349236b81daa12a8cc5cf67eb1a4acb92da3a109fa4",
+        "byteSize": 3545,
+        "mediaType": "application/json"
+      },
+      "canonicalContextSources": [
+        {
+          "projectId": "ai-factory",
+          "repositoryId": "ai-factory",
+          "path": "docs/implementation/IMPLEMENTATION_KICKOFF.md",
+          "sourceRevision": "3da27d685977ceb1c69074996b6b83260c54bfc5",
+          "verifiedAtRevision": "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a",
+          "sourceVersion": "0445fb2392d27338a62645ad163b5ad2e7d822d3",
+          "contentSha256": "08aa7f2116b921fbfdbb857cdd359b2572d455d7d984605d2350ff9f96cd0d44",
+          "authority": "canonical"
+        }
+      ],
+      "independentReceipts": [
+        {
+          "ref": "file:///paperclip/milestone4-validation/b7dc7427-93f8-40c7-8b63-309a7b31a178.json",
+          "sha256": "ac902a6d88b9b5b43f6e22aff28a92e71601de993d7e3a2aca088f3693a24013",
+          "byteSize": 2053,
+          "runId": "b7dc7427-93f8-40c7-8b63-309a7b31a178",
+          "agentId": "4964fe25-762e-41ff-a780-d5ee8f17e472",
+          "gitHead": "c653361216a9c2333f5695346feb5da3c73dfc87",
+          "gitTree": "6a789cd04ebc7cc349effa782a212bf6b3cb9935",
+          "branchName": "AIF-51-readable-task-scorecard-cli-output",
+          "baseGitHead": "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a",
+          "commandSha256": "963a5b07c4dff841363014e3280ce084dfce98b9e5b9ed7e07d7050ab2e932d3",
+          "guardScriptSha256": "356545197798fada3d06c0ea21add76eabe5dd0a423407559927f903364c7112",
+          "qaScriptSha256": "8b50951d95087d59f8190cc274d465747e8417d62f11661872ae0f409499a2e8",
+          "verdict": "passed",
+          "testSummary": [
+            "Ran 9 tests in 0.001s",
+            "OK"
+          ]
+        },
+        {
+          "ref": "file:///paperclip/milestone4-validation/369d5da1-22bd-45f1-bc21-3b1b763bd4df.json",
+          "sha256": "b0f916f9085eef6726564d185d4d65e665768807e2515c8605ec1ad185147a5f",
+          "byteSize": 823,
+          "runId": "369d5da1-22bd-45f1-bc21-3b1b763bd4df",
+          "agentId": "e86e8b20-2f2c-44c3-8279-27c6378ed98d",
+          "gitHead": "c653361216a9c2333f5695346feb5da3c73dfc87",
+          "gitTree": "6a789cd04ebc7cc349effa782a212bf6b3cb9935",
+          "branchName": "AIF-51-readable-task-scorecard-cli-output",
+          "baseGitHead": "e66b1ca34e8b8aeecb2faf8d14ffb01e7351763a",
+          "commandSha256": "963a5b07c4dff841363014e3280ce084dfce98b9e5b9ed7e07d7050ab2e932d3",
+          "guardScriptSha256": "356545197798fada3d06c0ea21add76eabe5dd0a423407559927f903364c7112",
+          "qaScriptSha256": null,
+          "verdict": "passed",
+          "testSummary": [
+            "Ran 133 tests in 9.230s",
+            "OK (skipped=2)"
+          ]
+        }
+      ],
+      "runTiming": [
+        {
+          "runId": "b7dc7427-93f8-40c7-8b63-309a7b31a178",
+          "agentId": "4964fe25-762e-41ff-a780-d5ee8f17e472",
+          "runtimeMs": 1160
+        },
+        {
+          "runId": "9f01100d-e668-49b4-bdda-81362500ec61",
+          "agentId": "55f721f8-54d4-4f02-ba19-f55fb24c501e",
+          "runtimeMs": 84722
+        },
+        {
+          "runId": "369d5da1-22bd-45f1-bc21-3b1b763bd4df",
+          "agentId": "e86e8b20-2f2c-44c3-8279-27c6378ed98d",
+          "runtimeMs": 12507
+        },
+        {
+          "runId": "d914a9f0-3d30-440c-96d6-b56c45a9e35d",
+          "agentId": "2ef551a8-e8e0-4cfe-855c-bf78f795c3a0",
+          "runtimeMs": 212771
+        }
+      ],
+      "locksClear": true,
+      "scorecard": {
+        "schemaVersion": 1,
+        "sourceSystem": "paperclip",
+        "issueId": "1541b324-7a5a-47f0-b9b3-2c1b74820a71",
+        "identifier": "AIF-51",
+        "status": "in_review",
+        "observedAt": "2026-09-29T05:46:55.460009+00:00",
+        "consistency": "non_atomic_GETs",
+        "quality": {
+          "ownerAccepted": false,
+          "independentParticipants": true,
+          "independenceBasis": "declared_review_participants_vs_run_linked_first_stage_request_actors; not_execution_proof",
+          "completedStages": 3,
+          "totalStages": 4,
+          "changesRequestedRounds": 0,
+          "correctness": "not_inferred_from_status; requires_validation_review_and_QA_evidence"
+        },
+        "runCount": 4,
+        "failedRuns": 0,
+        "handoffCancellations": 4,
+        "recordedRetries": 0,
+        "timing": {
+          "coveredRuns": 4,
+          "knownRuntimeMs": 311160,
+          "runtimeMs": 311160,
+          "executionWindowMs": 359375
+        },
+        "usage": {
+          "coveredRuns": 0,
+          "costCoveredRuns": 0,
+          "knownInputTokens": 0,
+          "knownCachedInputTokens": 0,
+          "knownOutputTokens": 0,
+          "knownReportedCostUsd": 0,
+          "inputTokens": null,
+          "cachedInputTokens": null,
+          "outputTokens": null,
+          "reportedCostUsd": null,
+          "reportedCostPerOwnerAcceptedTaskUsd": null,
+          "costBasis": "native_reported_USD_not_invoice; missing_is_unknown"
+        },
+        "nativeLedger": {
+          "costCents": 0,
+          "inputTokens": 0,
+          "cachedInputTokens": 0,
+          "outputTokens": 0,
+          "runCount": 4,
+          "runtimeMs": 311160
+        },
+        "runs": [
+          {
+            "id": "b7dc7427-93f8-40c7-8b63-309a7b31a178",
+            "agentId": "4964fe25-762e-41ff-a780-d5ee8f17e472",
+            "status": "cancelled"
+          },
+          {
+            "id": "9f01100d-e668-49b4-bdda-81362500ec61",
+            "agentId": "55f721f8-54d4-4f02-ba19-f55fb24c501e",
+            "status": "cancelled"
+          },
+          {
+            "id": "369d5da1-22bd-45f1-bc21-3b1b763bd4df",
+            "agentId": "e86e8b20-2f2c-44c3-8279-27c6378ed98d",
+            "status": "cancelled"
+          },
+          {
+            "id": "d914a9f0-3d30-440c-96d6-b56c45a9e35d",
+            "agentId": "2ef551a8-e8e0-4cfe-855c-bf78f795c3a0",
+            "status": "cancelled"
+          }
+        ]
+      }
+    }
+  ]
+}

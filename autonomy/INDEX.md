@@ -59,7 +59,14 @@ tests, full Reviewer assessment and functional QA. Restart preserved context and
 receipts. The owner approved AIF-49 on 2026-09-29; Paperclip records `done`, 4/4
 gates, with clear locks. Integration `a46ec83` retains the exact candidate on
 `milestone1-contracts`; fresh merged checks and isolated Git rollback/reapply
-passed. Milestone 4 is next and has not started. See `milestone3/README.md`.
+passed. Milestone 4's owner-approved bounded measurement slice is verified:
+a read-only native task scorecard and one serial baseline/memory task pair,
+without additional services. Candidate integration still requires the native
+owner gate. AIF-50/AIF-51 passed Tests/Reviewer/QA, 3/4 pending owner approval;
+recommend AIF-50's smaller formatter. This pair shows no demonstrated memory
+benefit; missing telemetry is not zero or evidence of cost savings. Full
+Milestone 4 remains incomplete. See
+`milestone3/README.md` and `milestone4/README.md`.
 Keep the selected integration boundaries and see
 `docs/implementation/IMPLEMENTATION_KICKOFF.md` for current receipts and exit gates.
 
