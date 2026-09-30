@@ -1,8 +1,9 @@
 # Milestone 4 — bounded task measurement
 
-Status: **FIRST SLICE OWNER-APPROVED AND INTEGRATED; bounded native handoff
-accounting repair deployed and verified. Full Milestone 4 remains incomplete;
-no performance/cost improvement is claimed.**
+Status: **FIRST SLICE OWNER-APPROVED AND INTEGRATED; native handoff accounting
+repair and supervised restore/rebuild/recovery drills verified. Full Milestone
+4/V1 acceptance remains incomplete: interrupted coding handoffs still lack
+complete task cost. No performance/cost improvement is claimed.**
 
 The initial owner-approved comparison used a read-only task scorecard and one
 small serial pair of native tasks, with/without the current verified memory
@@ -262,3 +263,128 @@ This closes the bounded native handoff accounting repair, **not** all of
 Milestone 4. Historical AIF-50/AIF-51 receipts were not backfilled. Their
 unfinished final steps remain lower-bound observations, and broader retrieval
 quality, priced-model coverage, and operational metrics remain open.
+
+### Restore, rebuild and model-call measurement — 2026-09-30
+
+[Operations receipt](results/operations-20260930.json) records real dependency
+loss and restore, not only archive readability or configured policy:
+
+- Paired Paperclip PostgreSQL/storage restore used the exact deployed image,
+  a separate PostgreSQL instance and internal network with no published port.
+  All seven core authority-table row checksums/counts and schema matched before
+  and after the restored controller started. The final capture contains 57
+  issues, 257 runs and 241 leases; all 95 agents remained paused. AIF-55/56/57
+  context artifact bytes matched their durable digests. Native result/usage
+  snapshots are included in the full restored run-row comparison.
+- MemPalace's pinned, prewarmed offline embeddinggemma image restored both full
+  primary lesson envelopes into disposable storage; real semantic search
+  returned four primary-resolvable results. The restored 24-tool read-only
+  catalog was checked against an explicit allowlist. An actual add-drawer call
+  returned the pinned server's read-only refusal `-32003`; the primary manifest
+  stayed unchanged. The source service restarted and passed readiness/readback.
+- The existing `ai_factory_docs_v1` index was actually deleted. Missing-index
+  retrieval was observed before rebuilding 60 documents: 49 committed Git
+  documents, two primary MemPalace records (including true superseded status)
+  and nine selected native Paperclip scorecards. Full non-admin readback matched
+  the primary snapshots. Native telemetry replay wrote zero documents.
+- Five Git-path judgments passed recall@5=1, MRR=0.8667 and zero stale relevant
+  hits after that rebuild. This is a small lexical smoke, not broad retrieval
+  quality or proof of model improvement. Earlier ranks differed with corpus
+  statistics; no relevance benefit is inferred from that change.
+- Real OpenSearch MCP child SIGKILL/restart passed again. The server exposed
+  only its four admitted tools; the two tested native agent profiles still
+  exposed exactly `SearchIndexTool`. No grants or security roles were expanded.
+
+Disposable drill containers, networks and volumes are removed. Private paired
+backups/receipts remain under `.milestone0`; credentials, model transcripts and
+backup bytes are not committed. These are supervised runbooks, not a new
+autonomous healing service, event queue or observability store.
+
+The bounded tools reuse existing credentials supplied by the operator:
+
+```powershell
+python -m milestone4.retrieval_eval --suite autonomy/evals/git-docs-v1.json --expect-revision <committed-head> --insecure-localhost
+python -m milestone4.project_telemetry --state <private-board-state.json> --roster autonomy/evals/telemetry-v1.json
+python -m milestone4.rebuild_projection --expect-revision <committed-head> --suite autonomy/evals/git-docs-v1.json --telemetry-roster autonomy/evals/telemetry-v1.json --paperclip-state <private-board-state.json> --confirm-rebuild-ai-factory-docs-v1
+python -m milestone4.restore_drill --backup-dir .milestone0/<new-directory> --image <immutable-owner-image> --revision <paperclip-source-sha> --run <enriched-run-id>
+python -m milestone4.memory_restore_drill --help
+```
+
+Reader variables are `AIF_DOCS_URL`, `AIF_DOCS_READER_USER/PASSWORD`; the telemetry
+writer additionally uses `AIF_DOCS_WRITER_USER/PASSWORD`. For the local self-signed
+cluster, telemetry requires `AIF_DOCS_LOCAL_TEST=1`. The destructive fixed-index
+drill alone needs operator credentials (`AIF_DOCS_OPERATOR_USER/PASSWORD`) and
+the existing primary `AIF_MEMORY_TOKEN`; those never enter native agents.
+All agents must be paused with zero queued/running work before restore/rebuild.
+Recovery is bounded: after a failed index replacement, retry source-derived
+restoration once without a second delete; never report that failed drill PASS.
+The telemetry roster is deliberately selected/bounded, not complete event history.
+
+### Native free-model read-only probe
+
+[Frozen probe receipt](results/read-only-20260930.json) retains three successful
+native `opencode_local` primary calls under one logical agent and search-only
+MCP profile. No coding stages were bypassed: these are explicitly read-only
+policy questions with a pending owner disposition, not software candidates.
+
+| Primary call | Exact answers | Input / cached input / output | Active seconds | Native reported USD |
+| --- | --- | --- | --- | --- |
+| AIF-55, Muse baseline | 8/8 | 44,983 / 30,276 / 2,043 | 38.451 | 0 |
+| AIF-56, same Muse +4,354 context bytes | 8/8 | 55,580 / 36,932 / 1,705 | 83.834 | 0 |
+| AIF-57, same agent/adapter, MiMO free | 7/8 | 20,272 / 55,040 / 1,498 | 38.997 | 0 |
+
+Both Muse calls retain the ordinary canonical pre-run enrichment; this is not
+a no-retrieval baseline. Additional context was verified against current Git
+and the scoped projection before execution. MiMO returned `Git + canonical
+Markdown/YAML` rather than the frozen literal `Git`. That is semantically
+consistent with current documentation but remains **QUALITY_FAILED** under the
+predefined exact-answer rubric; no automatic binding promotion follows.
+
+The context call used more reported input and took longer with equal checked
+quality. n=1, order/cache/provider variation prevent causal claims. Reported
+free USD 0 is not invoice validation, paid-model coverage, task-total cost or
+operator overhead. Configured prompt hashes identify supplied configuration,
+not an independently captured rendered provider prompt. Supplied context does
+not prove causal use. All three task workspaces stayed clean at `83c826a`; all
+three primary leases were released. The original smoke actor configuration was
+restored and it is paused. Prompt instructions are not filesystem/shell access
+enforcement; the approved trusted-local isolation deferral is unchanged.
+
+Two initial setup attempts (AIF-53/54) failed before provider invocation because
+the runtime source/tracking ref and frozen project base disagreed with the
+indexed accepted commit. They were cancelled, not counted as model failures.
+The clean source and its tracking ref were fast-forwarded from the owner branch;
+fresh probe issues used explicit immutable base refs. Old task worktrees and the
+project's historical default base were not rewritten during those probes. The successful AIF-55
+baseline was re-observed after an observer parsing correction, not reinferred.
+
+Deployment synchronization must advance the clean controller source branch and
+its tracking ref to the committed accepted branch, then set the project's
+**future-task default** base to that same immutable revision through the native
+project API. Preserve all other policy fields and existing task/worktree refs.
+This avoids the next ordinary submission repeating the stale-base failure;
+old run identities/artifacts and task branches are never reset. Prior default
+`7254867f3172253a445f34511ae01e6ebbb94f5d` is retained here for configuration
+rollback, which would also require a matching Git projection/source revision.
+
+Fresh final validation: **182 Python tests run, 180 passed/two optional live
+skips; 26/26 Node context/handoff/identity regressions; 9/9 formatter QA**.
+Live drills above are separate evidence, not inferred from those skips.
+
+### Remaining exit decision
+
+The finite M0–M4 roadmap has no new milestone or dependency. M0–M3's approved
+trusted-local demonstrations and M4's accepted scorecard remain usable. These
+drills close the bounded operations evidence gaps, not full production readiness.
+The remaining strict M4/V1 exit is **complete cost per owner-accepted correct
+coding task across native handoff**, against its recorded baseline. The existing
+cancel-on-handoff path can interrupt the provider's final usage report: retain
+partial subtotals, never call them complete. The read-only calls above cannot
+substitute for that gate or approve a code integration. Completing that gate
+requires a fresh coding comparison with reliable full settlement and owner
+acceptance; historical missing reports cannot be recovered by guessing.
+
+Alternatively the owner may explicitly accept the bounded trusted-local V1 and
+defer that measurement criterion. No such scope change has been assumed. Do not
+declare all milestones finished, auto-approve pending tasks, add a second workflow
+engine, or expand memory injection on this negative measurement evidence.

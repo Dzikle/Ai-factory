@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "scope": "supervised_trusted_local_operations_not_full_v1_acceptance",
+  "paperclipRevision": "3f4b73c8febcbc4956f8b8d84ff0d815f87786d2",
+  "paperclipImage": "ghcr.io/dzikle/paperclip@sha256:d195b970b077b872bb4e720915dc53a97a9096d0f35e29030d37233cc0c0b273",
+  "pairedRestore": {
+    "status": "PASS",
+    "observedAt": "2026-09-30T17:34:02.837209+00:00",
+    "privateEvidenceDirectory": ".milestone0/m4-restore-final-20260930",
+    "databaseVersion": "PostgreSQL 17.11",
+    "postgresImageId": "sha256:7456ef82e5f5bc43d997f4781bbd7c0d6389bff397564649a356e206ba473aee",
+    "schema": "283|1790018362070",
+    "coreTableCounts": {
+      "companies": 1, "agents": 95, "issues": 57, "heartbeat_runs": 257,
+      "project_workspaces": 1, "execution_workspaces": 22, "environment_leases": 241
+    },
+    "allCoreRowsAndSchemaMatchBeforeAndAfterRestoredControllerStartup": true,
+    "separateDatabaseAndInternalNetwork": true,
+    "restoredAgentsPaused": true,
+    "databaseBackupSha256": "1c5ef3142bd76bb704c0eb12606d828bbdef299e4ecae2e1cca25d70f8d30713",
+    "storageBackupSha256": "de0cfe3002925333ac37d80104735e489bf72630f28460c99c913043431ac548",
+    "storageArchiveEntries": 18325,
+    "restoredArtifactDigests": {
+      "b0964b45-f9ae-4656-b9c5-609565559620": "48238f1360cd7da1d1712f564150e4fe7d6404752a74d39cb1469bc37dcee5ef",
+      "cb197ab9-f279-4311-9722-6c884d5734b0": "b2456cff18b9a7ff39efa9722fa4a551f2d484088a4f1ca9260f578a8695fea8",
+      "0a6714e9-834e-4d7e-bfa6-8300c2e4fbc5": "5637fccdf70d8048944441c108726b22f9f9e1a0cec78111ead264144b1df491"
+    },
+    "eachRestoredArtifactBytes": 3545,
+    "elapsedSeconds": 162.7
+  },
+  "memoryRestore": {
+    "status": "PASS",
+    "observedAt": "2026-09-30T16:25:40.422384+00:00",
+    "privateEvidenceDirectory": ".milestone0/m4-memory-restore-20260930-fixed",
+    "image": "ghcr.io/mempalace/mempalace@sha256:65da0834ab5ddc2d8247de43aff611393a151eac2893108e66b64f077bf1f232",
+    "embedding": "prewarmed_embeddinggemma_cpu_offline",
+    "backupSha256": "a1872d7cd3bbbc3d0ae6a5a28c5abe4b94b38f67754e28054b0c3a3048dae9bc",
+    "primaryDrawers": 2,
+    "fullPrimaryEnvelopesPreserved": true,
+    "offlineSearchResults": 4,
+    "restoredReadOnlyCatalogTools": 24,
+    "actualMutationDeniedCode": -32003,
+    "postDenialManifestUnchanged": true,
+    "sourceRestartedAndReady": true,
+    "elapsedSeconds": 79.6
+  },
+  "projectionRebuild": {
+    "status": "PASS",
+    "sourceRevision": "83c826a9642611e21fe9603df9f9a45aa94e383a",
+    "index": "ai_factory_docs_v1",
+    "actualMissingIndexObserved": true,
+    "exactPrimaryReadback": true,
+    "documentsBefore": 57,
+    "documentsAfter": 60,
+    "sources": {"git": 49, "mempalace": 2, "paperclip": 9},
+    "sourceDigest": "17c727a4ed684af228bf0a73a552444d6530db47c14bc09cb771f6cec0ef0270",
+    "nativeTelemetryReplayWrites": 0,
+    "nativeTelemetrySourceDigest": "65d4fbc09105ed89a08938c42e460d17a08304f3b8c39fbbe30e13d94a8279d4",
+    "retrievalCases": 5,
+    "topK": 5,
+    "recallAtK": 1.0,
+    "meanReciprocalRank": 0.8666666666666666,
+    "staleRelevantHits": 0,
+    "promotionThresholdsPassed": true
+  },
+  "mcpRecovery": {
+    "status": "PASS",
+    "actualChildSigkillAndRestartObserved": true,
+    "serverCatalog": ["IndexMappingTool", "ListIndexTool", "MsearchTool", "SearchIndexTool"],
+    "effectiveAgentCatalog": ["SearchIndexTool"],
+    "profileAgentIds": ["2ef551a8-e8e0-4cfe-855c-bf78f795c3a0", "55f721f8-54d4-4f02-ba19-f55fb24c501e"]
+  },
+  "deterministicValidation": {
+    "pythonTestsRun": 182, "pythonPassed": 180, "optionalLiveSkips": 2,
+    "nodePassed": 26, "formatterQaPassed": 9
+  },
+  "limitations": [
+    "operator_supervised_not_autonomous_self_healing",
+    "single_local_node_not_production_failover",
+    "small_lexical_retrieval_smoke_not_organizational_relevance_evaluation",
+    "bounded_selected_issue_snapshot_not_event_stream_projector",
+    "backups_private_and_not_committed"
+  ]
+}

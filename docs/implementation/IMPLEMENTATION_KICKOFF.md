@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestone 0 ADMITTED; Milestone 1 first-task proof complete; Milestones 2 and 3 trusted-local demonstrations COMPLETE; Milestone 4 first measurement slice OWNER-APPROVED AND INTEGRATED (full Milestone 4, V1 and production gates remain incomplete)
+**Status:** Milestones 0–3 trusted-local demonstrations COMPLETE; Milestone 4 scorecard OWNER-APPROVED AND INTEGRATED, accounting repair and supervised restore/rebuild/recovery verified. Strict Milestone 4/V1 acceptance remains open for complete cost per accepted correct coding task; production readiness is not claimed.
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -28,7 +28,7 @@ complete; make that loop easy to use before adding breadth.
 | 1 — first runnable task | **Done** | AIF-42 completed Developer → Validator → Reviewer → human approval; AIF-43 survived a native child kill and resumed under a different native adapter. Evidence below. |
 | 2 — usable engineering loop | **Local demo complete** | Reusable submission/status commands created AIF-48 and replayed its key; distinct tests, Reviewer, QA and owner approval completed; exact candidate integrated and reverified. |
 | 3 — useful memory | **Local demo complete** | Real scoped memory informed AIF-49's deterministic checker; native tests, Reviewer, QA and actual owner approval completed; exact candidate integrated, merged checks and isolated Git rollback/reapply passed. |
-| 4 — measure and operate | **First slice integrated; full milestone open** | AIF-50's read-only scorecard is accepted and deployed. The serial pair demonstrates no memory benefit; missing native tokens/cost and broader operations/eval gates remain open. |
+| 4 — measure and operate | **Scorecard and bounded operations verified; strict exit open** | AIF-50 is accepted. Real Paperclip/MemPalace restore, complete active docs-index rebuild, native telemetry replay and MCP crash/profile checks passed. Extra context demonstrated no benefit; interrupted coding-task cost remains incomplete. |
 
 Every milestone must end with a runnable demonstration and recorded acceptance
 evidence. Do not add an index, service, generic adapter, or framework merely to
@@ -671,8 +671,28 @@ tokens/cost have zero covered runs and remain unknown. AIF-50's smaller
 formatter is integrated locally on `milestone1-contracts`, not pushed or PRed.
 Next bounded measurement need: reliable native handoff usage/cost evidence.
 
-The broader items below remain backlog/exit criteria, **not work added to this
-first slice**:
+**Further completion work (2026-09-30):** The existing Milestone 4 report now
+records actual isolated paired Paperclip restore, offline MemPalace restore,
+source-derived loss/rebuild of the active docs index (Git + memory + selected
+native telemetry), zero-write replay, and real MCP restart/effective-profile
+checks. No new service/store or task authority was introduced. Five committed
+lexical judgments passed; that is not organizational relevance evaluation.
+Three free native read-only calls provide complete primary-call tokens/timing,
+not accepted coding-task cost: Muse scored 8/8 twice with extra context costing
+more input/time; MiMO scored 7/8 under the unchanged exact-format rubric. All
+agents are paused, original smoke configuration restored, and no probe code is
+integrated. The three run/artifact records survived the paired restore.
+
+The operational holes demonstrated by those bounded drills are closed. The
+strict exit below **still requires complete native handoff accounting and owner
+acceptance for a fresh correct coding comparison**. Historical AIF-50/51 usage
+cannot be backfilled; AIF-52's partial usage and read-only AIF-55/56/57 do not
+satisfy that requirement. Finishing under the current criteria needs that coding
+evidence. Only an explicit owner decision may instead close bounded trusted-local
+V1 with the measurement deferred. No deferral or full completion is assumed.
+
+The broader items below remain backlog or production extensions, not additional
+milestones added to the revised finite M0–M4 plan:
 
 - Build retrieval query sets/judgments/experiments in OpenSearch Search Relevance
   Workbench and keep expected outcomes/promotion thresholds in Git.
@@ -680,11 +700,16 @@ first slice**:
   accepted correct task, first-pass review/QA rate, escaped defects, recovery
   success, duplicate effects, context size/use, stale-memory rejection, and
   model/skill version correlations.
+  The selected one-shot scorecard projection is now implemented; broad event
+  replay/history and complete coding-task cost are not thereby proven.
 - Implement bounded self-healing actions: retry idempotent reads, restart an MCP
   runtime slot, rebuild a disposable graph/index, rehydrate a workspace, or
   escalate. Every action is policy-constrained and audited.
 - Run restore, dependency rollback, OpenSearch rebuild, MemPalace restore, and
   model/provider substitution drills.
+  Supervised restore/rebuild/MCP recovery and a native model-binding mechanics
+  probe are now recorded. The alternate model missed one exact-answer check;
+  this is not a production promotion or general cross-model quality result.
 - Add Promptfoo, Phoenix, Langfuse, ToolHive, SWE-ReX, DBOS, or another store only
   when a measured gap and the authority boundary are recorded in a new ADR.
 

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "projectId": "ai-factory",
+  "repositoryId": "ai-factory",
+  "thresholds": {"recallAtK": 1.0, "meanReciprocalRank": 0.5, "staleRelevantHits": 0},
+  "cases": [
+    {
+      "id": "durable-authority",
+      "query": "where authoritative task run state survives a model crash",
+      "relevantPaths": ["docs/architecture/STATE_AND_STORAGE.md"]
+    },
+    {
+      "id": "least-privilege-tools",
+      "query": "MCP capability least privilege role permission enforcement",
+      "relevantPaths": ["docs/architecture/MCP_AND_CAPABILITY_MODEL.md"]
+    },
+    {
+      "id": "memory-supersession",
+      "query": "MemPalace superseded memory cannot override current Git truth",
+      "relevantPaths": ["docs/decisions/adr/006-memory-mempalace.md"]
+    },
+    {
+      "id": "knowledge-projection",
+      "query": "OpenSearch rebuildable knowledge projection canonical source",
+      "relevantPaths": ["docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md"]
+    },
+    {
+      "id": "portable-skills",
+      "query": "Agent Skills standard portable skill format",
+      "relevantPaths": ["docs/decisions/adr/002-skills-agent-skills.md"]
+    }
+  ]
+}

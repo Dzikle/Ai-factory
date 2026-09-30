@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "status": "QUALITY_FAILED",
+  "observedAt": "2026-09-30T17:14:02.800593+00:00",
+  "scope": "read_only_policy_question_calls_not_accepted_coding_task_cost",
+  "privateEvidenceDirectory": ".milestone0/m4-readonly-native-resume-20260930",
+  "sourceRevision": "83c826a9642611e21fe9603df9f9a45aa94e383a",
+  "logicalAgentId": "74519fa4-15c6-437c-9694-5d2579b76356",
+  "adapterType": "opencode_local",
+  "effectiveExternalMcpTools": ["SearchIndexTool"],
+  "ordinaryCanonicalPreRunEnrichmentInBothTrials": true,
+  "additionalContextBytes": 4354,
+  "additionalContextSha256": "cf25295480faf5d18e8aca39e37205fc44f2ca1472750af5acba45cd685d4f84",
+  "results": [
+    {
+      "identifier": "AIF-55", "label": "baseline",
+      "runId": "b0964b45-f9ae-4656-b9c5-609565559620",
+      "model": "opencode/muse-spark-1.3-contributor-free",
+      "nativeStatus": "succeeded", "checksPassed": 8, "checksExpected": 8,
+      "inputTokens": 44983, "cachedInputTokens": 30276, "outputTokens": 2043,
+      "nativeReportedCostUsd": 0, "activeRuntimeSeconds": 38.451,
+      "configuredPromptBytes": 722,
+      "configuredPromptSha256": "83ecda6216178a2180b542d8c839e2cf80ab615e668aeccf40caa0a8ff1ceb0e",
+      "nativeResultDigest": "5c9dd84fe35a25c1e278c4b6b0d1551cf2d48db075666755495e14b46cfb33ba"
+    },
+    {
+      "identifier": "AIF-56", "label": "additional-context",
+      "runId": "cb197ab9-f279-4311-9722-6c884d5734b0",
+      "model": "opencode/muse-spark-1.3-contributor-free",
+      "nativeStatus": "succeeded", "checksPassed": 8, "checksExpected": 8,
+      "inputTokens": 55580, "cachedInputTokens": 36932, "outputTokens": 1705,
+      "nativeReportedCostUsd": 0, "activeRuntimeSeconds": 83.834,
+      "configuredPromptBytes": 5110,
+      "configuredPromptSha256": "ea31addb016cc23f1427bac07d7c729ec56f9335986073a5287cae80289b3148",
+      "nativeResultDigest": "5c9dd84fe35a25c1e278c4b6b0d1551cf2d48db075666755495e14b46cfb33ba"
+    },
+    {
+      "identifier": "AIF-57", "label": "model-substitution",
+      "runId": "0a6714e9-834e-4d7e-bfa6-8300c2e4fbc5",
+      "model": "opencode/mimo-v2.6-flash-free",
+      "nativeStatus": "succeeded", "checksPassed": 7, "checksExpected": 8,
+      "inputTokens": 20272, "cachedInputTokens": 55040, "outputTokens": 1498,
+      "nativeReportedCostUsd": 0, "activeRuntimeSeconds": 38.997,
+      "configuredPromptBytes": 5110,
+      "configuredPromptSha256": "ea31addb016cc23f1427bac07d7c729ec56f9335986073a5287cae80289b3148",
+      "nativeResultDigest": "2ca4ccb0dbba480bed7ed7e03b79efcb01a07478817d9e1cf3ab6993c56537aa",
+      "failedLiteralField": "currentProjectTruth",
+      "expected": "Git", "actual": "Git + canonical Markdown/YAML"
+    }
+  ],
+  "allThreeWorkspacesUnchangedAtSourceRevision": true,
+  "allThreePrimaryRunLeasesReleased": true,
+  "actorConfigurationRestoredAndPaused": true,
+  "ownerDispositionsPending": true,
+  "performanceImprovementProven": false,
+  "limitations": [
+    "one_serial_pair_not_randomized",
+    "free_native_reported_cost_not_invoice_or_priced_model_proof",
+    "primary_run_totals_not_all_task_or_operator_overhead",
+    "configured_prompt_digest_not_independent_rendered_provider_prompt_proof",
+    "context_supplied_not_proof_of_causal_use",
+    "no_interrupted_coding_handoff_cost_claim",
+    "trusted_local_prompt_not_filesystem_or_shell_permission_enforcement"
+  ]
+}
