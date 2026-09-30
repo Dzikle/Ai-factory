@@ -120,6 +120,16 @@ claim. Preserve the deployed credential-containment fix, authentication and
 existing scoped MCP profiles. Do not introduce another control plane, enable
 all admission agents, auto-approve integration, or run untrusted repositories.
 
+**Local V1 accepted, 2026-09-30:** The owner explicitly accepted the bounded
+trusted-local V1 and deferred complete cost per accepted correct coding task
+across interrupted native handoffs. The revised M0–M4 local roadmap is closed;
+do not reopen it solely for that measurement. Missing/partial usage stays
+unknown/partial, never a fabricated complete total or a claimed saving.
+This is not production acceptance, a waiver of credential/MCP/review controls,
+or approval of pending native tasks. See the current implementation plan and
+`milestone4/results/local-v1-acceptance-20260930.json`. Further implementation
+must follow an actual requested feature/task, not add another mandatory milestone.
+
 ## Quality objective
 
 The system is optimized around **cost per accepted correct task**, not token price or number of autonomous actions. Prefer a slightly more expensive execution that is correct over a cheap execution that causes repeated review/fix cycles or downstream defects.

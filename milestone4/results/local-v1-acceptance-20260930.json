@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "status": "ACCEPTED_TRUSTED_LOCAL_V1",
+  "acceptedOn": "2026-09-30",
+  "recordedAt": "2026-09-30T18:34:48Z",
+  "authority": "explicit_current_owner_decision",
+  "ownerMessage": "I accept the local v1",
+  "acceptedImplementationCommit": "7a2a6d00114571e57b68082eca13f57179ee560e",
+  "acceptedBranch": "milestone1-contracts",
+  "roadmap": "revised_bounded_trusted_local_M0_to_M4_closed",
+  "evidence": ["operations-20260930.json", "pair-20260929.json", "read-only-20260930.json"],
+  "scopeAmendment": {
+    "completeCostPerAcceptedCorrectCodingTaskAcrossInterruptedHandoffs": "DEFERRED_POST_V1",
+    "historicalMissingUsageBackfilled": false,
+    "performanceOrCostImprovementProven": false
+  },
+  "productionReadinessClaimed": false,
+  "pendingNativeTasksApproved": false,
+  "reviewPermissionAndCredentialControlsUnchanged": true,
+  "existingPostV1DeferralsUnchanged": true,
+  "mainBranchMergedByThisDecision": false,
+  "nextWork": "owner_requested_real_coding_task_not_another_mandatory_milestone"
+}

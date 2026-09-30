@@ -1,6 +1,6 @@
 # AI Factory — Integration-First V1 Implementation Plan
 
-**Status:** Milestones 0–3 trusted-local demonstrations COMPLETE; Milestone 4 scorecard OWNER-APPROVED AND INTEGRATED, accounting repair and supervised restore/rebuild/recovery verified. Strict Milestone 4/V1 acceptance remains open for complete cost per accepted correct coding task; production readiness is not claimed.
+**Status:** TRUSTED-LOCAL V1 ACCEPTED by the owner on 2026-09-30; revised Milestones 0–4 COMPLETE for that bounded scope. Complete interrupted-handoff coding-task cost measurement is explicitly DEFERRED, not passed. Production readiness is not claimed.
 
 **Adoption decision:** [`../decisions/V1_ADOPTION_ARCHITECTURE.md`](../decisions/V1_ADOPTION_ARCHITECTURE.md)
 
@@ -28,7 +28,18 @@ complete; make that loop easy to use before adding breadth.
 | 1 — first runnable task | **Done** | AIF-42 completed Developer → Validator → Reviewer → human approval; AIF-43 survived a native child kill and resumed under a different native adapter. Evidence below. |
 | 2 — usable engineering loop | **Local demo complete** | Reusable submission/status commands created AIF-48 and replayed its key; distinct tests, Reviewer, QA and owner approval completed; exact candidate integrated and reverified. |
 | 3 — useful memory | **Local demo complete** | Real scoped memory informed AIF-49's deterministic checker; native tests, Reviewer, QA and actual owner approval completed; exact candidate integrated, merged checks and isolated Git rollback/reapply passed. |
-| 4 — measure and operate | **Scorecard and bounded operations verified; strict exit open** | AIF-50 is accepted. Real Paperclip/MemPalace restore, complete active docs-index rebuild, native telemetry replay and MCP crash/profile checks passed. Extra context demonstrated no benefit; interrupted coding-task cost remains incomplete. |
+| 4 — measure and operate | **Local scope accepted** | AIF-50 and bounded operations are verified. The owner accepted local V1 and deferred complete interrupted-handoff coding-task cost. Extra context demonstrated no benefit; missing costs remain unknown. |
+
+**Owner acceptance — 2026-09-30:** “I accept the local v1” accepts the bounded
+trusted-local scope offered after the final operations checks. The earlier
+complete-cost exit criterion is moved to post-V1 measurement; it is not relabeled
+PASS and historical usage is not backfilled. The machine-readable
+[acceptance record](../../milestone4/results/local-v1-acceptance-20260930.json)
+pins the accepted implementation/evidence. This closes the revised local roadmap,
+not the full north-star platform or production rollout. It does not approve
+pending native tasks, change review/permission controls, merge `main`, enable
+deferred components, or authorize autonomous self-improvement. Subsequent work
+starts from a requested real feature/task rather than another mandatory milestone.
 
 Every milestone must end with a runnable demonstration and recorded acceptance
 evidence. Do not add an index, service, generic adapter, or framework merely to
@@ -684,12 +695,11 @@ agents are paused, original smoke configuration restored, and no probe code is
 integrated. The three run/artifact records survived the paired restore.
 
 The operational holes demonstrated by those bounded drills are closed. The
-strict exit below **still requires complete native handoff accounting and owner
-acceptance for a fresh correct coding comparison**. Historical AIF-50/51 usage
-cannot be backfilled; AIF-52's partial usage and read-only AIF-55/56/57 do not
-satisfy that requirement. Finishing under the current criteria needs that coding
-evidence. Only an explicit owner decision may instead close bounded trusted-local
-V1 with the measurement deferred. No deferral or full completion is assumed.
+owner's subsequent local V1 acceptance explicitly **defers complete native
+handoff accounting and a fresh owner-accepted correct coding cost comparison**.
+Historical AIF-50/51 usage cannot be backfilled; AIF-52's partial usage and
+read-only AIF-55/56/57 do not satisfy that measurement. The local roadmap is
+closed by the scope decision, not by pretending those receipts prove full cost.
 
 The broader items below remain backlog or production extensions, not additional
 milestones added to the revised finite M0–M4 plan:
@@ -713,7 +723,8 @@ milestones added to the revised finite M0–M4 plan:
 - Add Promptfoo, Phoenix, Langfuse, ToolHive, SWE-ReX, DBOS, or another store only
   when a measured gap and the authority boundary are recorded in a new ADR.
 
-Milestone 4 exits with paired runs of the same task class showing accepted
+The original full measurement target, now **post-V1 rather than a local exit
+gate**, is paired runs of the same task class showing accepted
 quality, context supplied/used, tokens, latency, and **cost per accepted
 correct task** against a no-retrieval or earlier-version baseline. Record
 failure drills and rollback evidence; do not claim improvement from cheaper
@@ -721,7 +732,12 @@ inference alone.
 
 ## 8. V1 completion test
 
-A real coding task must demonstrate:
+**Accepted local scope:** The revised M0–M4 demonstrations and operations
+receipts are accepted together; no single run is claimed to prove every broader
+target. Complete interrupted-handoff cost measurement is deferred. Existing
+independent quality/security/approval controls remain required for every task.
+
+The broader end-to-end regression target remains:
 
 ```text
 Paperclip durable task/claim

@@ -1,9 +1,12 @@
 # Milestone 4 — bounded task measurement
 
-Status: **FIRST SLICE OWNER-APPROVED AND INTEGRATED; native handoff accounting
-repair and supervised restore/rebuild/recovery drills verified. Full Milestone
-4/V1 acceptance remains incomplete: interrupted coding handoffs still lack
-complete task cost. No performance/cost improvement is claimed.**
+Status: **TRUSTED-LOCAL V1 ACCEPTED by the owner on 2026-09-30; revised local
+Milestone 4 closed. Native accounting repair and supervised operations are
+verified; complete interrupted-handoff coding-task cost is explicitly DEFERRED,
+not passed. No performance/cost improvement or production readiness is claimed.**
+
+The [owner acceptance record](results/local-v1-acceptance-20260930.json)
+supersedes earlier incomplete-status checkpoints below, not their measurements.
 
 The initial owner-approved comparison used a read-only task scorecard and one
 small serial pair of native tasks, with/without the current verified memory
@@ -384,12 +387,12 @@ All eight leases belonging to AIF-53–57 are terminal/released with stable rele
 metadata on repeated checks; their execution/checkout locks are clear. No
 disposable drill container, volume or internal network remains.
 
-### Remaining exit decision
+### Owner acceptance and post-V1 measurement
 
 The finite M0–M4 roadmap has no new milestone or dependency. M0–M3's approved
 trusted-local demonstrations and M4's accepted scorecard remain usable. These
 drills close the bounded operations evidence gaps, not full production readiness.
-The remaining strict M4/V1 exit is **complete cost per owner-accepted correct
+The original strict measurement is **complete cost per owner-accepted correct
 coding task across native handoff**, against its recorded baseline. The existing
 cancel-on-handoff path can interrupt the provider's final usage report: retain
 partial subtotals, never call them complete. The read-only calls above cannot
@@ -397,7 +400,12 @@ substitute for that gate or approve a code integration. Completing that gate
 requires a fresh coding comparison with reliable full settlement and owner
 acceptance; historical missing reports cannot be recovered by guessing.
 
-Alternatively the owner may explicitly accept the bounded trusted-local V1 and
-defer that measurement criterion. No such scope change has been assumed. Do not
-declare all milestones finished, auto-approve pending tasks, add a second workflow
-engine, or expand memory injection on this negative measurement evidence.
+On 2026-09-30 the owner explicitly replied **“I accept the local v1”** to the
+choice of bounded local acceptance with that measurement deferred. The revised
+M0–M4 trusted-local roadmap is therefore closed. The cost gate is **DEFERRED**,
+not PASS; the read-only probe's QUALITY_FAILED result and pending native owner
+dispositions are unchanged. This accepts project scope, not individual pending
+tasks or production readiness. Do not auto-approve tasks, add a second workflow
+engine, reopen mandatory milestone work just for this deferred metric, or expand
+memory injection on the negative measurement evidence. Use the working local
+system for the next requested real coding task.

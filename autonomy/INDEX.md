@@ -39,6 +39,18 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 
 ## Current phase rule
 
+**Trusted-local V1 accepted by the owner on 2026-09-30.** The revised finite
+M0–M4 roadmap is closed for that scope. Complete cost per accepted correct coding
+task across interrupted native handoffs is explicitly deferred, not passed.
+Missing/partial telemetry remains unknown/partial; no improvement is proven.
+See [the acceptance record](../milestone4/results/local-v1-acceptance-20260930.json)
+and [current plan](../docs/implementation/IMPLEMENTATION_KICKOFF.md).
+Pending/unapproved native tasks are not accepted by this scope decision. Keep
+credential containment, scoped MCP profiles, independent review and human approval;
+production readiness and existing post-V1 deferrals are unchanged. New work follows
+an actual requested feature/task, not another mandatory milestone. The earlier
+checkpoint history below retains its evidence, not a current acceptance blocker.
+
 Phase 0.5 and the Paperclip Milestone 0 dependency gate are complete. Milestone 1
 proved one real, independently reviewed native coding task and model-change
 recovery. Milestone 2's revised trusted-local demonstration is complete; the supervised OpenSearch MCP slice and
@@ -68,7 +80,7 @@ skips), 9/9 QA and 26/26 Node checks passed. The existing source checkout is
 updated; primary `main` is unchanged. AIF-51 remains unapproved, not integrated.
 This pair shows no demonstrated memory
 benefit; missing telemetry is not zero or evidence of cost savings. Full
-Milestone 4 remains incomplete. See
+measurement remains deferred under the later local acceptance above. See
 `milestone3/README.md` and `milestone4/README.md`.
 Keep the selected integration boundaries and see
 `docs/implementation/IMPLEMENTATION_KICKOFF.md` for current receipts and exit gates.

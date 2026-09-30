@@ -38,7 +38,7 @@ DO BETTER NEXT TIME
 
 AI Factory should not rebuild mature infrastructure merely because we can.
 
-Before substantial custom implementation, evaluate existing open-source components against the AI Factory architectural contract. Current primary candidates include:
+Before substantial custom implementation, evaluate existing open-source components against the AI Factory architectural contract. The completed adoption spike evaluated these candidates; selections and deferrals are recorded in the [adoption matrix](docs/decisions/ADOPTION_MATRIX.md):
 
 - **Paperclip** — control plane / tasks / agents / budgets / workspaces / adapters;
 - **Agent Skills** — canonical portable skill format;
@@ -64,6 +64,17 @@ AI Factory remains the architecture and product contract. External projects are 
 
 ## Current phase
 
-**Phase 0.5: adoption spike.**
+**Trusted-local V1 accepted by the owner — 2026-09-30.**
 
-The architecture is documented. Before writing substantial control-plane/runtime infrastructure, prove which mature open-source components can satisfy the contracts and identify only the genuinely differentiated pieces AI Factory still needs to build.
+The revised M0–M4 local roadmap is complete: task submission/progress, independent
+tests/Reviewer/QA/owner approval, bounded Git-verified context, supervised memory,
+native scorecards and restore/rebuild/recovery runbooks. The accepted implementation
+is on `milestone1-contracts`; this acceptance does not merge or rewrite `main`.
+
+Complete cost measurement for interrupted coding handoffs is explicitly deferred,
+not passed. No model-performance/cost improvement or production readiness is claimed.
+Additional isolation and the existing post-V1 deferrals remain unchanged.
+
+See the [accepted implementation scope](docs/implementation/IMPLEMENTATION_KICKOFF.md),
+[task commands](milestone2/README.md), and
+[acceptance record](milestone4/results/local-v1-acceptance-20260930.json).
