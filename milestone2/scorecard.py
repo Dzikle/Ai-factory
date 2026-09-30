@@ -115,7 +115,9 @@ def collect(client, issue, company_id):
         usage = run.get("usageJson")
         if not isinstance(usage, dict):
             continue
-        completeness = usage.get("usageCompleteness", "complete")
+        # Older unsuccessful runs can carry parser-synthesized zeros; only an
+        # explicit completeness marker makes their accounting trustworthy.
+        completeness = usage.get("usageCompleteness", "complete" if run.get("status") == "succeeded" else None)
         if not isinstance(completeness, str) or completeness not in {"complete", "partial"}:
             continue
         tokens = [number(usage.get(k), integer=True) for k in ("inputTokens", "cachedInputTokens", "outputTokens")]

@@ -1,0 +1,5 @@
+{
+  "title": "Native handoff accounting probe",
+  "requestKey": "aif-m4-native-handoff-accounting-probe-20260930-v1",
+  "description": "Bounded telemetry probe only. In your assigned task worktree, add milestone4/fixtures/native-handoff-accounting-probe.txt with exactly one line: Native handoff accounting probe. Commit only that file. Do not merge it into the project or modify any other files. Run git diff --check before handoff. Use the existing independent validation policy and normal native adapter. Do not change model/provider, credentials, containers, project configuration, or architecture. This probe exists solely to verify that a native developer-to-validator handoff retains observed usage as partial accounting."
+}

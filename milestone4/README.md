@@ -1,12 +1,15 @@
 # Milestone 4 — bounded task measurement
 
-Status: **FIRST SLICE OWNER-APPROVED AND INTEGRATED. Full
-Milestone 4 remains incomplete; no performance/cost improvement is claimed.**
+Status: **FIRST SLICE OWNER-APPROVED AND INTEGRATED; bounded native handoff
+accounting repair deployed and verified. Full Milestone 4 remains incomplete;
+no performance/cost improvement is claimed.**
 
-Owner-approved scope: a read-only task scorecard and one small serial pair of
-native tasks, with/without the current verified memory lesson. Existing services,
-model bindings, authentication and review policy stay unchanged. No new image,
-store, scheduler, routing or self-healing platform.
+The initial owner-approved comparison used a read-only task scorecard and one
+small serial pair of native tasks, with/without the current verified memory
+lesson. It changed no image. The later accounting repair below updates only the
+existing owner-fork controller image and scorecard; model bindings,
+authentication and review policy remain unchanged. No new store, scheduler,
+routing or self-healing platform was added.
 
 ## Scorecard
 
@@ -171,7 +174,7 @@ open for trustworthy native handoff telemetry, broader retrieval judgments and
 recorded bounded operations/drills. Do not add another observability platform
 or routing/healing system merely to fill this telemetry gap.
 
-### Native handoff accounting repair candidate — 2026-09-29
+### Native handoff accounting repair — 2026-09-29 to 2026-09-30
 
 The owner Paperclip fork branch `ai-factory/milestone4-handoff-usage` at
 `3ef2f39c4ff0e7fd11b31bf472df09f36839195d` retains
@@ -181,7 +184,7 @@ usage is marked `partial`. OpenCode no longer fabricates zero usage/cost from
 an unfinished stream, and its finished-step usage is explicitly per-run.
 The AI Factory branch `milestone4-handoff-usage` shows partial observations as
 known subtotals, never as complete task totals. No new authority or service was
-introduced; the running controller was **not** replaced or modified.
+introduced; the running controller was **not** replaced at this checkpoint.
 
 Test-first evidence: the handoff regression failed with `usageJson=null` before
 the fix and passed **2/2** on a separate migrated PostgreSQL database; the
@@ -196,10 +199,59 @@ suite ran 143 tests with two optional live skips and one unrelated, unchanged
 provenance-schema test failure. The disposable test database and source shadow
 were removed after verification.
 
-This is a candidate, **not live cost coverage**. The observed OpenCode handoff
-streams each had an unfinished last step, so finished-step tokens and reported
-cost are lower-bound observations; full totals and cost-per-accepted-task remain
-unknown. Historical AIF-50/AIF-51 receipts were not backfilled. Next, review
-the fork patch, deploy it through the existing supported controller build only
-when storage permits, and run one new bounded native handoff to confirm persisted
-partial usage and read-only scorecard coverage. Milestone 4 remains open.
+Independent review found three more accounting gaps: Stop after child exit but
+before adapter cleanup, historical cancelled runs without a completeness marker,
+and malformed nonempty OpenCode JSONL lines. The final owner-fork commit
+`3f4b73c8febcbc4956f8b8d84ff0d815f87786d2` retains same-run legacy
+spawn ownership until adapter result settlement; the scorecard excludes unmarked
+non-successful usage (old parser zeros are not evidence); malformed stream lines
+leave usage/cost unknown. The post-child-exit regression failed on the old
+condition with `usageJson=null`, then passed with the correction. On migrated
+disposable PostgreSQL, delayed handoff cases passed **3/3**. OpenCode parser and
+adjacent adapter tests passed **15/15**, adapter typecheck passed; AI Factory
+scorecard **44/44** and independent formatter QA **9/9** passed. The broader
+Windows process-Stop matrix had 17 POSIX signal-expectation failures (Windows
+reports exit code 1 instead of `SIGTERM`/`SIGINT`); these are **not** counted as
+passing Linux tests. The prior revision's Linux 16/16 result remains historical.
+
+The owner-fork [CI run](https://github.com/Dzikle/paperclip/actions/runs/36650114983)
+passed both normal production platform builds and the PID-1 reaping check.
+The immutable deployed image is
+`ghcr.io/dzikle/paperclip@sha256:d195b970b077b872bb4e720915dc53a97a9096d0f35e29030d37233cc0c0b273`
+(linux/amd64 manifest
+`sha256:c4b96d2af15c9e5d795e3bc862671760aa11eb06e767cfa22e3b3f49e64400ab`);
+its revision label matches `3f4b73c8`. The existing PostgreSQL 17.11 database
+remained at 283 Drizzle journal rows and core authority counts unchanged across
+cutover: 1 company, 95 agents, 51 issues, 245 runs and 231 leases. All agents
+were paused and no runs were active before cutover. The controller is healthy
+after deployment and restart.
+
+Paired pre-cutover recovery material remains in Git-ignored
+`.milestone0/m4-usage-precutover-20260930/`: PostgreSQL custom dump SHA-256
+`8bc5d460b26ace707c6abdadc75d58be254267c241692883613c003f1a251abd`
+(2,142 readable archive-list lines) and storage tar SHA-256
+`6c9284b22ef9194b579aaa151428ff29856f2cd089d8eafd531323200ceb2649`
+(15,537 readable entries). This validates archive readability, **not** a fresh
+restore rehearsal. Backups contain private data and must not be committed.
+
+Fresh synthetic task **AIF-52**, defined by
+`milestone4/tasks/native-handoff-accounting-probe.json`, ran the unchanged
+native `opencode_local` adapter on
+`opencode/muse-spark-1.3-contributor-free`. Its Developer run
+`e5f65f3c-0910-4b00-ab0e-0ddf28a019f6` reached
+`cancelled/issue_reassigned`, with durable `usageCompleteness=partial`,
+27,487 observed input, 60,823 cached-input and 1,712 output tokens. The
+provider reported USD 0 for this free model; no native cost-event row was
+emitted for the zero-priced run. After controller restart, the same run still
+has the partial snapshot. The read-only scorecard shows one handoff, one
+partial-covered run, zero fully covered runs, known reported cost subtotal 0,
+and **no** complete task cost or cost-per-accepted-task. The probe was cancelled
+without merging its synthetic file; execution/checkout locks are clear, its
+single ephemeral local lease is terminal (`expired`, `released_at` set), and
+all agents are paused. The disposable PostgreSQL test container was removed;
+the paired backup was retained.
+
+This closes the bounded native handoff accounting repair, **not** all of
+Milestone 4. Historical AIF-50/AIF-51 receipts were not backfilled. Their
+unfinished final steps remain lower-bound observations, and broader retrieval
+quality, priced-model coverage, and operational metrics remain open.

@@ -214,6 +214,19 @@ class ScorecardCliTests(unittest.TestCase):
         self.assertEqual(0, human.returncode, human.stderr)
         self.assertIn("Observed partial accounting: usage 2; cost 2", human.stdout)
 
+    def test_legacy_unmarked_cancelled_usage_is_not_verified_accounting(self):
+        self.measured()
+        for run in self.runs:
+            run.update(status="cancelled", errorCode="issue_reassigned")
+            run["usageJson"].update(inputTokens=0, cachedInputTokens=0,
+                                     outputTokens=0, costUsd=0)
+        usage = self.report()["usage"]
+        self.assertEqual(0, usage["coveredRuns"])
+        self.assertEqual(0, usage["costCoveredRuns"])
+        self.assertEqual(0, usage["partialCoveredRuns"])
+        self.assertIsNone(usage["reportedCostUsd"])
+        self.assertIsNone(usage["reportedCostPerOwnerAcceptedTaskUsd"])
+
     def test_one_partial_record_prevents_a_mixed_complete_total(self):
         self.measured()
         self.runs[0]["usageJson"]["usageCompleteness"] = "complete"

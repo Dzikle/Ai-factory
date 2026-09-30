@@ -1,5 +1,5 @@
 schema_version: 1
-recorded_at: "2026-09-28"
+recorded_at: "2026-09-30"
 platform:
   host: "Windows 11"
   containers: "linux/amd64"
@@ -23,12 +23,24 @@ dependencies:
       amd64_manifest: "sha256:c9ae6864d9ce8ec9a5ab5ae2b64a4ce583ed30171ab3f5799634b4adc26b3bb7"
       workflow: "https://github.com/Dzikle/paperclip/actions/runs/36381672435"
       runtime_versions: "Node 24.21.0; Codex CLI 0.158.0; OpenCode 1.18.33"
-      status: "DEPLOYED LOCALLY; environment-inheritance/credential-rotation gate PASS; agents paused pending execution/access-boundary verification; native Codex search gate remains BLOCKED on provider_quota; not new Milestone 0 admission evidence"
+      status: "HISTORICAL DEPLOYED PIN; locally superseded by milestone4_active_candidate; environment-inheritance/credential-rotation gate PASS; native Codex search gate remains BLOCKED on provider_quota"
       schema: "Unchanged PostgreSQL 17.11 / 283-row Drizzle journal / latest 1790018362070; no migration changes in source diff"
       validation: "97/97 focused exact-image tests; normal production multiarch build + PID-1 check; published and live native-child environment probes; native OpenCode directory proof without inference; old database password rejected/new accepted over SCRAM; seven authority-table hashes/schema unchanged after restart; effective search-only MCP profiles pass; AIF-47 accepted/unlocked and six persisted artifacts verified. Broader source-targeted run: 1239 passed, 6 skipped, 1 pre-existing Cursor fixture failure of 1246 tests; all touched typechecks/builds pass."
       evidence: "milestone2/README.md; milestone2/fixtures/native-agent-env-probe.mjs; milestone2/fixtures/opencode-workspace-probe.mjs"
       backup: ".milestone0/m2-security-rotation-20260928/ (ignored paired dump + tar + private credential recovery files; public hashes in milestone2/README.md; archive checks only, not a new restore rehearsal)"
       previous_image: "ghcr.io/dzikle/paperclip@sha256:95f6708217d9b34b10c9a3637d024e121a2bdaf6fa0008eb3fca5983b80f1676; source d57c0b7c5cbd2e29c25363df7dc30531e44f5ad1; historical only, do not resume native agents on pre-containment images"
+    milestone4_active_candidate:
+      fork_branch: "ai-factory/milestone4-handoff-usage"
+      fork_commit: "3f4b73c8febcbc4956f8b8d84ff0d815f87786d2"
+      image: "ghcr.io/dzikle/paperclip@sha256:d195b970b077b872bb4e720915dc53a97a9096d0f35e29030d37233cc0c0b273"
+      amd64_manifest: "sha256:c4b96d2af15c9e5d795e3bc862671760aa11eb06e767cfa22e3b3f49e64400ab"
+      workflow: "https://github.com/Dzikle/paperclip/actions/runs/36650114983"
+      status: "DEPLOYED LOCALLY; bounded native handoff accounting gate PASS on AIF-52; agents paused; broader Milestone 4 remains open"
+      schema: "PostgreSQL 17.11 / 283-row Drizzle journal unchanged on cutover and restart; image label declares 282 migration files"
+      validation: "Multiarch production build and PID-1 check passed; DB-backed late handoff regression 3/3 with post-child-exit RED/GREEN; OpenCode parser 15/15 and adapter typecheck; AI Factory scorecard 44/44 and presentation QA 9/9; live AIF-52 native OpenCode run cancelled/issue_reassigned with partial usage retained after controller restart, 0 complete coverage, exact issue locks clear, lease expired/released"
+      evidence: "milestone4/README.md; milestone4/tasks/native-handoff-accounting-probe.json"
+      backup: ".milestone0/m4-usage-precutover-20260930/ (ignored paired PostgreSQL dump and Paperclip storage tar; hashes and archive counts in milestone4/README.md)"
+      previous_image: "ghcr.io/dzikle/paperclip@sha256:37ab79a0ea5da736bb32cded7d82a1c47873369fdc711d43e5ecec22f2797b0a; source 6f19a0d07f02fdaaca4085b07bb32b3f7b260383"
     milestone2_opencode_workspace_candidate:
       fork_branch: "ai-factory/milestone2-opencode-workspace"
       fork_commit: "379fe383d0e21a8e6194e799ba224762f7245cf4"
