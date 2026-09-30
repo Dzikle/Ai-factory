@@ -67,6 +67,14 @@ class RetrievalEvalTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "scope"):
             evaluate(reader, self.suite(), expected_revision=REV)
 
+    def test_evaluation_answer_keys_are_excluded_from_queries_and_results(self):
+        reader = Reader([[], []])
+        evaluate(reader, self.suite(), expected_revision=REV)
+        for _, _, body in reader.calls:
+            self.assertEqual([{"prefix": {"path": "autonomy/evals/"}}], body["query"]["bool"].get("must_not"))
+        with self.assertRaisesRegex(ValueError, "scope"):
+            evaluate(Reader([[hit("autonomy/evals/git-docs-v1.json")]]), self.suite(), expected_revision=REV)
+
     def test_empty_and_unjudged_cases_do_not_create_fake_quality(self):
         suite = self.suite()
         suite["cases"][0]["relevantPaths"] = []

@@ -71,8 +71,14 @@
     "profileAgentIds": ["2ef551a8-e8e0-4cfe-855c-bf78f795c3a0", "55f721f8-54d4-4f02-ba19-f55fb24c501e"]
   },
   "deterministicValidation": {
-    "pythonTestsRun": 182, "pythonPassed": 180, "optionalLiveSkips": 2,
+    "pythonTestsRun": 183, "pythonPassed": 181, "optionalLiveSkips": 2,
     "nodePassed": 26, "formatterQaPassed": 9
+  },
+  "postPublicationRetrieval": {
+    "sourceRevision": "b06a2a4de6d5be88e8c48dcc9c23bebd654f5518",
+    "excludedJudgmentPathPrefix": "autonomy/evals/",
+    "recallAtK": 1.0, "meanReciprocalRank": 0.9, "staleRelevantHits": 0,
+    "promotionThresholdsPassed": true
   },
   "limitations": [
     "operator_supervised_not_autonomous_self_healing",

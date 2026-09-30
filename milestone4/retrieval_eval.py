@@ -17,6 +17,7 @@ FIELDS = ["path", "project_id", "repository_id", "source_system", "status",
 
 def _path(value):
     return (isinstance(value, str) and 1 <= len(value) <= 512 and "\\" not in value
+            and not value.startswith("autonomy/evals/")
             and ":" not in value and all(part not in {"", ".", ".."} for part in value.split("/")))
 
 
@@ -66,6 +67,8 @@ def evaluate(reader, suite, *, expected_revision, k=5):
                        {"term": {"source_system": "git"}}, {"term": {"status": "canonical"}},
                        {"term": {"canonical": True}}],
             "must": [{"multi_match": {"query": case["query"], "fields": ["title^3", "content"]}}],
+            # Judgments remain searchable knowledge, not inputs to their own eval.
+            "must_not": [{"prefix": {"path": "autonomy/evals/"}}],
         }}}
         response = reader.request("POST", "/ai_factory_docs/_search", body)
         container = response.get("hits") if isinstance(response, dict) else None

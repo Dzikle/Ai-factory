@@ -369,9 +369,20 @@ rollback, which would also require a matching Git projection/source revision.
 Only Paperclip's generated `.paperclip/worktrees/` copies are Git-ignored;
 unrelated untracked files and tracked edits still prevent source deployment.
 
-Fresh final validation: **182 Python tests run, 180 passed/two optional live
+Fresh final validation: **183 Python tests run, 181 passed/two optional live
 skips; 26/26 Node context/handoff/identity regressions; 9/9 formatter QA**.
 Live drills above are separate evidence, not inferred from those skips.
+
+Publishing the query suite added its answer keys to the canonical knowledge
+corpus. A test reproduced the evaluator's missing exclusion; evaluation queries
+now exclude `autonomy/evals/`, and returned judgment files are rejected. The
+eight retrieval regressions pass. At published commit `b06a2a4`, a live query
+with that exclusion passed recall@5=1, MRR=0.9, stale relevant hits=0. The earlier
+operations receipt remains the historical pre-publication observation, not a
+rewritten score. No model-performance improvement is inferred from these ranks.
+All eight leases belonging to AIF-53–57 are terminal/released with stable release
+metadata on repeated checks; their execution/checkout locks are clear. No
+disposable drill container, volume or internal network remains.
 
 ### Remaining exit decision
 
