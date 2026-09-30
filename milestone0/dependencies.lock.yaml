@@ -37,7 +37,7 @@ dependencies:
       workflow: "https://github.com/Dzikle/paperclip/actions/runs/36650114983"
       status: "DEPLOYED LOCALLY; bounded native handoff accounting gate PASS on AIF-52; agents paused; broader Milestone 4 remains open"
       schema: "PostgreSQL 17.11 / 283-row Drizzle journal unchanged on cutover and restart; image label declares 282 migration files"
-      validation: "Multiarch production build and PID-1 check passed; DB-backed late handoff regression 3/3 with post-child-exit RED/GREEN; OpenCode parser 15/15 and adapter typecheck; AI Factory scorecard 44/44 and presentation QA 9/9; live AIF-52 native OpenCode run cancelled/issue_reassigned with partial usage retained after controller restart, 0 complete coverage, exact issue locks clear, lease expired/released"
+      validation: "Multiarch production build and PID-1 check passed; 24/24 focused Stop/handoff/retry tests inside exact Linux image on disposable migrated PostgreSQL, including post-child-exit RED/GREEN; OpenCode parser 15/15 and adapter typecheck; AI Factory scorecard 44/44 and presentation QA 9/9; live AIF-52 native OpenCode run cancelled/issue_reassigned with partial usage retained after controller restart, 0 complete coverage, exact issue locks clear, lease expired/released"
       evidence: "milestone4/README.md; milestone4/tasks/native-handoff-accounting-probe.json"
       backup: ".milestone0/m4-usage-precutover-20260930/ (ignored paired PostgreSQL dump and Paperclip storage tar; hashes and archive counts in milestone4/README.md)"
       previous_image: "ghcr.io/dzikle/paperclip@sha256:37ab79a0ea5da736bb32cded7d82a1c47873369fdc711d43e5ecec22f2797b0a; source 6f19a0d07f02fdaaca4085b07bb32b3f7b260383"

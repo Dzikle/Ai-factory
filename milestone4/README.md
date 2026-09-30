@@ -213,8 +213,11 @@ disposable PostgreSQL, delayed handoff cases passed **3/3**. OpenCode parser and
 adjacent adapter tests passed **15/15**, adapter typecheck passed; AI Factory
 scorecard **44/44** and independent formatter QA **9/9** passed. The broader
 Windows process-Stop matrix had 17 POSIX signal-expectation failures (Windows
-reports exit code 1 instead of `SIGTERM`/`SIGINT`); these are **not** counted as
-passing Linux tests. The prior revision's Linux 16/16 result remains historical.
+reports exit code 1 instead of `SIGTERM`/`SIGINT`). On a new disposable
+migrated PostgreSQL instance, the exact published Linux production image then
+passed **24/24** focused Stop, retry, independent-exit and delayed-handoff
+tests, including the 16-case owned-Stop matrix. The prior revision's Linux
+16/16 result remains historical; this 24/24 is evidence for the final revision.
 
 The owner-fork [CI run](https://github.com/Dzikle/paperclip/actions/runs/36650114983)
 passed both normal production platform builds and the PID-1 reaping check.
