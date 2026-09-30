@@ -366,6 +366,8 @@ This avoids the next ordinary submission repeating the stale-base failure;
 old run identities/artifacts and task branches are never reset. Prior default
 `7254867f3172253a445f34511ae01e6ebbb94f5d` is retained here for configuration
 rollback, which would also require a matching Git projection/source revision.
+Only Paperclip's generated `.paperclip/worktrees/` copies are Git-ignored;
+unrelated untracked files and tracked edits still prevent source deployment.
 
 Fresh final validation: **182 Python tests run, 180 passed/two optional live
 skips; 26/26 Node context/handoff/identity regressions; 9/9 formatter QA**.
