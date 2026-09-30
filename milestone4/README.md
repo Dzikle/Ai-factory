@@ -167,7 +167,8 @@ unknown. Zero company live runs were observed. Existing one-shot projection
 updated 49 canonical documents; reader-only replay planned zero writes.
 The subsequent receipt-only commit is carried through the same checkout and
 projector. No image, service, credential, model binding or migration changed.
-This is a **local merge**, not a push or PR; primary `main` stays at `71b5a5d`.
+At that checkpoint this was a **local merge**, not a push or PR; primary `main`
+stayed at `71b5a5d`.
 
 Next: trustworthy native handoff usage/cost evidence. Full Milestone 4 remains
 open for trustworthy native handoff telemetry, broader retrieval judgments and
@@ -182,8 +183,9 @@ a successful process-Stop settlement until its exact executor writes late
 metadata, while failed Stops remain immediately retryable. Cancelled/failed
 usage is marked `partial`. OpenCode no longer fabricates zero usage/cost from
 an unfinished stream, and its finished-step usage is explicitly per-run.
-The AI Factory branch `milestone4-handoff-usage` shows partial observations as
-known subtotals, never as complete task totals. No new authority or service was
+The AI Factory branch `milestone4-handoff-usage` (now fast-forwarded into the
+accepted `milestone1-contracts` branch) shows partial observations as known
+subtotals, never as complete task totals. No new authority or service was
 introduced; the running controller was **not** replaced at this checkpoint.
 
 Test-first evidence: the handoff regression failed with `usageJson=null` before
@@ -249,7 +251,9 @@ and **no** complete task cost or cost-per-accepted-task. The probe was cancelled
 without merging its synthetic file; execution/checkout locks are clear, its
 single ephemeral local lease is terminal (`expired`, `released_at` set), and
 all agents are paused. The disposable PostgreSQL test container was removed;
-the paired backup was retained.
+the paired backup was retained. The accepted branch was pushed to the owner's
+`Dzikle/Ai-factory` repository; primary `main` remains the earlier adoption
+spike commit and was not rewritten.
 
 This closes the bounded native handoff accounting repair, **not** all of
 Milestone 4. Historical AIF-50/AIF-51 receipts were not backfilled. Their
