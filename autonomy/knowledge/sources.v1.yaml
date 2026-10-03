@@ -1,0 +1,37 @@
+# Git-owned knowledge source contracts for bounded evidence packs.
+# Paperclip resolves these into per-run evidence requests; OpenSearch stays a
+# rebuildable projection and MemPalace stays historical memory. No connection
+# URL or credential is stored here.
+
+- id: git
+  system: git
+  authority: canonical
+  access: read
+  operations: [read_file]
+  citation_fields: [source_uri, source_version]
+  freshness_method: revision_check
+  max_result_bytes: 96000
+  projection_role: none
+  degradation: required
+
+- id: opensearch-git-docs
+  system: opensearch
+  authority: projection
+  access: read
+  operations: [bounded_search]
+  citation_fields: [source_uri, citation, freshness]
+  freshness_method: index_timestamp
+  max_result_bytes: 24000
+  projection_role: retrieval
+  degradation: optional_unavailable
+
+- id: mempalace
+  system: mempalace
+  authority: historical
+  access: read
+  operations: [bounded_search]
+  citation_fields: [source_uri, citation, freshness]
+  freshness_method: observed_at
+  max_result_bytes: 24000
+  projection_role: experience
+  degradation: optional_unavailable

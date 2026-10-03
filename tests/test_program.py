@@ -162,8 +162,7 @@ class ProgramReplayTests(unittest.TestCase):
         return submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), sample_program(), start=True,
                               now=datetime(2026, 10, 3, tzinfo=timezone.utc), **kwargs)
 
-    def test_interrupted_submission_replays_without_duplicates(self):
-        # Full-run request indices: 1-5 scope reads, 6 parent, 7 document,
+    def test_interrupted_submission_replays_without_duplicates(self):        # Full-run request indices: 1-5 scope reads, 6 parent, 7 document,
         # 8 receipt, 9-12 children, 13-20 blocker reads/writes, 21-22 start.
         expected = self.submit(FakePaperclip())
         for fail_at in (7, 8, 9, 10, 11, 12, 13, 16, 22):
@@ -175,6 +174,51 @@ class ProgramReplayTests(unittest.TestCase):
                 self.assertEqual(expected, result)
                 self.assertEqual(5, len(client.issues))
                 self.assertEqual(1, len(client.comments))
+
+
+class StubSource:
+    def query(self, *, text, filters, max_hits, max_bytes):
+        return [{"path": "docs/note.md"}]
+
+    def verify(self, item):
+        import hashlib
+
+        body = "wave context"
+        return {"source": "git", "source_system": "git", "source_id": item["path"],
+                "source_version": "v1", "content_sha256": hashlib.sha256(body.encode()).hexdigest(),
+                "project_id": "ai-factory", "text": body, "citation": "git:v1:docs/note.md",
+                "source_uri": "git://ai-factory/v1/docs/note.md",
+                "authority": "canonical", "freshness": "fresh"}
+
+
+class ProgramEvidenceTests(unittest.TestCase):
+    def test_evidence_packs_persist_before_children_and_replay(self):
+        from milestone3.context import build_evidence_pack
+
+        program = sample_program()
+        packs = {}
+        for wave in program["waves"]:
+            packs[wave["id"]] = build_evidence_pack(
+                {"project_id": "ai-factory", "total_budget": {"max_bytes": 1000, "max_tokens": 250},
+                 "queries": [{"source": "git", "text": "wave", "filters": {}, "max_hits": 2,
+                              "max_bytes": 1000, "required": True}]},
+                {"git": StubSource()})
+        client = FakePaperclip()
+        first = submit_program(client, COMPANY, {"userId": "owner"},
+                               {"projectId": PROJECT, "developerAgentId": DEV, "validatorAgentId": VALIDATOR,
+                                "reviewerAgentId": REVIEWER, "qaAgentId": QA},
+                               program, start=False, now=datetime(2026, 10, 3, tzinfo=timezone.utc),
+                               evidence_packs=packs)
+        self.assertIn("evidence-orchestration", client.documents)
+        child = client.issues[first["waves"][0]["id"]]
+        self.assertIn("evidence-orchestration", child["description"])
+        self.assertIn(packs["orchestration"]["sha256"], child["description"])
+        second = submit_program(client, COMPANY, {"userId": "owner"},
+                                {"projectId": PROJECT, "developerAgentId": DEV, "validatorAgentId": VALIDATOR,
+                                 "reviewerAgentId": REVIEWER, "qaAgentId": QA},
+                                program, start=False, now=datetime(2026, 10, 3, tzinfo=timezone.utc),
+                                evidence_packs=packs)
+        self.assertEqual(first, second)
 
 
 if __name__ == "__main__":

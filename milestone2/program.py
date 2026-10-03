@@ -130,11 +130,22 @@ def _validated_program(program, *, now):
     return program
 
 
-def build_submission(state, workflow, program, *, start=False, now=None, health=None, capability_manifests=None):
+def build_submission(state, workflow, program, *, start=False, now=None, health=None, capability_manifests=None,
+                     evidence_packs=None):
     """Build every Paperclip payload without network or filesystem writes."""
     now = now or datetime.now(timezone.utc)
     owner = _owner_user_id(state)
     program = _validated_program(program, now=now)
+    if evidence_packs is not None:
+        if not isinstance(evidence_packs, dict):
+            raise ValueError("evidence_packs must map wave IDs to evidence packs")
+        known_waves = {wave["id"] for wave in program["waves"]}
+        for wave_id, pack in evidence_packs.items():
+            if wave_id not in known_waves:
+                raise ValueError(f"evidence pack targets unknown wave: {wave_id!r}")
+            for field in ("schemaVersion", "items", "total_bytes", "sha256"):
+                if not isinstance(pack, dict) or field not in pack:
+                    raise ValueError(f"evidence pack for wave {wave_id!r} is missing {field}")
     agents = {
         "developerAgentId": program_agent_id(workflow.get("developerAgentId")),
         "validatorAgentId": program_agent_id(workflow.get("validatorAgentId")),
@@ -219,6 +230,7 @@ def build_submission(state, workflow, program, *, start=False, now=None, health=
         "policy": policy,
         "decisions": decisions,
         "admission": admission,
+        "evidencePacks": evidence_packs or {},
         "parent": parent,
         "authorizationDocument": authorization_document,
         "receipt": receipt,
@@ -233,7 +245,7 @@ def _check_replay(label, expected, actual, fields):
 
 
 def submit_program(client, company_id, state, workflow, program, *, start=False, now=None,
-                   health=None, capability_manifests=None):
+                   health=None, capability_manifests=None, evidence_packs=None):
     """Idempotently create one parent plus four dependency-ordered children.
 
     Every write uses a stable idempotency key, document content, or
@@ -247,11 +259,16 @@ def submit_program(client, company_id, state, workflow, program, *, start=False,
     ``blocked`` leaves all children in backlog (the caller maps this to exit
     2); ``degraded`` is stored in the authorization document and child
     context and may start because every unavailable capability is optional.
+
+    When evidence packs are supplied, one ``evidence-<wave-id>`` document
+    is stored before that child starts, and the child description carries
+    only the document ID/revision, digest, source summary, and budget.
     """
     now = now or datetime.now(timezone.utc)
     company_id = uuid(company_id, "companyId")
     plan = build_submission(state, workflow, program, start=start, now=now,
-                            health=health, capability_manifests=capability_manifests)
+                            health=health, capability_manifests=capability_manifests,
+                            evidence_packs=evidence_packs)
     task_preflight(client, company_id, plan["parent"], start=False)
 
     _, parent = client.request("POST", f"/api/companies/{company_id}/issues", plan["parent"], expected=(200, 201))
@@ -267,9 +284,27 @@ def submit_program(client, company_id, state, workflow, program, *, start=False,
 
     client.request("POST", f"/api/issues/{parent_id}/comments", plan["receipt"], expected=(200, 201))
 
+    evidence_revisions = {}
+    for wave_id, pack in plan["evidencePacks"].items():
+        try:
+            _, stored = client.request("PUT", f"/api/issues/{parent_id}/documents/evidence-{wave_id}",
+                                       {"content": pack}, expected=(200,))
+        except (ApiError, ValueError) as exc:
+            raise ValueError(f"evidence document conflict for wave {wave_id}; refusing to overwrite") from exc
+        evidence_revisions[wave_id] = stored.get("revisionId")
+
     child_ids = []
     for child in plan["children"]:
+        description = child["description"]
+        if child["wave"] in evidence_revisions:
+            pack = plan["evidencePacks"][child["wave"]]
+            description += (
+                f"\nEvidence evidence-{child['wave']} (revision {evidence_revisions[child['wave']]}): "
+                f"digest {pack['sha256']}, {len(pack['items'])} items, "
+                f"{pack['total_bytes']} bytes, {len(pack['degraded_sources'])} degraded sources."
+            )
         payload = {key: child[key] for key in ("title", "description", "idempotencyKey", "projectId", "status", "assigneeAgentId", "executionPolicy")}
+        payload["description"] = description
         payload["parentId"] = parent_id
         _, issue = client.request("POST", f"/api/companies/{company_id}/issues", payload, expected=(200, 201))
         _check_replay(f"child wave {child['wave']}", {**payload, "parentId": parent_id}, issue,
@@ -370,6 +405,8 @@ def main(argv=None):
     submit.add_argument("--output", default=None, help="atomically write the submission receipt JSON here")
     submit.add_argument("--health", default=None, help="component probe results JSON for admission gating (doctor --output)")
     submit.add_argument("--manifests", default=str(DEFAULT_MANIFESTS), help="Git-owned capability provider manifests")
+    submit.add_argument("--evidence", action="store_true",
+                        help="build one bounded local-Git evidence pack per wave and store it before that child starts")
     status = commands.add_parser("status", help="show Paperclip's authoritative program status")
     status.add_argument("parent", help="parent program issue UUID")
     args = parser.parse_args(argv)
@@ -382,16 +419,27 @@ def main(argv=None):
             workflow, program = read_object(args.workflow), read_object(args.program)
             manifests = load_manifests(args.manifests)
             health = read_probes(args.health, manifests) if args.health else None
+            evidence_packs = None
+            if args.evidence:
+                from milestone3.context import GitFileAdapter, build_evidence_pack, default_wave_request
+                root = Path(__file__).resolve().parents[1]
+                adapter = GitFileAdapter(root, project_id=program.get("project_id", "ai-factory"))
+                evidence_packs = {
+                    wave["id"]: build_evidence_pack(default_wave_request(program, wave), {"git": adapter})
+                    for wave in program["waves"]
+                }
             if args.dry_run:
                 plan = build_submission(state, workflow, program, start=args.start,
-                                        health=health, capability_manifests=manifests)
+                                        health=health, capability_manifests=manifests,
+                                        evidence_packs=evidence_packs)
                 print(json.dumps({**plan, "dryRun": True}, indent=2))
                 return 0
             base_url = text(state.get("baseUrl"), "baseUrl", 2048)
             board_key = text(state.get("boardApiKey"), "boardApiKey", 4096)
             client = Client(base_url, board_key)
             result = submit_program(client, company_id, state, workflow, program, start=args.start,
-                                    health=health, capability_manifests=manifests)
+                                    health=health, capability_manifests=manifests,
+                                    evidence_packs=evidence_packs)
             if args.output:
                 _atomic_write_json(args.output, result)
             if args.json:
