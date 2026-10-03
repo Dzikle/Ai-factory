@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "profiles": {
+    "ai-factory-full": {
+      "checks": [
+        {"id": "git-diff", "argv": ["git", "diff", "--check"], "timeoutSeconds": 60, "required": true},
+        {"id": "unit", "argv": ["python", "-m", "milestone3.check"], "timeoutSeconds": 900, "required": true}
+      ]
+    },
+    "ai-factory-docs": {
+      "eligibleChangeTypes": ["documentation"],
+      "checks": [
+        {"id": "git-diff", "argv": ["git", "diff", "--check"], "timeoutSeconds": 60, "required": true}
+      ]
+    }
+  }
+}

@@ -21,8 +21,10 @@ from milestone0.scripts.paperclip_admission import ApiError, Client
 from milestone1.paperclip_policy import program_agent_id
 from milestone1.validate_contracts import validate_self_enhancement
 from milestone2.capabilities import DEFAULT_MANIFESTS, assess, load_manifests, read_probes
+from milestone2.outcome_report import validate_outcome_report
 from milestone2.task import preflight as task_preflight
 from milestone2.task import read_object, text, uuid
+from milestone3.verification import validate_contract as validate_verification_contract
 
 
 SCOPE_VERBS = ("implement", "verify", "review", "report", "maintain")
@@ -384,8 +386,27 @@ def read_program_status(client, parent_id, company_id):
     }
 
 
-def _atomic_write_json(path, value):
-    target = Path(path)
+def store_verification_contract(client, parent_id, wave_id, contract):
+    """Store a wave's verification contract before that child starts."""
+    validate_verification_contract(contract)
+    _, document = client.request("PUT", f"/api/issues/{parent_id}/documents/verification-{wave_id}",
+                                 {"content": contract}, expected=(200,))
+    return {"document": f"verification-{wave_id}", "revisionId": document.get("revisionId")}
+
+
+def store_outcome(client, parent_id, outcome):
+    """Store the program outcome report after the stages complete.
+
+    Only a validated report is stored; candidate lineage is checked by the
+    validator, never inferred here.
+    """
+    validate_outcome_report(outcome)
+    _, document = client.request("PUT", f"/api/issues/{parent_id}/documents/outcome",
+                                 {"content": outcome}, expected=(200,))
+    return {"document": "outcome", "revisionId": document.get("revisionId")}
+
+
+def _atomic_write_json(path, value):    target = Path(path)
     tmp = target.with_name(f"{target.name}.tmp-{os.getpid()}")
     tmp.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, target)

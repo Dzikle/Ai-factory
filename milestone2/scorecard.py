@@ -231,4 +231,33 @@ def format_scorecard(report):
         "native reported cost is not invoice evidence; "
         "correctness requires independent validation/review/QA.",
     ]
+    verification = report.get("verification")
+    if isinstance(verification, dict):
+        lines.append(
+            f"Verification: {verification.get('status', 'unknown')} "
+            f"(candidate {verification.get('candidate_commit', 'unknown')}); "
+            f"failed: {', '.join(verification.get('failed_checks') or []) or '(none)'}; "
+            f"missing: {', '.join(verification.get('missing_checks') or []) or '(none)'}; "
+            f"outcome: {verification.get('outcome_status', 'unknown')}"
+        )
     return "\n".join(lines)
+
+
+def summarize_verification(digest, outcome=None):
+    """Link verification digest and outcome coverage without inferring correctness.
+
+    Only recorded fields are projected; a missing digest or outcome stays
+    missing and is never treated as passing or free.
+    """
+    summary = {
+        "candidate_commit": (digest or {}).get("candidate_commit", "unknown"),
+        "status": (digest or {}).get("status", "unknown"),
+        "failed_checks": list((digest or {}).get("failed_checks") or []),
+        "missing_checks": list((digest or {}).get("missing_checks") or []),
+        "outcome_status": (outcome or {}).get("status", "unknown"),
+    }
+    if outcome is not None and outcome.get("candidate", {}).get("commit") != summary["candidate_commit"]:
+        summary["lineage"] = "mismatch"
+    else:
+        summary["lineage"] = "match" if outcome is not None else "unknown"
+    return summary
