@@ -129,5 +129,55 @@ class RetrievalEvalTests(unittest.TestCase):
                                           "AIF_DOCS_READER_PASSWORD": "private"})
 
 
+def cited(path, *, revision=REV):
+    row = hit(path, revision=revision)
+    row["_source"]["citation"] = f"git:{revision[:12]}:{path}"
+    return row
+
+
+class RetrievalEvalV2Tests(unittest.TestCase):
+    def suite(self):
+        return {"schemaVersion": 2, "projectId": "ai-factory",
+                "repositoryId": "ai-factory", "cases": [
+                    {"id": "authority", "query": "task run source of truth",
+                     "queryType": "canonical_lookup", "expectedSources": ["git"],
+                     "requiredAuthority": "canonical", "requireFresh": True,
+                     "relevantPaths": ["docs/architecture/STATE_AND_STORAGE.md"]},
+                    {"id": "memory", "query": "past retrieval failure lessons",
+                     "queryType": "historical_lookup", "expectedSources": ["git"],
+                     "requiredAuthority": "historical", "requireFresh": False,
+                     "relevantPaths": ["docs/architecture/MCP_AND_CAPABILITY_MODEL.md"]},
+                ]}
+
+    def test_v2_reports_ranked_recall_citations_and_authority(self):
+        reader = Reader([
+            [cited("AGENTS.md"), cited("docs/architecture/STATE_AND_STORAGE.md")],
+            [hit("docs/architecture/MCP_AND_CAPABILITY_MODEL.md")],
+        ])
+        report = evaluate(reader, self.suite(), expected_revision=REV, k=5)
+        self.assertEqual(2, report["schemaVersion"])
+        self.assertEqual(0.5, report["recallAt1"])
+        self.assertEqual(1.0, report["recallAt3"])
+        self.assertEqual(1.0, report["recallAt5"])
+        self.assertEqual(0, report["cases"][0]["authorityViolations"])
+        self.assertEqual(1, report["cases"][1]["authorityViolations"])
+        self.assertEqual(1, report["missingCitations"])
+        self.assertTrue(report["cases"][0]["requireFresh"])
+        for _, _, body in reader.calls:
+            self.assertIn("citation", body["_source"])
+
+    def test_v1_suites_keep_schema_version_1_reports(self):
+        reader = Reader([[hit("docs/architecture/STATE_AND_STORAGE.md")], []])
+        report = evaluate(reader, {"schemaVersion": 1, "projectId": "ai-factory",
+                                   "repositoryId": "ai-factory", "cases": [
+                                       {"id": "authority", "query": "task run source of truth",
+                                        "relevantPaths": ["docs/architecture/STATE_AND_STORAGE.md"]},
+                                       {"id": "capabilities", "query": "least privilege",
+                                        "relevantPaths": ["docs/architecture/MCP_AND_CAPABILITY_MODEL.md"]}]},
+                          expected_revision=REV, k=3)
+        self.assertEqual(1, report["schemaVersion"])
+        self.assertNotIn("recallAt1", report)
+
+
 if __name__ == "__main__":
     unittest.main()

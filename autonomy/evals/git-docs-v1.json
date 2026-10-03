@@ -1,33 +1,77 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "projectId": "ai-factory",
   "repositoryId": "ai-factory",
-  "thresholds": {"recallAtK": 1.0, "meanReciprocalRank": 0.5, "staleRelevantHits": 0},
+  "thresholds": {
+    "recallAtK": 1.0,
+    "meanReciprocalRank": 0.5,
+    "staleRelevantHits": 0
+  },
   "cases": [
     {
       "id": "durable-authority",
       "query": "where authoritative task run state survives a model crash",
-      "relevantPaths": ["docs/architecture/STATE_AND_STORAGE.md"]
+      "relevantPaths": [
+        "docs/architecture/STATE_AND_STORAGE.md"
+      ],
+      "queryType": "canonical_lookup",
+      "expectedSources": [
+        "git"
+      ],
+      "requiredAuthority": "canonical",
+      "requireFresh": true
     },
     {
       "id": "least-privilege-tools",
       "query": "MCP capability least privilege role permission enforcement",
-      "relevantPaths": ["docs/architecture/MCP_AND_CAPABILITY_MODEL.md"]
+      "relevantPaths": [
+        "docs/architecture/MCP_AND_CAPABILITY_MODEL.md"
+      ],
+      "queryType": "canonical_lookup",
+      "expectedSources": [
+        "git"
+      ],
+      "requiredAuthority": "canonical",
+      "requireFresh": true
     },
     {
       "id": "memory-supersession",
       "query": "MemPalace superseded memory cannot override current Git truth",
-      "relevantPaths": ["docs/decisions/adr/006-memory-mempalace.md"]
+      "relevantPaths": [
+        "docs/decisions/adr/006-memory-mempalace.md"
+      ],
+      "queryType": "canonical_lookup",
+      "expectedSources": [
+        "git"
+      ],
+      "requiredAuthority": "canonical",
+      "requireFresh": true
     },
     {
       "id": "knowledge-projection",
       "query": "OpenSearch rebuildable knowledge projection canonical source",
-      "relevantPaths": ["docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md"]
+      "relevantPaths": [
+        "docs/architecture/OPENSEARCH_KNOWLEDGE_FABRIC.md"
+      ],
+      "queryType": "canonical_lookup",
+      "expectedSources": [
+        "git"
+      ],
+      "requiredAuthority": "canonical",
+      "requireFresh": true
     },
     {
       "id": "portable-skills",
       "query": "Agent Skills standard portable skill format",
-      "relevantPaths": ["docs/decisions/adr/002-skills-agent-skills.md"]
+      "relevantPaths": [
+        "docs/decisions/adr/002-skills-agent-skills.md"
+      ],
+      "queryType": "canonical_lookup",
+      "expectedSources": [
+        "git"
+      ],
+      "requiredAuthority": "canonical",
+      "requireFresh": true
     }
   ]
 }
