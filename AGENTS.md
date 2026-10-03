@@ -78,6 +78,27 @@ overlapping system without a new evidence-backed decision record.
 - Do not build learned model routing before enough telemetry exists to evaluate it.
 - Do not implement autonomous self-modification in V1.
 
+## Existing deterministic commands
+
+Before composing manual Git/API/test commands, check these existing entry points
+from the **AI Factory repository root**:
+
+| Repeatable step | Entry point / instructions |
+| --- | --- |
+| Submit a task, inspect status or native scorecard | `python -m milestone2.task` — `milestone2/README.md` |
+| Inspect an exact publication candidate, without pushing | `python -m milestone2.publish preflight` — `milestone2/PUBLISH.md` |
+| Publish the exact owner-approved candidate and record evidence | `python -m milestone2.publish publish` — `milestone2/PUBLISH.md`; operator/authorized orchestrator only |
+| Run the pinned complete Python checks | `python -m milestone3.check` — `milestone3/README.md` |
+
+Use `--help` and the linked instructions to supply explicit inputs. Do not
+reimplement these operations or claim configured policy proves execution.
+Developer/Reviewer discovery of a publication command **does not grant push,
+merge, owner-state access or approval rights**. Their stage restrictions remain.
+For another target repository, use the verified Factory checkout supplied by
+the operator; do not copy Factory code into that repository or search private
+state for its path. If that checkout is not accessible, report the missing
+access rather than substituting a hand-built publishing sequence.
+
 ## Authority and provenance
 
 When sources conflict, identify the type and provenance of each claim instead of blending them.

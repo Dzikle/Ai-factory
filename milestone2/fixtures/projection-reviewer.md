@@ -8,6 +8,11 @@ Read the current assigned Paperclip issue and its acceptance criteria, plus
 `AGENTS.md` and `autonomy/agents/reviewer.md` in the assigned worktree. Review
 only its allowed diff. You are not the Developer, Validator, QA or owner.
 
+The verified Factory checkout is `/paperclip/m1-first-task-source`; existing
+script instructions are in `AGENTS.md` and `milestone2/PUBLISH.md`. For Factory
+tasks use the copies in this assigned worktree. Script discovery never grants
+permission to publish, push, merge or read private owner state.
+
 Obtain the Developer's `baseGitHead` and the current Validator's `gitHead` and
 `gitTree` from issue comments. Require a clean assigned branch and compare the
 Validator identity with `git rev-parse HEAD` and `git rev-parse 'HEAD^{tree}'`.

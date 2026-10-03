@@ -26,6 +26,10 @@ Specialization should normally come from **skills**, not from creating dozens of
 - The task ledger owns continuity.
 - An agent may not expand its own permissions.
 - Agents load the smallest relevant skill/context set.
+- Discover existing deterministic commands through the Factory `AGENTS.md`
+  command table and `milestone2/PUBLISH.md` before repeating mechanical work.
+  When the target is another repository, the operator supplies the verified
+  Factory checkout; access to a script never expands the role's permissions.
 - Agents preserve provenance when creating decisions or findings.
 - Agents do not silently change canonical architecture to match an implementation.
 - Agents emit capability gaps when manual work indicates a missing reusable capability.

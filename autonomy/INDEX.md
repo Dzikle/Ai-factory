@@ -28,6 +28,10 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 
 ## System registries
 
+- Repeatable repository preflight/publication/receipt commands → [`../milestone2/PUBLISH.md`](../milestone2/PUBLISH.md)
+- Existing submission/status/scorecard commands → [`../milestone2/README.md`](../milestone2/README.md)
+- Pinned full-suite command → [`../milestone3/README.md`](../milestone3/README.md)
+
 - Skills → `skills/README.md`
 - Capabilities and MCP/tool providers → `capabilities/README.md`
 - Models and routing → `models/README.md`

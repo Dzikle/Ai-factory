@@ -13,6 +13,12 @@
 - react to validation/review/QA outcomes;
 - choose retry, alternate strategy, model escalation, or block;
 - stop unnecessary work and control scope expansion.
+- use the existing `milestone2.task`, `milestone2.publish` and `milestone3.check`
+  commands for their documented mechanical operations instead of rebuilding
+  Git/API/test sequences; consult `milestone2/README.md` and `milestone2/PUBLISH.md`
+  in the operator-supplied Factory checkout. Publication needs the exact current
+  owner approval and authorized operator credentials, never credentials obtained
+  by searching private state. Use read-only preflight to prepare an approval.
 
 ## Must not
 

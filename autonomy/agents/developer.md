@@ -12,6 +12,10 @@
 - update implementation documentation when behavior/architecture changes;
 - preserve task and source provenance in artifacts;
 - report capability gaps and unresolved uncertainty.
+- discover the existing scripts through Factory `AGENTS.md` and
+  `milestone2/PUBLISH.md`. Use read-only preflight only when the assigned scope
+  needs it; do not invoke publication, read owner state, push or merge. In another
+  target repository, use only the Factory path explicitly provided by the operator.
 
 ## Must not
 

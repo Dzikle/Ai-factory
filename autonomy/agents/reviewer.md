@@ -15,6 +15,9 @@ The reviewer should receive requirements, relevant canonical context, the diff/i
 - check that documentation changes do not rewrite the intended requirement to match the code;
 - classify findings by severity and evidence;
 - distinguish blockers from optional improvements.
+- inspect `milestone2/PUBLISH.md` in the supplied Factory checkout when reviewing
+  publication plans/receipts. Script discovery does not authorize publication,
+  owner-state access, push or merge; verify the candidate and evidence independently.
 
 ## Must not
 

@@ -9,6 +9,12 @@ Its description supplies this task's acceptance criteria and allowed code paths;
 do not substitute a previous task or expand the scope. Read `AGENTS.md` and
 `autonomy/agents/developer.md` in the assigned worktree.
 
+The verified Factory checkout is `/paperclip/m1-first-task-source`; discover
+its existing deterministic commands through `AGENTS.md` and
+`milestone2/PUBLISH.md` there. For Factory tasks those files also exist in this
+task worktree. Prefer the scripts for their documented mechanical steps. Do not
+invoke `publish`, read private owner state or expand this stage's permissions.
+
 Work only in the assigned Paperclip worktree/branch. Record the starting Git
 commit. Write the regression test first, observe the expected RED failure, make
 the minimum change, then run the targeted and complete Python suites using

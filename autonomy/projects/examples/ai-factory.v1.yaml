@@ -9,6 +9,8 @@ repositories:
       - docs/architecture/
       - docs/decisions/
       - docs/implementation/IMPLEMENTATION_KICKOFF.md
+      - milestone2/PUBLISH.md
+      - milestone2/README.md
 allowed_skills:
   - repository-discovery
   - code-review
