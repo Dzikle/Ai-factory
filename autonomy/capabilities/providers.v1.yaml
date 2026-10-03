@@ -1,0 +1,124 @@
+# Logical capability-to-provider manifests for self-enhancement admission.
+# Paperclip remains the runtime authority; this file only declares which
+# provider implements each logical capability, how its health is probed, and
+# what happens when it is unavailable. It never carries runtime credentials.
+
+- capability: repo.read
+  provider: paperclip
+  effect: read
+  operations:
+    - name: read_file
+      request_fields: [path, revision]
+      result_fields: [text, source_uri, source_version]
+  health_probe: paperclip
+  degradation: required
+  max_result_bytes: 96000
+  status: active
+
+- capability: repo.write
+  provider: paperclip
+  effect: write
+  operations:
+    - name: write_file
+      request_fields: [path, content, expected_version]
+      result_fields: [path, source_version]
+  health_probe: paperclip
+  degradation: required
+  max_result_bytes: 48000
+  status: active
+
+- capability: git.read
+  provider: paperclip
+  effect: read
+  operations:
+    - name: read_revision
+      request_fields: [revision]
+      result_fields: [commit, tree, source_uri]
+  health_probe: paperclip
+  degradation: required
+  max_result_bytes: 16000
+  status: active
+
+- capability: git.diff.read
+  provider: paperclip
+  effect: read
+  operations:
+    - name: read_diff
+      request_fields: [base_revision, candidate_revision]
+      result_fields: [diff_stat, diff_sha256]
+  health_probe: paperclip
+  degradation: required
+  max_result_bytes: 48000
+  status: active
+
+- capability: validation.run
+  provider: paperclip
+  effect: write
+  operations:
+    - name: run_checks
+      request_fields: [profile, candidate_commit]
+      result_fields: [status, digest_sha256]
+  health_probe: paperclip
+  degradation: required
+  max_result_bytes: 16000
+  status: active
+
+- capability: artifact.write
+  provider: paperclip
+  effect: write
+  operations:
+    - name: write_artifact
+      request_fields: [path, content_sha256]
+      result_fields: [path, artifact_uri]
+  health_probe: paperclip
+  degradation: required
+  max_result_bytes: 48000
+  status: active
+
+- capability: knowledge.search
+  provider: opensearch-mcp
+  effect: read
+  operations:
+    - name: bounded_search
+      request_fields: [text, filters, max_hits, max_bytes]
+      result_fields: [text, source_uri, citation, authority, freshness]
+  health_probe: opensearch-mcp
+  degradation: optional_unavailable
+  max_result_bytes: 24000
+  status: active
+
+- capability: memory.search
+  provider: mempalace
+  effect: read
+  operations:
+    - name: bounded_search
+      request_fields: [text, filters, max_hits, max_bytes]
+      result_fields: [text, source_uri, citation, authority, freshness]
+  health_probe: mempalace
+  degradation: optional_unavailable
+  max_result_bytes: 24000
+  status: active
+
+- capability: code.graph.search
+  provider: codegraph-adapter
+  effect: read
+  operations:
+    - name: query_graph
+      request_fields: [text, revision]
+      result_fields: [nodes, edges, source_version]
+  health_probe: codegraph-adapter
+  degradation: optional_unavailable
+  max_result_bytes: 24000
+  status: disabled
+
+- capability: production.deploy
+  provider: none
+  effect: admin
+  operations:
+    - name: deploy
+      request_fields: [target, candidate_commit]
+      result_fields: [receipt]
+  health_probe: none
+  degradation: required
+  max_result_bytes: 1000
+  status: disabled

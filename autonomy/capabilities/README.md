@@ -4,6 +4,41 @@ Agents should receive only the external capabilities required for their current 
 
 Where semantics are stable, agents request logical capabilities rather than hard-coded providers.
 
+## Self-enhancement provider manifests and admission
+
+`providers.v1.yaml` binds each logical capability needed by the
+self-enhancement waves to exactly one provider, probe, and degradation rule:
+
+```yaml
+- capability: knowledge.search
+  provider: opensearch-mcp
+  effect: read
+  operations: [bounded_search]
+  health_probe: opensearch-mcp
+  degradation: optional_unavailable
+  max_result_bytes: 24000
+  status: active
+```
+
+`milestone2/capabilities.py` aggregates externally supplied component probes
+with `assess(required, optional, manifests, health)`: unhealthy required
+capabilities report `blocked`, unhealthy optional ones report `degraded`
+with an explicit list, and anything else is `ready`. Unknown capabilities
+raise instead of falling back to prompt permission, and `disabled` manifests
+are never admitted even when their probe is healthy. Every active provider
+declares the same logical request/result fields for its advertised
+operation; a provider-specific field may be optional but cannot silently
+replace a canonical one.
+
+`python -m milestone2.capabilities doctor` reads component-owned JSON probe
+results from explicit files (or stdin with `--probes -`) and emits one
+machine-readable aggregate plus a concise text view. It never prints
+credentials and never calls paid model providers. `milestone2/program.py`
+calls `assess` before setting the first wave to `todo`: `blocked` leaves all
+children in backlog (exit 2), while `degraded` is stored in the parent
+authorization document and child context and may start because every
+unavailable capability is optional.
+
 Examples:
 
 ```text

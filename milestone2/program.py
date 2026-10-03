@@ -20,6 +20,7 @@ from urllib.error import URLError
 from milestone0.scripts.paperclip_admission import ApiError, Client
 from milestone1.paperclip_policy import program_agent_id
 from milestone1.validate_contracts import validate_self_enhancement
+from milestone2.capabilities import DEFAULT_MANIFESTS, assess, load_manifests, read_probes
 from milestone2.task import preflight as task_preflight
 from milestone2.task import read_object, text, uuid
 
@@ -129,7 +130,7 @@ def _validated_program(program, *, now):
     return program
 
 
-def build_submission(state, workflow, program, *, start=False, now=None):
+def build_submission(state, workflow, program, *, start=False, now=None, health=None, capability_manifests=None):
     """Build every Paperclip payload without network or filesystem writes."""
     now = now or datetime.now(timezone.utc)
     owner = _owner_user_id(state)
@@ -156,7 +157,15 @@ def build_submission(state, workflow, program, *, start=False, now=None):
         )
     if start and any(decision["execution_mode"] == "read_only" for decision in decisions.values()):
         raise ValueError("refusing --start: a read-only program must not allocate an agent runtime or workspace")
+    admission = None
+    if health is not None:
+        manifests = capability_manifests if capability_manifests is not None else load_manifests(DEFAULT_MANIFESTS)
+        required = sorted({capability for wave in program["waves"] for capability in wave["required_capabilities"]})
+        optional = sorted({capability for wave in program["waves"] for capability in wave["optional_capabilities"]} - set(required))
+        admission = assess(required, optional, manifests, health)
     authorization_document = {"program": program, "digest": digest}
+    if admission is not None:
+        authorization_document["admission"] = admission
     parent = {
         "title": text(parent_title(program), "title", 200),
         "description": text(
@@ -182,17 +191,18 @@ def build_submission(state, workflow, program, *, start=False, now=None):
     }
     children = []
     for wave in program["waves"]:
+        description = (
+            f"Self-enhancement wave '{wave['id']}' of program {program['program_id']} "
+            f"(request {program['request_key']}).\n"
+            f"Authorization digest sha256:{digest}.\n"
+            f"Verification profile: {wave['verification_profile']}."
+        )
+        if admission is not None and admission["status"] == "degraded" and admission["unavailable_optional"]:
+            description += f"\nDegraded optional capabilities: {', '.join(admission['unavailable_optional'])}."
         children.append(
             {
                 "title": text(wave_title(program, wave), "title", 200),
-                "description": text(
-                    f"Self-enhancement wave '{wave['id']}' of program {program['program_id']} "
-                    f"(request {program['request_key']}).\n"
-                    f"Authorization digest sha256:{digest}.\n"
-                    f"Verification profile: {wave['verification_profile']}.",
-                    "description",
-                    200_000,
-                ),
+                "description": text(description, "description", 200_000),
                 "idempotencyKey": text(wave_request_key(program, wave), "requestKey", 255),
                 "projectId": project_id,
                 "status": "backlog",
@@ -208,6 +218,7 @@ def build_submission(state, workflow, program, *, start=False, now=None):
         "digest": digest,
         "policy": policy,
         "decisions": decisions,
+        "admission": admission,
         "parent": parent,
         "authorizationDocument": authorization_document,
         "receipt": receipt,
@@ -221,7 +232,8 @@ def _check_replay(label, expected, actual, fields):
             raise ValueError(f"replay conflict on {label}: field {field} differs; refusing to overwrite")
 
 
-def submit_program(client, company_id, state, workflow, program, *, start=False, now=None):
+def submit_program(client, company_id, state, workflow, program, *, start=False, now=None,
+                   health=None, capability_manifests=None):
     """Idempotently create one parent plus four dependency-ordered children.
 
     Every write uses a stable idempotency key, document content, or
@@ -230,10 +242,16 @@ def submit_program(client, company_id, state, workflow, program, *, start=False,
     accepting an existing object on replay, its project, parent, title,
     request key, document digest, blockers, and policy are compared; a
     conflict stops and is never overwritten.
+
+    When component health is supplied, admission is assessed before dispatch:
+    ``blocked`` leaves all children in backlog (the caller maps this to exit
+    2); ``degraded`` is stored in the authorization document and child
+    context and may start because every unavailable capability is optional.
     """
     now = now or datetime.now(timezone.utc)
     company_id = uuid(company_id, "companyId")
-    plan = build_submission(state, workflow, program, start=start, now=now)
+    plan = build_submission(state, workflow, program, start=start, now=now,
+                            health=health, capability_manifests=capability_manifests)
     task_preflight(client, company_id, plan["parent"], start=False)
 
     _, parent = client.request("POST", f"/api/companies/{company_id}/issues", plan["parent"], expected=(200, 201))
@@ -270,12 +288,14 @@ def submit_program(client, company_id, state, workflow, program, *, start=False,
 
     if start:
         _, first = client.request("GET", f"/api/issues/{child_ids[0]}")
-        if first.get("status") != "todo":
+        admission = plan["admission"]
+        if first.get("status") != "todo" and (admission is None or admission["status"] != "blocked"):
             client.request("PATCH", f"/api/issues/{child_ids[0]}", {"status": "todo"}, expected=(200,))
 
     return {
         "parentId": parent_id,
         "digest": plan["digest"],
+        "admission": plan["admission"],
         "parentUrlPath": f"/api/issues/{parent_id}",
         "authorizationDocumentRevision": revision,
         "waves": [
@@ -348,6 +368,8 @@ def main(argv=None):
     submit.add_argument("--start", action="store_true", help="set the first unblocked wave to todo; agents must already be active")
     submit.add_argument("--dry-run", action="store_true", help="validate and show payloads without network or filesystem writes")
     submit.add_argument("--output", default=None, help="atomically write the submission receipt JSON here")
+    submit.add_argument("--health", default=None, help="component probe results JSON for admission gating (doctor --output)")
+    submit.add_argument("--manifests", default=str(DEFAULT_MANIFESTS), help="Git-owned capability provider manifests")
     status = commands.add_parser("status", help="show Paperclip's authoritative program status")
     status.add_argument("parent", help="parent program issue UUID")
     args = parser.parse_args(argv)
@@ -358,22 +380,31 @@ def main(argv=None):
         company_id = uuid(state.get("companyId"), "companyId")
         if args.command == "submit":
             workflow, program = read_object(args.workflow), read_object(args.program)
+            manifests = load_manifests(args.manifests)
+            health = read_probes(args.health, manifests) if args.health else None
             if args.dry_run:
-                plan = build_submission(state, workflow, program, start=args.start)
+                plan = build_submission(state, workflow, program, start=args.start,
+                                        health=health, capability_manifests=manifests)
                 print(json.dumps({**plan, "dryRun": True}, indent=2))
                 return 0
             base_url = text(state.get("baseUrl"), "baseUrl", 2048)
             board_key = text(state.get("boardApiKey"), "boardApiKey", 4096)
             client = Client(base_url, board_key)
-            result = submit_program(client, company_id, state, workflow, program, start=args.start)
+            result = submit_program(client, company_id, state, workflow, program, start=args.start,
+                                    health=health, capability_manifests=manifests)
             if args.output:
                 _atomic_write_json(args.output, result)
             if args.json:
                 print(json.dumps(result))
             else:
                 print(f"Program parent: {result['parentId']} (digest sha256:{result['digest']})")
+                if result["admission"] is not None:
+                    print(f"Admission: {result['admission']['status']}")
                 for row in result["waves"]:
                     print(f"  wave {row['wave']}: {row['id']}")
+            if args.start and result["admission"] is not None and result["admission"]["status"] == "blocked":
+                print("Admission is blocked: required capabilities are unhealthy; all waves left in backlog.", file=sys.stderr)
+                return 2
             return 0
         uuid(args.parent, "parent")
         client = Client(text(state.get("baseUrl"), "baseUrl", 2048), text(state.get("boardApiKey"), "boardApiKey", 4096))
