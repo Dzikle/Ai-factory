@@ -118,6 +118,8 @@ Every autonomous mechanism should have appropriate:
 
 ## Self-improvement rule
 
+Blind live self-modification remains prohibited. Governed self-hosted development is allowed when a current human authorization defines the repository, paths, actions, budgets, stop conditions, verification, independent review, publication boundary, and rollback. The running controller may not rewrite the live state that governs its own run.
+
 Self-improvement can identify opportunities, research alternatives, benchmark candidates, and propose canonical changes. It must not directly install privileged capabilities or mutate canonical infrastructure without the promotion process.
 
 Initial promotion flow:

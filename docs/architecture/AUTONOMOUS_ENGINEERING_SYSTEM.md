@@ -483,6 +483,8 @@ mistake
 
 ## 17. Self-improvement and reuse discovery
 
+Blind live self-modification remains prohibited. Governed self-hosted development is allowed when a current human authorization defines the repository, paths, actions, budgets, stop conditions, verification, independent review, publication boundary, and rollback. The running controller may not rewrite the live state that governs its own run.
+
 Self-improvement asks whether the process was unnecessarily expensive, slow, brittle, or custom.
 
 The Process Optimizer may identify:

@@ -78,6 +78,8 @@ overlapping system without a new evidence-backed decision record.
 - Do not build learned model routing before enough telemetry exists to evaluate it.
 - Do not implement autonomous self-modification in V1.
 
+Blind live self-modification remains prohibited. Governed self-hosted development is allowed when a current human authorization defines the repository, paths, actions, budgets, stop conditions, verification, independent review, publication boundary, and rollback. The running controller may not rewrite the live state that governs its own run.
+
 ## Existing deterministic commands
 
 Before composing manual Git/API/test commands, check these existing entry points

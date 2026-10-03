@@ -1,5 +1,7 @@
 """Offline cross-reference checks; Paperclip remains the runtime policy authority."""
 
+from datetime import datetime
+
 
 def check_consistency(vocabulary: dict, roles: dict, project: dict, skills: list[dict]) -> list[str]:
     """Report invalid policy references without creating or granting runtime profiles."""
@@ -120,4 +122,28 @@ def check_task_request(request: dict, vocabulary: dict, roles: dict, project: di
                 errors.append(f"task denies required skill capability {capability_id}")
             elif capability_id not in available:
                 errors.append(f"task cannot satisfy skill {skill_id} capability {capability_id}")
+    return errors
+
+
+def validate_self_enhancement(document: dict, *, now: datetime) -> list[str]:
+    """Validate relationships that JSON Schema cannot express by itself."""
+    errors: list[str] = []
+    authorization = document["authorization"]
+    expires = datetime.fromisoformat(authorization["expires_at"].replace("Z", "+00:00"))
+    if expires <= now:
+        errors.append("authorization expired")
+
+    wave_ids = [wave["id"] for wave in document["waves"]]
+    if len(wave_ids) != len(set(wave_ids)):
+        errors.append("wave IDs must be unique")
+    known = set(wave_ids)
+    allowed = set(authorization["allowed_actions"])
+    for wave in document["waves"]:
+        unknown = set(wave["blocked_by"]) - known
+        if unknown:
+            errors.append(f"wave {wave['id']} has unknown blockers: {sorted(unknown)}")
+        if wave["id"] in wave["blocked_by"]:
+            errors.append(f"wave {wave['id']} blocks itself")
+        if not set(wave["required_capabilities"]).issubset(allowed):
+            errors.append(f"wave {wave['id']} exceeds authorization")
     return errors

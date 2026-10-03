@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-factory.local/contracts/v1/self-enhancement.schema.json",
+  "title": "AI Factory governed self-enhancement contracts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "program_id", "request_key", "project_id", "repository_id", "intent", "scope_verb", "base_revision", "spec_path", "plan_path", "authorization", "waves"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "program_id": {"$ref": "#/$defs/identifier"},
+    "request_key": {"$ref": "#/$defs/identifier"},
+    "project_id": {"$ref": "#/$defs/identifier"},
+    "repository_id": {"$ref": "#/$defs/identifier"},
+    "intent": {"$ref": "#/$defs/identifier"},
+    "scope_verb": {"enum": ["implement", "verify", "review", "report", "maintain"]},
+    "base_revision": {"$ref": "#/$defs/sha1"},
+    "spec_path": {"$ref": "#/$defs/path"},
+    "plan_path": {"$ref": "#/$defs/path"},
+    "authorization": {"$ref": "#/$defs/authorization"},
+    "waves": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/wave"}}
+  },
+  "$defs": {
+    "identifier": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"},
+    "path": {"type": "string", "minLength": 1, "maxLength": 512, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._/-]+$"},
+    "action": {"type": "string", "minLength": 3, "maxLength": 96, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"},
+    "sha1": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "budget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["max_bytes", "max_tokens"],
+      "properties": {"max_bytes": {"type": "integer", "minimum": 1, "maximum": 10000000}, "max_tokens": {"type": "integer", "minimum": 1, "maximum": 1000000}}
+    },
+    "authorization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["allowed_paths", "allowed_actions", "remote_actions", "max_correction_rounds", "expires_at"],
+      "properties": {
+        "allowed_paths": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+        "allowed_actions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/action"}},
+        "remote_actions": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/action"}},
+        "max_correction_rounds": {"type": "integer", "minimum": 0, "maximum": 10},
+        "expires_at": {"$ref": "#/$defs/timestamp"}
+      }
+    },
+    "wave": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "size", "risk", "change_type", "required_capabilities", "optional_capabilities", "context_budget", "verification_profile", "knowledge_impact", "blocked_by"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "size": {"enum": ["small", "medium", "large"]},
+        "risk": {"enum": ["low", "normal", "high"]},
+        "change_type": {"enum": ["read_only", "documentation", "code", "policy", "mixed"]},
+        "required_capabilities": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/action"}},
+        "optional_capabilities": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/action"}},
+        "context_budget": {"$ref": "#/$defs/budget"},
+        "verification_profile": {"$ref": "#/$defs/identifier"},
+        "knowledge_impact": {"enum": ["none", "verify", "update"]},
+        "blocked_by": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}}
+      }
+    },
+    "capability_health": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capability", "provider", "status", "checked_at"],
+      "properties": {"capability": {"$ref": "#/$defs/action"}, "provider": {"$ref": "#/$defs/identifier"}, "status": {"enum": ["healthy", "unhealthy", "unknown"]}, "checked_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "verification_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["profile", "candidate_commit", "checks"],
+      "properties": {"profile": {"$ref": "#/$defs/identifier"}, "candidate_commit": {"$ref": "#/$defs/sha1"}, "checks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/identifier"}}}
+    },
+    "verification_digest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate_commit", "status", "sha256"],
+      "properties": {"candidate_commit": {"$ref": "#/$defs/sha1"}, "status": {"enum": ["passed", "failed", "divergent"]}, "sha256": {"$ref": "#/$defs/sha256"}}
+    },
+    "deferred_finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["project_id", "summary", "origin_task_ids", "fingerprint"],
+      "properties": {"project_id": {"$ref": "#/$defs/identifier"}, "summary": {"type": "string", "minLength": 1, "maxLength": 2000}, "origin_task_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}}, "fingerprint": {"$ref": "#/$defs/sha256"}}
+    },
+    "outcome_report": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate_commit", "candidate_tree", "status", "authorization_digest"],
+      "properties": {"candidate_commit": {"$ref": "#/$defs/sha1"}, "candidate_tree": {"$ref": "#/$defs/sha1"}, "status": {"enum": ["accepted", "blocked", "failed"]}, "authorization_digest": {"$ref": "#/$defs/sha256"}}
+    },
+    "knowledge_patch": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "expected_sha256", "old_text", "new_text"],
+      "properties": {"path": {"$ref": "#/$defs/path"}, "expected_sha256": {"$ref": "#/$defs/sha256"}, "old_text": {"type": "string", "minLength": 1, "maxLength": 100000}, "new_text": {"type": "string", "maxLength": 100000}}
+    },
+    "resource_record": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "owner_task_id", "path", "expires_at", "referenced", "protected"],
+      "properties": {"id": {"$ref": "#/$defs/identifier"}, "owner_task_id": {"$ref": "#/$defs/identifier"}, "path": {"$ref": "#/$defs/path"}, "expires_at": {"$ref": "#/$defs/timestamp"}, "referenced": {"type": "boolean"}, "protected": {"type": "boolean"}}
+    },
+    "knowledge_source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "authority", "access", "max_result_bytes", "degradation"],
+      "properties": {"id": {"$ref": "#/$defs/identifier"}, "authority": {"enum": ["canonical", "operational", "historical", "projection"]}, "access": {"enum": ["read", "write", "read_write"]}, "max_result_bytes": {"type": "integer", "minimum": 1, "maximum": 10000000}, "degradation": {"enum": ["required", "optional_unavailable"]}}
+    }
+  }
+}

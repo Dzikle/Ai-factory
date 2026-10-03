@@ -1,0 +1,43 @@
+schema_version: 1
+policy_id: self-enhancement-v1
+waves:
+  - id: orchestration
+    size: large
+    risk: normal
+    change_type: code
+    required_capabilities: [repo.read, repo.write, git.read, git.diff.read, validation.run, artifact.write]
+    optional_capabilities: []
+    context_budget: {max_bytes: 48000, max_tokens: 12000}
+    verification_profile: ai-factory-full
+    knowledge_impact: update
+    blocked_by: []
+  - id: context-knowledge
+    size: large
+    risk: normal
+    change_type: code
+    required_capabilities: [repo.read, repo.write, git.read, validation.run, knowledge.search, artifact.write]
+    optional_capabilities: [memory.search]
+    context_budget: {max_bytes: 48000, max_tokens: 12000}
+    verification_profile: ai-factory-full
+    knowledge_impact: update
+    blocked_by: [orchestration]
+  - id: verification-delivery
+    size: large
+    risk: high
+    change_type: code
+    required_capabilities: [repo.read, repo.write, git.read, git.diff.read, validation.run, artifact.write]
+    optional_capabilities: []
+    context_budget: {max_bytes: 40000, max_tokens: 10000}
+    verification_profile: ai-factory-full
+    knowledge_impact: update
+    blocked_by: [context-knowledge]
+  - id: continuous-operation
+    size: large
+    risk: high
+    change_type: mixed
+    required_capabilities: [repo.read, repo.write, git.read, git.diff.read, validation.run, artifact.write]
+    optional_capabilities: [knowledge.search, memory.search]
+    context_budget: {max_bytes: 40000, max_tokens: 10000}
+    verification_profile: ai-factory-full
+    knowledge_impact: update
+    blocked_by: [verification-delivery]

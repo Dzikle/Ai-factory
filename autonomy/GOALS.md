@@ -86,6 +86,8 @@ A coding task must be able to lose its active model/session and later continue c
 
 ## Explicit V1 non-goals
 
+Blind live self-modification remains prohibited. Governed self-hosted development is allowed when a current human authorization defines the repository, paths, actions, budgets, stop conditions, verification, independent review, publication boundary, and rollback. The running controller may not rewrite the live state that governs its own run.
+
 Do not attempt to build these before the core loop is reliable:
 
 - autonomous self-modification;
