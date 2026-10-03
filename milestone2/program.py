@@ -21,7 +21,7 @@ from milestone0.scripts.paperclip_admission import ApiError, Client
 from milestone1.paperclip_policy import program_agent_id
 from milestone1.validate_contracts import validate_self_enhancement
 from milestone2.capabilities import DEFAULT_MANIFESTS, assess, load_manifests, read_probes
-from milestone2.outcome_report import validate_outcome_report
+from milestone2.outcome_report import render_markdown, validate_outcome_report
 from milestone2.task import preflight as task_preflight
 from milestone2.task import read_object, text, uuid
 from milestone3.verification import validate_contract as validate_verification_contract
@@ -406,6 +406,15 @@ def store_outcome(client, parent_id, outcome):
     return {"document": "outcome", "revisionId": document.get("revisionId")}
 
 
+def build_program_report(client, parent_id, company_id):
+    """Project the stored outcome report; lineage comes from the record."""
+    status = read_program_status(client, parent_id, company_id)
+    _, document = client.request("GET", f"/api/issues/{parent_id}/documents/outcome")
+    outcome = (document.get("content") or {}) if isinstance(document, dict) else {}
+    validate_outcome_report(outcome)
+    return {"status": status, "outcome": outcome, "markdown": render_markdown(outcome)}
+
+
 def _atomic_write_json(path, value):
     target = Path(path)
     tmp = target.with_name(f"{target.name}.tmp-{os.getpid()}")
@@ -431,12 +440,19 @@ def main(argv=None):
                         help="build one bounded local-Git evidence pack per wave and store it before that child starts")
     status = commands.add_parser("status", help="show Paperclip's authoritative program status")
     status.add_argument("parent", help="parent program issue UUID")
+    report = commands.add_parser("report", help="render the stored program outcome report as Markdown")
+    report.add_argument("parent", help="parent program issue UUID")
+    report.add_argument("--output", default=None, help="write the Markdown report here instead of stdout")
     args = parser.parse_args(argv)
     try:
-        if not args.state:
-            raise ValueError("Set AIF_PAPERCLIP_STATE or pass --state with the private board state file")
-        state = read_object(args.state)
-        company_id = uuid(state.get("companyId"), "companyId")
+        if args.command == "submit" and args.dry_run and not args.state:
+            state = {"userId": "dry-run-operator", "companyId": "00000000-0000-0000-0000-000000000000"}
+            company_id = state["companyId"]
+        else:
+            if not args.state:
+                raise ValueError("Set AIF_PAPERCLIP_STATE or pass --state with the private board state file")
+            state = read_object(args.state)
+            company_id = uuid(state.get("companyId"), "companyId")
         if args.command == "submit":
             workflow, program = read_object(args.workflow), read_object(args.program)
             manifests = load_manifests(args.manifests)
@@ -478,13 +494,20 @@ def main(argv=None):
             return 0
         uuid(args.parent, "parent")
         client = Client(text(state.get("baseUrl"), "baseUrl", 2048), text(state.get("boardApiKey"), "boardApiKey", 4096))
-        report = read_program_status(client, args.parent, company_id)
-        if args.json:
-            print(json.dumps(report))
+        if args.command == "status":
+            report = read_program_status(client, args.parent, company_id)
+            if args.json:
+                print(json.dumps(report))
+            else:
+                print(f"Program parent: {report['parentId']} — {report['status']}")
+                for row in report["waves"]:
+                    print(f"  {row['identifier'] or row['id']} — {row['status']} (blocked by {len(row['blockedByIssueIds'])})")
+            return 0
+        built = build_program_report(client, args.parent, company_id)
+        if args.output:
+            Path(args.output).write_text(built["markdown"], encoding="utf-8")
         else:
-            print(f"Program parent: {report['parentId']} — {report['status']}")
-            for row in report["waves"]:
-                print(f"  {row['identifier'] or row['id']} — {row['status']} (blocked by {len(row['blockedByIssueIds'])})")
+            print(built["markdown"])
         return 0
     except ApiError as error:
         print(f"Paperclip API returned {error.status}; no automatic retry. Resubmit with the same program requestKey.", file=sys.stderr)

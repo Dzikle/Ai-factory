@@ -6,9 +6,11 @@ carry freshness and authority labels, citations, budgets, explicit unknowns,
 and a digest, and never fabricate evidence for unavailable sources.
 """
 
+import argparse
 import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Protocol
 
@@ -225,3 +227,33 @@ def default_wave_request(program, wave, *, project_id="ai-factory"):
              "max_hits": 8, "max_bytes": min(budget["max_bytes"], 48000), "required": True},
         ],
     }
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    evidence = commands.add_parser("evidence", help="build one bounded local-Git evidence pack for a program wave")
+    evidence.add_argument("--root", default=".", help="local Git checkout to read (no writes, no network)")
+    evidence.add_argument("--program", required=True, help="validated self-enhancement program JSON")
+    evidence.add_argument("--wave", required=True, help="wave ID to build the pack for")
+    evidence.add_argument("--output", default=None, help="write the pack JSON here instead of stdout")
+    args = parser.parse_args(argv)
+    try:
+        program = json.loads(Path(args.program).read_text(encoding="utf-8-sig"))
+        waves = {wave["id"]: wave for wave in program.get("waves", [])}
+        if args.wave not in waves:
+            raise ValueError(f"unknown wave: {args.wave!r}")
+        adapter = GitFileAdapter(args.root, project_id=program.get("project_id", "ai-factory"))
+        pack = build_evidence_pack(default_wave_request(program, waves[args.wave]), {"git": adapter})
+        if args.output:
+            Path(args.output).write_text(json.dumps(pack, indent=2) + "\n", encoding="utf-8")
+        else:
+            print(json.dumps(pack, indent=2))
+        return 0
+    except (ValueError, EvidenceUnavailable) as error:
+        print(str(error), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

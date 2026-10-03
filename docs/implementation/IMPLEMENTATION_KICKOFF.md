@@ -771,6 +771,42 @@ workflow truth, silently bypasses MCP governance, treats memory/projection as
 current truth, or cannot replace any selected dependency through its documented
 adapter/restore path.
 
+## 10. Governed self-hosted development — V1 self-enhancement lifecycle (2026-10-03)
+
+The approved design (`docs/superpowers/specs/2026-10-03-self-enhancement-lifecycle-design.md`)
+and plan (`docs/superpowers/plans/2026-10-03-v1-self-enhancement-lifecycle.md`)
+extend the accepted trusted-local V1 so one owner-authorized program can
+implement, verify, review, report, and measure AI Factory enhancements without
+repeated approval at every internal stage. This does not reopen the accepted
+M0–M4 roadmap and does not claim production readiness, automatic
+merge/deployment, or a second source of task/workflow truth.
+
+What changed: one versioned contract schema plus a four-wave policy
+(`autonomy/contracts/v1/self-enhancement.schema.json`,
+`autonomy/policies/self-enhancement.v1.yaml`); one-authorization program
+submission with idempotent replay (`milestone2/program.py`,
+`milestone2/tasks/self-enhancement-program.json`); capability admission and
+diagnostics (`milestone2/capabilities.py`,
+`autonomy/capabilities/providers.v1.yaml`); bounded evidence packs
+(`milestone3/context.py`, `autonomy/knowledge/sources.v1.yaml`);
+verification contracts, digests, and outcome reports
+(`milestone3/verification.py`, `milestone2/outcome_report.py`,
+`autonomy/evals/verification.v1.json`); safe maintenance and retrieval
+regression (`milestone3/maintenance.py`, retrieval-eval schema v2); six
+canonical operational skills (`autonomy/skills/*`); and one discoverable CLI
+surface across the owning modules. Blind live self-modification remains
+prohibited; governed self-hosted development is allowed only under a current
+human authorization as now stated in `AGENTS.md`, `autonomy/GOALS.md`,
+`autonomy/GOVERNANCE.md`, and
+`docs/architecture/AUTONOMOUS_ENGINEERING_SYSTEM.md`.
+
+Bootstrap evidence: [`milestone4/results/self-enhancement-v1-20261003.json`](../../milestone4/results/self-enhancement-v1-20261003.json)
+records the exact source revision, per-task commits, offline test counts with
+RED/GREEN evidence, and remaining live-proof limitations. The live current-V1
+bootstrap issue, deterministic Validator, independent Reviewer, QA, the single
+final owner integration approval, and the successor-V1 canary in a
+disposable/test project remain authoritative and are not claimed here.
+
 ## 9. Explicit post-V1 deferrals
 
 - autonomous canonical self-modification;

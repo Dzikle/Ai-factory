@@ -797,3 +797,30 @@ Behavior:
 - `status` reads Paperclip's authoritative parent/child state and rejects
   cross-company rows, more than eight children, duplicate IDs, unexpected
   child titles, or a missing authorization document/digest.
+- `report PARENT --output outcome.md` renders the stored program outcome
+  report as Markdown after validating its fields and candidate lineage.
+
+## Whole-lifecycle command sequence
+
+Each lifecycle operation lives on its owning module; there is no second
+all-powerful CLI. `AIF_PAPERCLIP_STATE` already points to the current
+private operator state, and `.milestone0/self-enhancement/workflow.json`
+contains the admitted current V1 project and distinct agent IDs. Both are
+ignored local inputs prepared once by the current operator, not additional
+approval steps, and neither may enter Git or a runtime workspace.
+
+```powershell
+New-Item -ItemType Directory -Force -Path '.milestone0/self-enhancement' | Out-Null
+python -m milestone2.capabilities doctor --output .milestone0/self-enhancement/health.json
+python -m milestone2.program submit --workflow .milestone0/self-enhancement/workflow.json --program milestone2/tasks/self-enhancement-program.json --health .milestone0/self-enhancement/health.json --output .milestone0/self-enhancement/submission.json --start
+$program = Get-Content -Raw -LiteralPath '.milestone0/self-enhancement/submission.json' | ConvertFrom-Json
+python -m milestone2.program status $program.parentId
+python -m milestone2.program report $program.parentId --output .milestone0/self-enhancement/outcome.md
+python -m milestone3.check
+```
+
+Supporting reads stay on their owners: `python -m milestone3.context
+evidence --program ... --wave ...` builds one bounded local-Git evidence
+pack; `python -m milestone3.verification verify --contract ... --root ...`
+executes a contract to a compact digest; `python -m milestone3.maintenance
+maintenance-preview --root ... --patch ...` dry-runs a knowledge patch.

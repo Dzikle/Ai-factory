@@ -7,10 +7,12 @@ working directories, duplicate check IDs, over-long timeouts, and
 environment values outside an explicit allowlist.
 """
 
+import argparse
 import hashlib
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -173,3 +175,28 @@ def check_progression(wave_ids, digests_by_wave):
             errors.append(f"wave {wave_id} cannot progress: {'; '.join(blockers)}")
             break
     return errors
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    verify = commands.add_parser("verify", help="execute a validated contract and print the compact digest")
+    verify.add_argument("--contract", required=True, help="verification contract JSON file")
+    verify.add_argument("--root", default=".", help="working-tree root the checks run in")
+    verify.add_argument("--output", default=None, help="write the digest JSON here instead of stdout")
+    args = parser.parse_args(argv)
+    try:
+        contract = json.loads(Path(args.contract).read_text(encoding="utf-8-sig"))
+        digest = run_contract(contract, args.root)
+        if args.output:
+            Path(args.output).write_text(json.dumps(digest, indent=2) + "\n", encoding="utf-8")
+        else:
+            print(json.dumps(digest, indent=2))
+        return 0 if not digest_acceptance(digest) else 2
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

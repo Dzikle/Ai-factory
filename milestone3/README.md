@@ -85,6 +85,26 @@ even if that successor is later superseded. Metadata projection is rebuildable
 from each primary drawer; replay writes the same document, without a cursor DB.
 Retention/review dates suppress retrieval; automated pruning is not implemented.
 
+## Self-enhancement lifecycle commands (V1)
+
+Bounded context, verification, and maintenance operations live on their
+owning modules; each is offline-safe unless stated otherwise.
+
+```powershell
+PYTHONPATH=/paperclip/m1-python-libs:$PWD python3 -m milestone3.context evidence --root . --program milestone2/tasks/self-enhancement-program.json --wave orchestration
+PYTHONPATH=/paperclip/m1-python-libs:$PWD python3 -m milestone3.verification verify --contract .milestone0/self-enhancement/contract.json --root .
+PYTHONPATH=/paperclip/m1-python-libs:$PWD python3 -m milestone3.maintenance maintenance-preview --root . --patch .milestone0/self-enhancement/patch.json
+PYTHONPATH=/paperclip/m1-python-libs:$PWD python3 -m milestone3.check
+```
+
+`evidence` reads only the local Git checkout through bounded queries and
+budgets. `verify` executes a validated contract (shell strings, absolute or
+escaping working directories, duplicate check IDs, over-long timeouts, and
+non-allowlisted environment values are rejected) and prints a compact digest
+carrying hashes and excerpts, never full raw logs. `maintenance-preview`
+dry-runs a knowledge patch: stale hashes and out-of-root targets are
+rejected before anything is written.
+
 ## Evidence — 2026-09-28
 
 - Existing production MemPalace 3.9.0 image and offline embeddinggemma q8 cache

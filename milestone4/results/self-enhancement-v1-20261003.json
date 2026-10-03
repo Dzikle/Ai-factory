@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "program": "ai-factory-self-enhancement-v1",
+  "recordedAt": "2026-10-03T00:00:00Z",
+  "note": "Bootstrap Developer evidence for AIF-61. Offline implementation and verification only; live submission, independent gates, and the successor canary remain for their authoritative stages. recordedAt is the evidence-file date, not a measured run timestamp.",
+  "baseGitHead": "4c9a5eb2a7345a8b66751369ca9b3bbf2bac54ac",
+  "taskCommits": {
+    "task1_contracts": "30c46dd3056abecdcaddc8acc8a8bff573a2d2df",
+    "task2_program": "dda5d785d8e7825c7c26f384a9ee94da9bc4144d",
+    "task3_capabilities": "c4bbde52edb3a0d2045337eb74c8873154a156fc",
+    "task4_evidence": "aebe2c4e54b2f3a59494e41ef185efc0984bfa46",
+    "task5_verification": "a875d7a606af63b4237da23fb892c35ac4840215",
+    "task6_maintenance": "92be42c6acbf0ff780f500de219f7c2920814a0f",
+    "task7_skills": "4620acf85c6375c29ab6d529f3aaad96ed0159a3"
+  },
+  "fixCommits": {
+    "overlay_schema": "7c370f0038062d3e98c6cf57bd69c20206d7da31",
+    "program_indent": "73be7648222a5145a6a8ab80b487b5d0d65f5530"
+  },
+  "redGreenEvidence": {
+    "task1": "Focused suite failed before the schema/validator existed (RED); 6/6 contract tests pass after (GREEN).",
+    "task2": "tests.test_program failed with ModuleNotFoundError: milestone2.program (RED); 8/8 pass after, including 9 interruption-replay convergences (GREEN).",
+    "task3": "tests.test_capabilities failed at import (RED); 6/6 pass after (GREEN).",
+    "task4": "tests.test_context failed at import (RED); 3/3 pass after, plus program evidence persistence/replay (GREEN).",
+    "task5": "tests.test_verification and tests.test_outcome_report failed at import (RED); 10/10 pass after (GREEN).",
+    "task6": "tests.test_maintenance failed at import (RED); 5/5 pass after; retrieval v2 additions pass with v1 reports unchanged (GREEN).",
+    "task7": "tests.test_operational_skills failed on missing packages (RED); 3/3 pass after (GREEN).",
+    "task8": "tests.test_self_enhancement_cli failed on missing report command and stateful dry-run (RED); 3/3 pass after (GREEN)."
+  },
+  "offlineGates": {
+    "python": "python -m milestone3.check in PYTHONPATH=/paperclip/m1-python-libs:$PWD: 258 tests, OK, 2 opt-in live tests skipped",
+    "node": "node --test over the plan fixture files: 38 tests, 29 pass, 0 fail, 9 skipped (disposable-container validator integration cases requiring AIF_VALIDATOR_INTEGRATION=1)"
+  },
+  "rulings": [
+    "Prior read-only-git diagnosis was a bad probe (.git is a file pointer in this worktree); commits succeed normally from inside the worktree. No controller checkout was touched.",
+    "Task 4 originally added evidence_sources to the project overlay; the overlay schema is strict (additionalProperties false), so the hunk was reverted in a fix commit. Evidence source contracts live only in autonomy/knowledge/sources.v1.yaml.",
+    "Evidence budgeting uses two passes (collect, prefer canonical/current, then cap) instead of the plan sketch's inline cap, to honor the spec's canonical-preference rule under binding budgets.",
+    "milestone1/paperclip_policy.py gained only a public program_agent_id alias; engineering_execution_policy is unchanged.",
+    "submit --dry-run works without operator state under an explicit dry-run-operator identity and performs no network or filesystem writes; real submission still requires the private operator state.",
+    "Retrieval-eval v2 gates passesThresholds only on the original three threshold keys plus any explicitly present maxAuthorityViolations/maxMissingCitations, so the committed v2 suite keeps its existing live gate while reporting the new signals.",
+    "manifest base_revision records the Task-1 HEAD (the committed revision when the manifest was created), per the plan."
+  ],
+  "usage": "unknown",
+  "limitations": [
+    "No live Paperclip submission was performed from this environment: no operator state/credentials are available here, and push/merge/publish/deploy remain out of scope for this stage.",
+    "The successor-V1 canary (disposable/test project: parent/children/blockers, degradation, replay, identity drift, reproducible report, quarantine-only cleanup) must run after approved integration, without publication or deployment.",
+    "Deterministic Validator, independent Reviewer, QA, and the single final owner integration approval remain authoritative and are not claimed.",
+    "No cost/usage telemetry was measured; usage stays unknown and no savings are claimed."
+  ]
+}

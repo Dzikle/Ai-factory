@@ -6,9 +6,11 @@ cleanup only quarantines expired, unreferenced, factory-owned resources and
 never recursively deletes.
 """
 
+import argparse
 import hashlib
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -161,3 +163,24 @@ def quarantine_resources(owned_root, records):
     (yard / "manifest.json").write_text(json.dumps({"digest": digest, "moved": moved}, indent=2) + "\n",
                                          encoding="utf-8")
     return {"digest": digest, "directory": str(yard), "moved": moved}
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    preview = commands.add_parser("maintenance-preview",
+                                  help="dry-run a knowledge patch without writing anything")
+    preview.add_argument("--root", required=True, help="assigned workspace root the patch must stay inside")
+    preview.add_argument("--patch", required=True, help="patch JSON with path, expected_sha256, old_text, new_text")
+    args = parser.parse_args(argv)
+    try:
+        patch = json.loads(Path(args.patch).read_text(encoding="utf-8-sig"))
+        print(json.dumps(preview_patch(args.root, patch), indent=2))
+        return 0
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

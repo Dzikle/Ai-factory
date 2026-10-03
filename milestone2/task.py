@@ -103,12 +103,18 @@ def main(argv=None):
     submit.add_argument("--task", required=True, help="title, description and stable requestKey JSON")
     submit.add_argument("--start", action="store_true", help="create a todo task for native dispatch; selected agents must already be active")
     submit.add_argument("--dry-run", action="store_true", help="show the payload without contacting Paperclip")
+    submit.add_argument("--program-note", action="store_true",
+                        help="print a pointer to milestone2.program for one-authorization multi-wave programs")
     status = commands.add_parser("status", help="show Paperclip's authoritative task progress")
     status.add_argument("issue", help="issue UUID or identifier, e.g. AIF-47")
     scorecard = commands.add_parser("scorecard", help="read native task quality, timings and usage coverage; no writes")
     scorecard.add_argument("issue", help="issue UUID or identifier, e.g. AIF-49")
     args = parser.parse_args(argv)
     try:
+        if args.command == "submit" and args.program_note:
+            print("For one-authorization self-enhancement programs "
+                  "(one parent, four dependency-ordered waves), use python -m milestone2.program submit --help")
+            return 0
         if not args.state:
             raise ValueError("Set AIF_PAPERCLIP_STATE or pass --state with the private board state file")
         state = read_object(args.state)
