@@ -1,8 +1,11 @@
-# AIF-58 — ready for owner integration approval
+# AIF-58 — owner-approved fix pushed
 
 The factory's native OpenCode Developer produced the correction; fresh Validator,
 native OpenCode Reviewer and independent QA approved the same committed candidate.
-The dispatcher repair supplied no website code. No website merge/push/deployment.
+The dispatcher repair supplied no website code. On 2026-10-03 the owner explicitly
+approved pushing this website fix. It is published as
+[`1a8a824379d92c9701c3fcf67756f0cc071fc925`](https://github.com/Dzikle/licitacija.mk/commit/1a8a824379d92c9701c3fcf67756f0cc071fc925)
+on `fix/aif-58-mobile-import-help`. No production/stage merge or deployment.
 
 Candidate: `b7d35ccc67437a28d43446e6e88894e200920c63`; tree:
 `9b5af0234779dfb6c030c462516acc19fff8705b`; snapshot base:
@@ -42,8 +45,15 @@ but mocked HTTP/auth. They do not claim a full backend or production-site test.
 ## Integration boundary
 
 Two ordered, generated [patches](patches/) preserve the Developer's initial fix
-and follow-up allowlist correction. They are review artifacts, not approval to
-apply them. The user's licitacija.mk checkout has unrelated existing changes:
-inspect patch applicability there, preserve those changes and do not transplant
-the partial snapshot as the repository's new root. Paperclip AIF-58 stays at
-the human approval stage until the owner explicitly approves integration.
+and follow-up allowlist correction. Publication applied only these changes to
+the existing full repository, parent `e9d94a8638baffbeae1fb406837f40bb42f0451e`;
+the partial snapshot was not transplanted as a new repository root. A temporary
+Git index preserved the user's checkout, unrelated edits and unpublished market
+commit. Mixed patch context line endings were handled with Git's
+`--ignore-space-change`; all four resulting files match the saved native candidate
+after line-ending normalization. Fresh browser checks on the exact exported
+integration tree passed **5/5**, plus JS syntax and actual diff whitespace checks.
+
+Paperclip's controller was stopped when publishing. Owner approval is recorded
+here from the explicit chat authorization; the live task's approval receipt has
+not been updated. No controller restart or task-state SQL mutation was performed.

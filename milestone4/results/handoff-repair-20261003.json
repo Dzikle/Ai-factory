@@ -53,7 +53,7 @@
     "candidate": "b7d35ccc67437a28d43446e6e88894e200920c63",
     "tree": "9b5af0234779dfb6c030c462516acc19fff8705b",
     "preflightBrowserTests": "5/5 PASS; not factory QA approval",
-    "status": "OWNER_INTEGRATION_APPROVAL_WAIT",
+    "status": "OWNER_APPROVED_FIX_PUSHED",
     "freshValidator": {
       "runId": "df8b49c5-3c76-43ec-bf8b-435683c62d6c",
       "result": "5/5 PASS",
@@ -97,7 +97,21 @@
     },
     "scopeLimit": "Credential-free partial frontend snapshot with real browser/template/CSS/JS and mocked HTTP/auth; not a full backend/production-site test",
     "patches": "licitacija-help-20261003/patches/",
-    "ownerIntegrationApproved": false,
+    "ownerIntegrationApproved": true,
+    "publication": {
+      "repository": "Dzikle/licitacija.mk",
+      "branch": "fix/aif-58-mobile-import-help",
+      "commit": "1a8a824379d92c9701c3fcf67756f0cc071fc925",
+      "tree": "18ae2df78fb96ac75b800344883169e220dc146d",
+      "parent": "e9d94a8638baffbeae1fb406837f40bb42f0451e",
+      "url": "https://github.com/Dzikle/licitacija.mk/commit/1a8a824379d92c9701c3fcf67756f0cc071fc925",
+      "ownerApproval": "Explicit chat authorization to push the website fix on 2026-10-03",
+      "freshIntegrationBrowserChecks": "5/5 PASS on exported exact target tree; JavaScript syntax and actual candidate diff whitespace checks PASS",
+      "candidateEquivalence": "All four files match saved native candidate after line-ending normalization; git apply --ignore-space-change handled mixed exported context line endings",
+      "unrelatedChanges": "Original checkout, index and unpublished c1fa8bd market commit preserved; not included in push",
+      "paperclipApprovalReceipt": "Not recorded live: controller was stopped; not restarted for this push, no task-state SQL writes",
+      "productionOrStageDeploymentTriggered": false
+    },
     "mergedOrDeployed": false,
     "costCompleteness": "UNKNOWN_OR_PARTIAL; no claimed saving"
   }

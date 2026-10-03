@@ -47,7 +47,7 @@ dependencies:
       image: "ghcr.io/dzikle/paperclip@sha256:c0d8fe5a94d7cabd475f149b10d7d7444ce003740aeefc0b03e40a6a41199dbf"
       amd64_manifest: "sha256:d484a108e23454c407e3d507a08ab6206a67629123d24a2644878492f4092fa8"
       workflow: "https://github.com/Dzikle/paperclip/actions/runs/37099994316"
-      status: "DEPLOYED; AIF-58 fresh Validator/native Reviewer/QA PASS, awaiting owner integration approval; no new milestone or production acceptance"
+      status: "DEPLOYED; AIF-58 fresh Validator/native Reviewer/QA PASS; owner-approved website fix pushed as licitacija.mk 1a8a824 on fix/aif-58-mobile-import-help (not deployed); no new milestone or production acceptance"
       schema: "PostgreSQL 17.11 / Drizzle 283|1790018362070 unchanged; seven authority-table hashes unchanged on cutover"
       runtime_versions: "Node 24.21.0; OpenCode 1.18.33"
       validation: "Normal multiarch production build and PID-1 gate PASS; cutover preserved seven authority tables/schema. Six focused suites 243/243 PASS and server TypeScript check PASS; independent review has no remaining findings. Deployed DISAAAA-1 process correction loop PASS without model calls/manual wakes. AIF-58 exact b7d35cc candidate: fresh Validator 5/5, native OpenCode Reviewer approved on second automatic run, QA 5/5. Pending QA handoff/stage/request hashes survived controller restart unchanged; zero run-interval overlaps, all 15 task leases released, locks clear. Windows pnpm test launcher failed before Vitest (spawnSync pnpm ENOENT); not a full-repository green claim."

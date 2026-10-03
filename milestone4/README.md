@@ -522,5 +522,15 @@ the four actors remain paused at the human gate.
 [Reviewable patches, actual browser evidence and screenshots](results/licitacija-help-20261003/README.md)
 are retained. The credential-free partial frontend snapshot tests real template/
 CSS/JS with HTTP/auth mocked; this is not a complete backend or production-site
-test. No website merge, push or deployment occurred. Owner approval is still
-required for integration; complete native cost accounting remains **DEFERRED**.
+test. No website merge, push or deployment occurred during that dispatcher repair.
+Complete native cost accounting remains **DEFERRED**.
+
+On 2026-10-03 the owner subsequently approved pushing the generated website fix.
+Only the four approved files were published as licitacija.mk
+[`1a8a824`](https://github.com/Dzikle/licitacija.mk/commit/1a8a824379d92c9701c3fcf67756f0cc071fc925)
+on `fix/aif-58-mobile-import-help`; original unrelated checkout changes and its
+unpublished market commit were preserved. Fresh real-browser checks on the exact
+integration tree passed **5/5**. No production/stage merge or deployment. The
+controller was stopped, so its live owner-approval receipt was not updated;
+approval/publication evidence is recorded in the existing receipt, not fabricated
+as a live Paperclip decision.
