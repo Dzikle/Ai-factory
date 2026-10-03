@@ -1,9 +1,9 @@
-# Owner-fork Milestone 4 accounting candidate; final native search gate is quota-blocked.
+# Owner-fork trusted-local runtime, including acknowledged workflow handoff repair.
 # Use after the paired DB/storage backup
 # with milestone0/compose/paperclip-fork-readmission.yaml as the first Compose file.
 services:
   paperclip-fork:
-    image: ghcr.io/dzikle/paperclip@sha256:d195b970b077b872bb4e720915dc53a97a9096d0f35e29030d37233cc0c0b273
+    image: ghcr.io/dzikle/paperclip@sha256:c0d8fe5a94d7cabd475f149b10d7d7444ce003740aeefc0b03e40a6a41199dbf
     networks:
       - baseline-postgres
       - native-runner

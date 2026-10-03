@@ -409,3 +409,118 @@ tasks or production readiness. Do not auto-approve tasks, add a second workflow
 engine, reopen mandatory milestone work just for this deferred metric, or expand
 memory injection on the negative measurement evidence. Use the working local
 system for the next requested real coding task.
+
+### Real-task workflow handoff repair — 2026-10-02
+
+AIF-58 exposed a functional dispatcher bug, not merely a busy-agent flag.
+An agent's own stage submission cancelled its provider before the issue update
+committed; legacy recovery treated that normal handoff as unknown interrupted
+work and blocked the next stage. Its later Developer continuation did start,
+then was explicitly paused, leaving a genuine separate interruption to reconcile.
+
+The owner's fork now records an authenticated, acknowledged source-run handoff
+in the same transaction as the issue update/decision and matching hold retirement.
+The locked task's ownership/version/workflow is checked before mutation. Unrelated
+crash holds survive ordinary task edits; late accounting and presentation writes
+preserve the receipt. Native adapters, run identity, budgets, MCP permissions and
+human approval remain authoritative in Paperclip; no second engine was added.
+
+Source `9d84b7ab892b9ad1f9947c2298d23cc7b6aad4b3`, image
+`ghcr.io/dzikle/paperclip@sha256:f19612c276550412128fadd5ae0ca40a88b6191e5320460ad9fe7d18a670f6ca`,
+built normally by [the owner workflow](https://github.com/Dzikle/paperclip/actions/runs/36988050386).
+Two scoped independent reviews produced additional stop-evidence, ownership-race
+and late-write regressions. Full server TypeScript checking passes.
+
+Published-image verification: five suites **176/176**; the recovery suite's cold
+combined run had one **afterEach cleanup timeout**, then passed **58/58** on its
+isolated rerun with a bounded 120-second hook timeout. The combined 233/234 run
+is not retrospectively described as an all-green job. This is not a repo-wide
+test claim.
+
+`milestone2/scripts/review_handoff_probe.py` reproduced the old failure and, on
+the new real Docker/PostgreSQL controller, drove **DISAAA-1** through Developer,
+Validator, Reviewer rejection, Developer correction, Reviewer approval, QA and
+final human-approval wait. No manual stage wakeup, reconciliation or approval;
+no model calls. All six source receipts and six released leases persist; issue
+locks are clear, writer intervals do not overlap, and all receipts are unchanged
+after controller restart. Run-detail endpoints, not metadata-omitting list
+summaries, provide the durable receipt assertion. Earlier harness/setup failures
+remain in ignored evidence rather than being counted as product failures.
+
+Cutover preserved all seven authority-table hashes and schema
+`PostgreSQL 17.11 / 283|1790018362070`. Paired protected backup:
+`.milestone0/handoff-precutover-20261002/`; database SHA-256
+`e2cf21acbde35f38927a6c4df0969386c6d7b01782351b19c1f83d6bcdd0bb83`, storage
+SHA-256 `a7c841a08cdda70951b246dd435e0f33cacb58daae151aaf5650cc6da7dfe22d`.
+Archive validation: 2,142 database entries / 18,604 storage entries, not a new
+restore rehearsal. Credentials were not rotated or published.
+
+AIF-58 is now resumed through the supported reconciliation API after verifying
+the paused provider was absent, its lease released, and its only unfinished work
+was a scoped browser-test edit. No website code was supplied by this controller
+repair. Paperclip resumes a correction at the rejecting stage, not the earlier
+Validator: the task's Reviewer instructions now review the new committed
+candidate without misattributing old validation; independent final QA must rerun
+the real browser suite on that exact candidate before owner approval. Native
+OpenCode Developer/Reviewer and independent process Validator/QA remain in use.
+That native attempt subsequently **BLOCKED**, not complete or deployed: its next
+Reviewer request arrived at 09:58:00.246 UTC, before the source lease released at
+09:58:00.360 UTC, and was skipped rather than retained. Resetting the task to
+`todo` also cleared its review state; the next Reviewer did not persist a verdict.
+Neither the process-only proof nor a prose review counts as native completion. This
+functional repair does not reopen the accepted M0–M4 roadmap or its deferred cost
+measurement.
+
+### Durable pending stage requests — 2026-10-03
+
+Owner-fork correction `aafc937cf5e5e3bbf04d57a12b4e6fd791fb3610` records the next
+stage request in Paperclip's existing wake queue in the same transaction as the
+handoff. Cleanup and startup retry that exact request through normal admission.
+Current source receipt, actor, task owner/version/workflow, execution lock,
+permissions, pause and budget gates remain authoritative. Ordinary queue
+promotion/coalescing cannot consume this special receipt; admission waits update
+one row, not an accumulating skipped-request history. Unrelated mentions survive.
+No new workflow engine, schema, native-adapter wrapper or permission grant.
+
+RED/GREEN evidence: a lost unrelated mention; ordinary queue promotion bypass;
+three daily-cap attempts creating four request rows instead of one. Final six
+focused suites **243/243 PASS**, including real PostgreSQL receipt tests, active
+conversation lease/no successor, fresh-service retry, stale assignee/workflow/
+version cancellation and idempotence. Full server TypeScript checking PASS.
+Independent bounded review found no remaining blockers in its three findings.
+`pnpm test` on Windows failed before Vitest started (`spawnSync pnpm ENOENT`);
+this is **not** a full-repository green claim. Slow initial Windows test/hook
+timeouts are retained as failures; bounded 120-second checks passed subsequently.
+
+Normal owner image [build](https://github.com/Dzikle/paperclip/actions/runs/37099994316)
+and PID-1 gate **PASS**. Deployed immutable image
+`ghcr.io/dzikle/paperclip@sha256:c0d8fe5a94d7cabd475f149b10d7d7444ce003740aeefc0b03e40a6a41199dbf`.
+Cutover preserved all seven authority-table hashes and schema; paired protected
+backup is `.milestone0/handoff-cleanup-precutover-20261003/` (hashes/archive counts
+in [the receipt](results/handoff-repair-20261003.json), not a new restore rehearsal).
+The deployed process-only **DISAAAA-1** correction loop also passes with zero
+model calls, manual stage wakes or reconciliations.
+
+AIF-58 now reaches **owner integration approval**, not another blocker. Fresh
+Validator **5/5**, native OpenCode Reviewer approval and independent QA **5/5**
+all identify the Developer's same clean candidate
+`b7d35ccc67437a28d43446e6e88894e200920c63`, tree
+`9b5af0234779dfb6c030c462516acc19fff8705b`. The first Reviewer run ended without a
+verdict; existing bounded recovery invoked it again and its own authenticated
+decision approved the candidate. No controller-authored review verdict.
+
+QA was paused deliberately after that decision. Controller restart preserved
+the exact source handoff, current stage and pending QA request hashes. Resuming
+only QA admitted the saved request automatically, without a manual wake. After
+QA: all 15 historical/current task leases have release timestamps, their records
+remain unchanged on repeated checks, no fresh run intervals overlap, and execution/
+checkout locks are clear. Successful agent submissions are terminal
+`cancelled/issue_reassigned` runs with durable committed handoffs, not crash holds.
+Original task actor configs, MCP bindings and enrichment flags are restored;
+the four actors remain paused at the human gate.
+
+[Reviewable patches, actual browser evidence and screenshots](results/licitacija-help-20261003/README.md)
+are retained. The credential-free partial frontend snapshot tests real template/
+CSS/JS with HTTP/auth mocked; this is not a complete backend or production-site
+test. No website merge, push or deployment occurred. Owner approval is still
+required for integration; complete native cost accounting remains **DEFERRED**.

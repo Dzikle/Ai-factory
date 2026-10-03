@@ -1,0 +1,569 @@
+From 127c72d5b8847fc1b695f400171c282521a3919b Mon Sep 17 00:00:00 2001
+From: AI Factory <ai-factory@local.invalid>
+Date: Wed, 30 Sep 2026 20:09:01 +0000
+Subject: [PATCH 1/2] AIF-58: style drawer import help, route to account guide
+ via bounded tour param
+
+---
+ .../homespace/assets/css/drawer-account.css   |  74 ++++
+ .../assets/js/account-import-tour.js          |  23 +
+ .../views/homespace/layout/layout.html        |  16 +
+ .../js/account-import-help.browser.test.js    | 406 ++++++++++++++++++
+ 4 files changed, 519 insertions(+)
+ create mode 100644 src/test/js/account-import-help.browser.test.js
+
+diff --git a/src/main/webapp/WEB-INF/views/homespace/assets/css/drawer-account.css b/src/main/webapp/WEB-INF/views/homespace/assets/css/drawer-account.css
+index e8d3dcd..95e0ac3 100644
+--- a/src/main/webapp/WEB-INF/views/homespace/assets/css/drawer-account.css
++++ b/src/main/webapp/WEB-INF/views/homespace/assets/css/drawer-account.css
+@@ -2038,3 +2038,77 @@
+     align-items: center;
+     gap: 3px;
+ }
++
++/* =======================================================
++   AIF-58: DRAWER IMPORT-HELP ACTION
++   The listings help trigger is copied from the account page
++   without page-only account.css. Style it here like the
++   account guide trigger (pill, touch-sized, full-width) and
++   stack the listings header so nothing clips at 360-412px.
++   ======================================================= */
++
++#drawerDynamicContent .listings-section-header {
++    display: flex;
++    flex-direction: column;
++    align-items: stretch;
++    gap: 10px;
++    margin-bottom: 12px;
++}
++
++#drawerDynamicContent .listings-section-actions {
++    display: flex;
++    flex-direction: column;
++    gap: 8px;
++    width: 100%;
++    max-width: 100%;
++}
++
++#drawerDynamicContent .account-tour-trigger,
++#drawerDynamicContent .drawer-import-help {
++    box-sizing: border-box;
++    display: inline-flex;
++    align-items: center;
++    justify-content: center;
++    gap: 8px;
++    width: 100%;
++    max-width: 100%;
++    min-height: 44px;
++    padding: 10px 14px;
++    border-radius: 999px;
++    border: 1.5px solid color-mix(in srgb, var(--accent-color), transparent 72%);
++    background: #fff;
++    color: var(--heading-color);
++    font-size: 13px;
++    font-weight: 700;
++    line-height: 1.3;
++    text-align: center;
++    overflow-wrap: anywhere;
++    cursor: pointer;
++    transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
++}
++
++#drawerDynamicContent .account-tour-trigger i,
++#drawerDynamicContent .drawer-import-help i {
++    color: var(--accent-color);
++    font-size: 15px;
++    flex-shrink: 0;
++}
++
++#drawerDynamicContent .account-tour-trigger:hover,
++#drawerDynamicContent .drawer-import-help:hover {
++    border-color: var(--accent-color);
++    background: color-mix(in srgb, var(--accent-color), transparent 95%);
++    color: var(--accent-color);
++}
++
++#drawerDynamicContent .account-tour-trigger:focus-visible,
++#drawerDynamicContent .drawer-import-help:focus-visible {
++    outline: none;
++    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-color), transparent 84%);
++}
++
++#drawerDynamicContent .listing-add-btn {
++    width: 100%;
++    justify-content: center;
++    max-width: 100%;
++}
+diff --git a/src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js b/src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js
+index b589fe9..d04ae65 100644
+--- a/src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js
++++ b/src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js
+@@ -409,6 +409,29 @@
+             openTour(tourName);
+         });
+ 
++        // AIF-58: honor a bounded tour request from the URL (the mobile drawer
++        // help routes here with ?tour=single-import). Only known tour names
++        // open; anything else is ignored. Ordinary clicks are unaffected.
++        var KNOWN_URL_TOURS = { 'single-import': 'single-import' };
++
++        function getRequestedUrlTour() {
++            try {
++                var params = new URLSearchParams(window.location.search);
++                var requested = params.get('tour');
++                if (!requested) return null;
++                return KNOWN_URL_TOURS[String(requested).trim().toLowerCase()] || null;
++            } catch (err) {
++                return null;
++            }
++        }
++
++        var requestedUrlTour = getRequestedUrlTour();
++        if (requestedUrlTour) {
++            window.setTimeout(function () {
++                openTour(requestedUrlTour);
++            }, 60);
++        }
++
+         window.addEventListener('resize', updateLayout);
+         document.addEventListener('scroll', updateLayout, true);
+     });
+diff --git a/src/main/webapp/WEB-INF/views/homespace/layout/layout.html b/src/main/webapp/WEB-INF/views/homespace/layout/layout.html
+index cfa7643..004d50b 100644
+--- a/src/main/webapp/WEB-INF/views/homespace/layout/layout.html
++++ b/src/main/webapp/WEB-INF/views/homespace/layout/layout.html
+@@ -443,6 +443,22 @@
+ 									}
+ 									
+ 									initDrawerListings(dynamicContent);
++
++									// The copied import workspace is incomplete in the drawer
++									// (page-only account CSS/JS do not run here). It must not
++									// become a second importer: drop it and route the help
++									// action to the existing full account guide instead.
++									var importWorkspace = dynamicContent.querySelector('#listing-import-workspace');
++									if (importWorkspace) importWorkspace.remove();
++
++									var drawerHelpTriggers = dynamicContent.querySelectorAll('[data-tour-trigger="single-import"]');
++									drawerHelpTriggers.forEach(function (helpTrigger) {
++										helpTrigger.classList.add('drawer-import-help');
++										helpTrigger.addEventListener('click', function (e) {
++											e.preventDefault();
++											window.location.href = (window.appContextPath || '') + '/user/account/area?section=listings&tour=single-import';
++										});
++									});
+ 								}
+ 								if (section === 'notifications') {
+ 									initDrawerNotifToolbar(dynamicContent);
+diff --git a/src/test/js/account-import-help.browser.test.js b/src/test/js/account-import-help.browser.test.js
+new file mode 100644
+index 0000000..10007d9
+--- /dev/null
++++ b/src/test/js/account-import-help.browser.test.js
+@@ -0,0 +1,406 @@
++'use strict';
++/*
++ * AIF-58 regression: mobile drawer (hamburger > Мои огласи) import help.
++ *
++ * Drawer copies #section-listings innerHTML from the account page, but
++ * account.css / account-import-tour.js are page-only, so the copied
++ * "Помош за увоз од линк" action is raw/unstyled and a no-op.
++ *
++ * Expected (fixed) behavior under test:
++ *  - the drawer help action is styled (pill, touch-sized, no overflow
++ *    at 360/390/412px) and routes to the full account page with
++ *    section=listings and the bounded tour request tour=single-import;
++ *  - the existing account tour auto-opens on arrival, advances through
++ *    the existing URL-input step to the final status step, closes and
++ *    reopens via the ordinary trigger;
++ *  - unexpected tour query values do not auto-open;
++ *  - a non-root context path is retained;
++ *  - the ordinary (no-param) profile/account help click still works.
++ *
++ * Real production template/JS/CSS in a real browser; only HTTP/auth are
++ * mocked. No production/stage contact: every non-local URL is blocked.
++ */
++const { describe, it, before, after } = require('node:test');
++const assert = require('node:assert/strict');
++const fs = require('node:fs');
++const path = require('node:path');
++const http = require('node:http');
++
++const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
++const LAYOUT_HTML = path.join(REPO_ROOT, 'src/main/webapp/WEB-INF/views/homespace/layout/layout.html');
++const ACCOUNT_HTML = path.join(REPO_ROOT, 'src/main/webapp/WEB-INF/views/homespace/pages/account.html');
++const DRAWER_CSS = path.join(REPO_ROOT, 'src/main/webapp/WEB-INF/views/homespace/assets/css/drawer-account.css');
++const ACCOUNT_CSS = path.join(REPO_ROOT, 'src/main/webapp/WEB-INF/views/homespace/assets/css/account.css');
++const TOUR_JS = path.join(REPO_ROOT, 'src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js');
++const AREA_JS = path.join(REPO_ROOT, 'src/main/webapp/WEB-INF/views/homespace/assets/js/account-area.js');
++const BOOTSTRAP_CSS = path.join(REPO_ROOT, 'src/main/webapp/WEB-INF/views/homespace/assets/vendor/bootstrap/css/bootstrap.min.css');
++
++const MOBILE_WIDTHS = [360, 390, 412];
++const ARTIFACT_DIR = process.env.AIF_QA_ARTIFACT_DIR || null;
++
++function readRepo(file) {
++  return fs.readFileSync(file, 'utf8');
++}
++
++/* Real layout drawer script: the inline block that defines initDrawerListings. */
++function extractDrawerScript(layoutHtml) {
++  const blocks = [...layoutHtml.matchAll(/<script(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
++  const hit = blocks.find((b) => b.includes('initDrawerListings'));
++  assert.ok(hit, 'real drawer script (initDrawerListings) must exist in layout.html');
++  return hit;
++}
++
++/* Real #section-listings element (balanced-div extraction, scripts included). */
++function extractSectionListings(accountHtml) {
++  const start = accountHtml.indexOf('<div id="section-listings"');
++  assert.ok(start !== -1, 'account.html must contain #section-listings');
++  const tagRe = /<\/?div\b[^>]*>/g;
++  tagRe.lastIndex = start;
++  let depth = 0;
++  let m;
++  while ((m = tagRe.exec(accountHtml)) !== null) {
++    depth += m[0].startsWith('</') ? -1 : 1;
++    if (depth === 0) return accountHtml.slice(start, tagRe.lastIndex);
++  }
++  throw new Error('unbalanced #section-listings div in account.html');
++}
++
++function escCtx(ctx) {
++  return /^\/[A-Za-z0-9_-]+$/.test(ctx || '') ? ctx : '';
++}
++
++function maybeShot(page, name) {
++  if (!ARTIFACT_DIR) return Promise.resolve();
++  fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
++  return page.screenshot({ path: path.join(ARTIFACT_DIR, name) });
++}
++
++function loadPlaywright() {
++  const modPath = process.env.AIF_PLAYWRIGHT_MODULE;
++  try {
++    return modPath ? require(modPath) : require('@playwright/test');
++  } catch (_) {
++    return require('@playwright/test');
++  }
++}
++
++async function connectBrowser() {
++  const { chromium } = loadPlaywright();
++  if (process.env.AIF_BROWSER_CDP) {
++    return { browser: await chromium.connectOverCDP(process.env.AIF_BROWSER_CDP), owned: false };
++  }
++  const candidates = [
++    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
++    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
++    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
++    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
++    '/usr/bin/google-chrome',
++    '/usr/bin/chromium',
++  ];
++  const exe = candidates.find((p) => { try { return fs.existsSync(p); } catch (_) { return false; } });
++  return { browser: await chromium.launch({ headless: true, ...(exe ? { executablePath: exe } : {}) }), owned: true };
++}
++
++async function newIsolatedPage(browser, width) {
++  const viewport = { width, height: 844 };
++  if (typeof browser.newContext === 'function') {
++    try {
++      const context = await browser.newContext({ viewport, isMobile: true, hasTouch: true });
++      return { context, page: await context.newPage(), close: () => context.close() };
++    } catch (_) { /* fall through to shared-context page */ }
++  }
++  const page = await browser.newPage({ viewport, isMobile: true, hasTouch: true });
++  return { context: page.context(), page, close: () => page.close(), shared: true };
++}
++
++describe('AIF-58 mobile drawer import help (real browser)', () => {
++  let server;
++  let origin;
++  let browser;
++  let owned = false;
++  let routedContexts = new Set();
++
++  // Real production sources, read once.
++  let drawerScript;
++  let sectionListingsHtml;
++  let accountHtmlText;
++  let bootstrapCss;
++
++  async function blockExternal(context) {
++    if (routedContexts.has(context)) return;
++    routedContexts.add(context);
++    // Transport note: the test browser runs on a different host than this
++    // Node process, so the browser itself cannot reach our fixture server.
++    // route.fetch() performs the request from Node (inside this container),
++    // then we fulfill the browser from that response. All other origins abort.
++    await context.route('**', async (route) => {
++      const u = route.request().url();
++      if (process.env.AIF_DEBUG_ROUTES) console.log('[route]', route.request().method, u);
++      if (!u.startsWith(origin)) {
++        await route.abort('blockedbyclient');
++        return;
++      }
++      try {
++        const response = await route.fetch();
++        await route.fulfill({ response });
++      } catch (_) {
++        try {
++          await route.abort('failed');
++        } catch (_) { /* already handled */ }
++      }
++    });
++  }
++
++  function drawerPage(ctx) {
++    return '<!doctype html><html lang="mk"><head><meta charset="utf-8">' +
++      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
++      '<link rel="stylesheet" href="' + ctx + '/homespace/assets/vendor/bootstrap/css/bootstrap.min.css">' +
++      '<link rel="stylesheet" href="' + ctx + '/homespace/assets/css/drawer-account.css">' +
++      '<style>:root{--accent-color:#0a7c1e;--heading-color:#1f2d1f;--surface-color:#fff;' +
++      '--default-color:#444;--mobile-bottom-nav-height:62px}</style></head><body>' +
++      '<a href="#" class="menu-item dynamic-drawer-link" data-uc-fetch="listings">Мои огласи</a>' +
++      '<div id="dynamicUserDrawer">' +
++      '<h5 id="dynamicUserDrawerLabel">Мој Профил</h5>' +
++      '<div id="drawerPanelContent" style="display:flex;">' +
++      '<div id="drawerLoadingSpinner" style="display:none;">Се вчитува...</div>' +
++      '<div id="drawerDynamicContent" style="max-width:100%;"></div>' +
++      '</div></div>' +
++      '<script>window.appContextPath = ' + JSON.stringify(ctx) + ';' +
++      // Escape closing tags: raw account markup contains </script>, which
++      // would otherwise terminate this harness block early and break it.
++      'window.__ACCOUNT_HTML__ = ' + JSON.stringify(accountHtmlText).replace(/<\//g, '<\\/') + ';' +
++      '(function(){var realFetch=window.fetch.bind(window);' +
++      'window.fetch=function(url,opts){var s=String((url&&url.url)||url);' +
++      'if(s.indexOf("/user/account/area")!==-1){' +
++      'return Promise.resolve(new Response(window.__ACCOUNT_HTML__,{status:200,' +
++      'headers:{"Content-Type":"text/html"}}));}return realFetch(url,opts);};})();</script>' +
++      '<script>' + drawerScript + '</script>' +
++      '</body></html>';
++  }
++
++  function accountPage(ctx) {
++    return '<!doctype html><html lang="mk"><head><meta charset="utf-8">' +
++      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
++      '<link rel="stylesheet" href="' + ctx + '/homespace/assets/vendor/bootstrap/css/bootstrap.min.css">' +
++      '<link rel="stylesheet" href="' + ctx + '/homespace/assets/css/account.css">' +
++      '<style>:root{--accent-color:#0a7c1e;--heading-color:#1f2d1f;--surface-color:#fff;--default-color:#444}' +
++      '.account-section{display:none}.account-section.active{display:block}</style></head>' +
++      '<body><div class="account-container">' + sectionListingsHtml + '</div>' +
++      '<script>window.appContextPath = ' + JSON.stringify(ctx) + ';' +
++      'window.GENERIC_IMPORT_ENABLED = false;</script>' +
++      '<script src="' + ctx + '/homespace/assets/js/account-area.js"></script>' +
++      '<script src="' + ctx + '/homespace/assets/js/account-import-tour.js"></script>' +
++      '<script>document.getElementById("section-listings").classList.add("active");</script>' +
++      '</body></html>';
++  }
++
++  before(async () => {
++    drawerScript = extractDrawerScript(readRepo(LAYOUT_HTML));
++    accountHtmlText = readRepo(ACCOUNT_HTML);
++    sectionListingsHtml = extractSectionListings(accountHtmlText);
++    bootstrapCss = readRepo(BOOTSTRAP_CSS);
++
++    const files = {
++      '/homespace/assets/vendor/bootstrap/css/bootstrap.min.css': [bootstrapCss, 'text/css'],
++      '/homespace/assets/css/drawer-account.css': [readRepo(DRAWER_CSS), 'text/css'],
++      '/homespace/assets/css/account.css': [readRepo(ACCOUNT_CSS), 'text/css'],
++      '/homespace/assets/js/account-import-tour.js': [readRepo(TOUR_JS), 'application/javascript'],
++      '/homespace/assets/js/account-area.js': [readRepo(AREA_JS), 'application/javascript'],
++    };
++
++    server = http.createServer((req, res) => {
++      const u = new URL(req.url, 'http://local');
++      let p = u.pathname;
++      // Strip one optional non-root context prefix (e.g. /shop/...).
++      let ctx = '';
++      const ctxMatch = p.match(/^(\/[A-Za-z0-9_-]+)?(\/home|\/|\/user\/account\/area|\/homespace\/assets\/.*)$/);
++      if (ctxMatch) {
++        if (ctxMatch[1] && ctxMatch[2] !== '/' && ctxMatch[1] !== '/home' && ctxMatch[1] !== '/user') ctx = ctxMatch[1];
++        p = ctxMatch[2];
++      }
++      if (p === '/home' || p === '/') {
++        const c = escCtx(u.searchParams.get('ctx') || '');
++        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
++        res.end(drawerPage(c));
++        return;
++      }
++      if (p === '/user/account/area') {
++        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
++        res.end(accountPage(ctx));
++        return;
++      }
++      if (files[p]) {
++        res.writeHead(200, { 'Content-Type': files[p][1] + '; charset=utf-8' });
++        res.end(files[p][0]);
++        return;
++      }
++      res.writeHead(404, { 'Content-Type': 'text/plain' });
++      res.end('not found');
++    });
++    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
++    origin = 'http://127.0.0.1:' + server.address().port;
++
++    const conn = await connectBrowser();
++    browser = conn.browser;
++    owned = conn.owned;
++  });
++
++  after(async () => {
++    // For a CDP connection browser.close() only disconnects the transport;
++    // it does not stop the externally launched test browser.
++    if (browser) await browser.close();
++    if (server) await new Promise((resolve) => server.close(resolve));
++  });
++
++  async function openDrawerListings(page) {
++    await page.locator('.dynamic-drawer-link[data-uc-fetch="listings"]').click();
++    await page.locator('#drawerDynamicContent .account-tour-trigger').waitFor({ timeout: 8000 });
++  }
++
++  it('drawer help is styled and fits at 360/390/412px', async () => {
++    for (const width of MOBILE_WIDTHS) {
++      const { context, page, close } = await newIsolatedPage(browser, width);
++      try {
++        await blockExternal(context);
++        await page.goto(origin + '/home', { waitUntil: 'load', timeout: 20000 });
++        await openDrawerListings(page);
++
++        const btn = page.locator('#drawerDynamicContent .account-tour-trigger');
++        await btn.waitFor({ timeout: 8000 });
++        assert.equal(await btn.count(), 1, 'drawer must expose exactly one import-help action');
++        assert.ok(await btn.isVisible(), 'drawer import help must be visible at ' + width + 'px');
++
++        const style = await btn.evaluate((el) => {
++          const cs = window.getComputedStyle(el);
++          return { minHeight: cs.minHeight, radius: cs.borderRadius, padding: cs.padding };
++        });
++        assert.ok(
++          style.minHeight !== 'auto' && parseFloat(style.minHeight) >= 38,
++          width + 'px: help action must be touch-sized (min-height>=38px), got ' + style.minHeight,
++        );
++        assert.ok(
++          style.radius !== '0px',
++          width + 'px: help action must be pill-shaped, got border-radius ' + style.radius,
++        );
++
++        const overflow = await page.evaluate(() => {
++          const root = document.getElementById('drawerDynamicContent');
++          const r = root.getBoundingClientRect();
++          const btnEl = root.querySelector('.account-tour-trigger');
++          const b = btnEl.getBoundingClientRect();
++          return {
++            rootScroll: root.scrollWidth,
++            rootClient: root.clientWidth,
++            btnRight: b.right,
++            rootRight: r.right,
++            btnLeft: b.left,
++            rootLeft: r.left,
++          };
++        });
++        assert.ok(
++          overflow.rootScroll <= overflow.rootClient + 1,
++          width + 'px: drawer content must not overflow horizontally',
++        );
++        assert.ok(
++          overflow.btnRight <= overflow.rootRight + 1 && overflow.btnLeft >= overflow.rootLeft - 1,
++          width + 'px: help action must not be clipped',
++        );
++        await maybeShot(page, 'drawer-help-' + width + '.png');
++      } finally {
++        await close();
++      }
++    }
++  });
++
++  it('tapping drawer help opens the existing account guide (URL input -> status)', async () => {
++    const { context, page, close } = await newIsolatedPage(browser, 390);
++    try {
++      await blockExternal(context);
++      await page.goto(origin + '/home', { waitUntil: 'load', timeout: 20000 });
++      await openDrawerListings(page);
++
++      await page.locator('#drawerDynamicContent .account-tour-trigger').tap();
++      await page.waitForURL(/\/user\/account\/area\?section=listings&tour=single-import/, { timeout: 8000 });
++
++      const popover = page.locator('.account-tour-popover');
++      await popover.waitFor({ timeout: 8000 });
++      // The guide reveals the layer before smooth-scrolling to the first
++      // target, so wait for the first step to render instead of reading early.
++      await page.locator('.account-tour-step-count:has-text("1 / 4")').waitFor({ timeout: 8000 });
++      assert.ok(await popover.isVisible(), 'account guide must auto-open after drawer routing');
++
++      await page.locator('[data-tour-next]').click();
++      await page.locator('.account-tour-step-count:has-text("2 / 4")').waitFor({ timeout: 8000 });
++
++      await page.locator('[data-tour-next]').click();
++      await page.locator('.account-tour-step-count:has-text("3 / 4")').waitFor({ timeout: 8000 });
++      assert.ok(await page.locator('#imp-url-input').isVisible(), 'tour step 3 targets the existing URL input');
++
++      await page.locator('[data-tour-next]').click();
++      await page.locator('.account-tour-step-count:has-text("4 / 4")').waitFor({ timeout: 8000 });
++      await maybeShot(page, 'tour-final-step.png');
++
++      // Close, then reopen via the ordinary trigger.
++      await page.locator('[data-tour-close]').click();
++      assert.ok(!(await popover.isVisible()), 'guide must close');
++      await page.locator('[data-tour-trigger="single-import"]').click();
++      await page.locator('.account-tour-step-count:has-text("1 / 4")').waitFor({ timeout: 8000 });
++    } finally {
++      await close();
++    }
++  });
++
++  it('unexpected tour query values do not auto-open the guide', async () => {
++    for (const bad of ['does-not-exist', 'import-all', 'single-import%22%3E%3Cimg']) {
++      const { context, page, close } = await newIsolatedPage(browser, 390);
++      try {
++        await blockExternal(context);
++        await page.goto(origin + '/user/account/area?section=listings&tour=' + bad, { waitUntil: 'load', timeout: 20000 });
++        await page.locator('[data-tour-trigger="single-import"]').waitFor({ timeout: 8000 });
++        await page.waitForTimeout(900);
++        assert.ok(
++          !(await page.locator('.account-tour-popover').isVisible()),
++          'tour=' + bad + ' must not auto-open the guide',
++        );
++      } finally {
++        await close();
++      }
++    }
++  });
++
++  it('non-root context path is retained through drawer help routing', async () => {
++    const { context, page, close } = await newIsolatedPage(browser, 390);
++    try {
++      await blockExternal(context);
++      await page.goto(origin + '/home?ctx=/shop', { waitUntil: 'load', timeout: 20000 });
++      await openDrawerListings(page);
++      await page.locator('#drawerDynamicContent .account-tour-trigger').click();
++      await page.waitForURL(/\/shop\/user\/account\/area\?section=listings&tour=single-import/, { timeout: 8000 });
++      await page.locator('.account-tour-popover').waitFor({ timeout: 8000 });
++      assert.ok(await page.locator('.account-tour-popover').isVisible(), 'guide opens under non-root context path');
++    } finally {
++      await close();
++    }
++  });
++
++  it('ordinary account help click still works without a tour param', async () => {
++    const { context, page, close } = await newIsolatedPage(browser, 390);
++    try {
++      await blockExternal(context);
++      const before = origin + '/user/account/area?section=listings';
++      await page.goto(before, { waitUntil: 'load', timeout: 20000 });
++      await page.locator('[data-tour-trigger="single-import"]').click();
++      await page.locator('.account-tour-step-count:has-text("1 / 4")').waitFor({ timeout: 8000 });
++      assert.ok(await page.locator('.account-tour-popover').isVisible(), 'ordinary help click opens the guide');
++      // Existing AccountArea intentionally normalizes the listings tab via
++      // history.pushState (e.g. appends tab=active); that is not a navigation.
++      // Assert the document path is unchanged instead of exact query equality.
++      const afterUrl = new URL(page.url());
++      const beforeUrl = new URL(before);
++      assert.equal(afterUrl.pathname, beforeUrl.pathname, 'ordinary click must not navigate away');
++      assert.equal(afterUrl.searchParams.get('section'), 'listings', 'section must stay listings');
++    } finally {
++      await close();
++    }
++  });
++});

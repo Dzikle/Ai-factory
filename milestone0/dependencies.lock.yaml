@@ -1,5 +1,5 @@
 schema_version: 1
-recorded_at: "2026-09-30"
+recorded_at: "2026-10-02"
 platform:
   host: "Windows 11"
   containers: "linux/amd64"
@@ -35,12 +35,25 @@ dependencies:
       image: "ghcr.io/dzikle/paperclip@sha256:d195b970b077b872bb4e720915dc53a97a9096d0f35e29030d37233cc0c0b273"
       amd64_manifest: "sha256:c4b96d2af15c9e5d795e3bc862671760aa11eb06e767cfa22e3b3f49e64400ab"
       workflow: "https://github.com/Dzikle/paperclip/actions/runs/36650114983"
-      status: "DEPLOYED LOCALLY; bounded native handoff accounting gate PASS on AIF-52; agents paused; broader Milestone 4 remains open"
+      status: "HISTORICAL DEPLOYED PIN; superseded locally by local_v1_handoff_runtime; bounded handoff accounting evidence remains historical; owner accepted local V1 on 2026-09-30"
       schema: "PostgreSQL 17.11 / 283-row Drizzle journal unchanged on cutover and restart; image label declares 282 migration files"
       validation: "Multiarch production build and PID-1 check passed; 24/24 focused Stop/handoff/retry tests inside exact Linux image on disposable migrated PostgreSQL, including post-child-exit RED/GREEN; OpenCode parser 15/15 and adapter typecheck; AI Factory scorecard 44/44 and presentation QA 9/9; live AIF-52 native OpenCode run cancelled/issue_reassigned with partial usage retained after controller restart, 0 complete coverage, exact issue locks clear, lease expired/released"
       evidence: "milestone4/README.md; milestone4/tasks/native-handoff-accounting-probe.json"
       backup: ".milestone0/m4-usage-precutover-20260930/ (ignored paired PostgreSQL dump and Paperclip storage tar; hashes and archive counts in milestone4/README.md)"
       previous_image: "ghcr.io/dzikle/paperclip@sha256:37ab79a0ea5da736bb32cded7d82a1c47873369fdc711d43e5ecec22f2797b0a; source 6f19a0d07f02fdaaca4085b07bb32b3f7b260383"
+    local_v1_handoff_runtime:
+      fork_branch: "ai-factory/review-correction-handoff"
+      fork_commit: "aafc937cf5e5e3bbf04d57a12b4e6fd791fb3610"
+      image: "ghcr.io/dzikle/paperclip@sha256:c0d8fe5a94d7cabd475f149b10d7d7444ce003740aeefc0b03e40a6a41199dbf"
+      amd64_manifest: "sha256:d484a108e23454c407e3d507a08ab6206a67629123d24a2644878492f4092fa8"
+      workflow: "https://github.com/Dzikle/paperclip/actions/runs/37099994316"
+      status: "DEPLOYED; AIF-58 fresh Validator/native Reviewer/QA PASS, awaiting owner integration approval; no new milestone or production acceptance"
+      schema: "PostgreSQL 17.11 / Drizzle 283|1790018362070 unchanged; seven authority-table hashes unchanged on cutover"
+      runtime_versions: "Node 24.21.0; OpenCode 1.18.33"
+      validation: "Normal multiarch production build and PID-1 gate PASS; cutover preserved seven authority tables/schema. Six focused suites 243/243 PASS and server TypeScript check PASS; independent review has no remaining findings. Deployed DISAAAA-1 process correction loop PASS without model calls/manual wakes. AIF-58 exact b7d35cc candidate: fresh Validator 5/5, native OpenCode Reviewer approved on second automatic run, QA 5/5. Pending QA handoff/stage/request hashes survived controller restart unchanged; zero run-interval overlaps, all 15 task leases released, locks clear. Windows pnpm test launcher failed before Vitest (spawnSync pnpm ENOENT); not a full-repository green claim."
+      evidence: "milestone4/README.md; milestone4/results/handoff-repair-20261003.json; milestone4/results/licitacija-help-20261003/; milestone2/scripts/review_handoff_probe.py"
+      backup: ".milestone0/handoff-cleanup-precutover-20261003/ (ignored paired PostgreSQL/storage backup; keys/passwords unchanged)"
+      previous_image: "ghcr.io/dzikle/paperclip@sha256:f19612c276550412128fadd5ae0ca40a88b6191e5320460ad9fe7d18a670f6ca; source 9d84b7ab892b9ad1f9947c2298d23cc7b6aad4b3"
     milestone2_opencode_workspace_candidate:
       fork_branch: "ai-factory/milestone2-opencode-workspace"
       fork_commit: "379fe383d0e21a8e6194e799ba224762f7245cf4"

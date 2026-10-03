@@ -1,0 +1,4 @@
+# Preserve original evidence/patch bytes, including on Windows checkouts.
+validator.json -text
+qa/evidence.json -text
+patches/*.patch -text

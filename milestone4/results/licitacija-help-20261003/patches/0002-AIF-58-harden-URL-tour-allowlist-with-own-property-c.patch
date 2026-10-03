@@ -1,0 +1,53 @@
+From b7d35ccc67437a28d43446e6e88894e200920c63 Mon Sep 17 00:00:00 2001
+From: AI Factory <ai-factory@local.invalid>
+Date: Fri, 2 Oct 2026 09:57:32 +0000
+Subject: [PATCH 2/2] AIF-58: harden URL tour allowlist with own-property
+ check, cover inherited keys
+
+Co-Authored-By: Paperclip <noreply@paperclip.ing>
+---
+ .../views/homespace/assets/js/account-import-tour.js      | 4 +++-
+ src/test/js/account-import-help.browser.test.js           | 8 +++++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js b/src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js
+index d04ae65..49a001f 100644
+--- a/src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js
++++ b/src/main/webapp/WEB-INF/views/homespace/assets/js/account-import-tour.js
+@@ -419,7 +419,9 @@
+                 var params = new URLSearchParams(window.location.search);
+                 var requested = params.get('tour');
+                 if (!requested) return null;
+-                return KNOWN_URL_TOURS[String(requested).trim().toLowerCase()] || null;
++                var key = String(requested).trim().toLowerCase();
++                if (!Object.prototype.hasOwnProperty.call(KNOWN_URL_TOURS, key)) return null;
++                return KNOWN_URL_TOURS[key];
+             } catch (err) {
+                 return null;
+             }
+diff --git a/src/test/js/account-import-help.browser.test.js b/src/test/js/account-import-help.browser.test.js
+index 10007d9..0391120 100644
+--- a/src/test/js/account-import-help.browser.test.js
++++ b/src/test/js/account-import-help.browser.test.js
+@@ -351,7 +351,9 @@ describe('AIF-58 mobile drawer import help (real browser)', () => {
+   });
+ 
+   it('unexpected tour query values do not auto-open the guide', async () => {
+-    for (const bad of ['does-not-exist', 'import-all', 'single-import%22%3E%3Cimg']) {
++    // Includes inherited Object keys: a plain lookup without an
++    // own-property check would treat these as known tours.
++    for (const bad of ['does-not-exist', 'import-all', 'single-import%22%3E%3Cimg', 'constructor', '__proto__', 'toString', 'CONSTRUCTOR']) {
+       const { context, page, close } = await newIsolatedPage(browser, 390);
+       try {
+         await blockExternal(context);
+@@ -362,6 +364,10 @@ describe('AIF-58 mobile drawer import help (real browser)', () => {
+           !(await page.locator('.account-tour-popover').isVisible()),
+           'tour=' + bad + ' must not auto-open the guide',
+         );
++        assert.equal(
++          new URL(page.url()).searchParams.get('section'), 'listings',
++          'tour=' + bad + ' must not mutate the section',
++        );
+       } finally {
+         await close();
+       }

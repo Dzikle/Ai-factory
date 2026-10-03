@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "scope": "Repair existing task handoff; no new milestone or production acceptance",
+  "paperclip": {
+    "repository": "Dzikle/paperclip",
+    "branch": "ai-factory/review-correction-handoff",
+    "revision": "aafc937cf5e5e3bbf04d57a12b4e6fd791fb3610",
+    "image": "ghcr.io/dzikle/paperclip@sha256:c0d8fe5a94d7cabd475f149b10d7d7444ce003740aeefc0b03e40a6a41199dbf",
+    "amd64Manifest": "sha256:d484a108e23454c407e3d507a08ab6206a67629123d24a2644878492f4092fa8",
+    "build": "https://github.com/Dzikle/paperclip/actions/runs/37099994316",
+    "normalBuildAndPid1Gate": "PASS",
+    "cutover": "PASS: seven authority-table hashes and schema unchanged",
+    "runtime": "Node 24.21.0 / OpenCode 1.18.33 / PostgreSQL 17.11 / Drizzle 283|1790018362070",
+    "processProbe": "DISAAAA-1 PASS: rejection/correction, three independent stages and owner-approval wait; zero manual stage wakes/reconciliations; no model calls"
+  },
+  "sourceVerification": {
+    "focusedSuites": 6,
+    "passed": 243,
+    "failed": 0,
+    "serverTypecheck": "PASS",
+    "independentReviewRemainingFindings": 0,
+    "rootTestCommand": "pnpm test",
+    "rootTestResult": "LAUNCHER_FAILED: spawnSync pnpm ENOENT on Windows; Vitest not started; not a full-suite pass",
+    "initialHostTimeouts": "Retained as failures; bounded 120-second focused rerun passed",
+    "redGreen": [
+      "Unrelated mention lost by early route return",
+      "Ordinary deferred queue consumed committed handoff without source/workflow proof",
+      "Three blocked daily-cap attempts created four request rows; fixed to one"
+    ],
+    "databaseCoverage": [
+      "Atomic handoff/next-wake persistence and rollback",
+      "Stable receipt under repeated recovery",
+      "Active conversation lease prevents successor",
+      "Fresh-service retry reads durable pending state",
+      "Changed task owner/version/workflow cancels stale wake",
+      "Budget-blocked attempts retain pending request",
+      "No ordinary queue promotion or coalescing of handoff receipt"
+    ],
+    "aiFactoryTaskCli": "12/12 PASS",
+    "credentialTransport": "3/3 PASS"
+  },
+  "backup": {
+    "privateDirectory": ".milestone0/handoff-cleanup-precutover-20261003/",
+    "databaseSha256": "6ff2354747fbb795134a0688ec0313d024d283dbb629169acf4f3415bd2db06a",
+    "storageSha256": "4493c3e5b775bd75f2aaf3e25cf64157b37019016ee3cd16abb302f5529e1910",
+    "databaseArchiveEntries": 2142,
+    "storageArchiveEntries": 18686,
+    "newRestoreRehearsal": false
+  },
+  "realTask": {
+    "identifier": "AIF-58",
+    "issueId": "c9e044da-889a-46b5-a453-cd2657118166",
+    "candidate": "b7d35ccc67437a28d43446e6e88894e200920c63",
+    "tree": "9b5af0234779dfb6c030c462516acc19fff8705b",
+    "preflightBrowserTests": "5/5 PASS; not factory QA approval",
+    "status": "OWNER_INTEGRATION_APPROVAL_WAIT",
+    "freshValidator": {
+      "runId": "df8b49c5-3c76-43ec-bf8b-435683c62d6c",
+      "result": "5/5 PASS",
+      "artifact": "licitacija-help-20261003/validator.json",
+      "sha256": "c4eaf817fa92a3805cc64ea03f56fc586ecfa366d95d3640d828a156ffb56f76"
+    },
+    "nativeReviewer": {
+      "adapter": "original native OpenCode",
+      "initialRunId": "b43155c3-bbd7-447e-8283-37e1428b8d35",
+      "initialResult": "Succeeded without a verdict; not approval",
+      "decisionRunId": "eea488d6-910d-40c7-8009-05f4f925be9c",
+      "result": "APPROVED exact candidate/tree through own authenticated decision after bounded automatic recovery"
+    },
+    "freshQa": {
+      "runId": "1e91afe7-e217-48ce-a30c-ff22fd3ce254",
+      "result": "5/5 PASS",
+      "artifact": "licitacija-help-20261003/qa/evidence.json",
+      "sha256": "95bad24984cb59605ceb575d89756452d1cf8acb5d1493b870982059a99b06f6",
+      "screenshots": "licitacija-help-20261003/qa/",
+      "testSha256": "102c03752cdcf11202d84565c7dfe3b6e5c5cd96ef02947ac072302b6890fea3"
+    },
+    "pendingQaRestart": {
+      "result": "PASS: identical before/after hashes; QA admitted from saved request after resuming only QA",
+      "wakeupRequestId": "7ba7b2a0-d1db-4f84-aa44-0cff691f58c5",
+      "sourceHandoffMd5": "84b10bef8f6d35f89472c93f2f456dd0",
+      "stageStateMd5": "94655102fac6c2add966184292c07a25",
+      "pendingRequestMd5": "9292558798bb3ec010803c54c60cc35f",
+      "manualStageWakes": 0
+    },
+    "finalState": {
+      "completedIndependentStages": 3,
+      "approvalStageIndex": 3,
+      "executionBlocker": null,
+      "executionRunId": null,
+      "checkoutRunId": null,
+      "historicalAndCurrentLeases": 15,
+      "unreleasedLeases": 0,
+      "leaseRowsMd5": "4958906022065ce5f1d9560eab2c158b",
+      "freshRunIntervalOverlaps": 0,
+      "runtimeConfigurationRestored": "PASS; original adapter configs, MCP installs and enrichment flags; four task actors paused"
+    },
+    "scopeLimit": "Credential-free partial frontend snapshot with real browser/template/CSS/JS and mocked HTTP/auth; not a full backend/production-site test",
+    "patches": "licitacija-help-20261003/patches/",
+    "ownerIntegrationApproved": false,
+    "mergedOrDeployed": false,
+    "costCompleteness": "UNKNOWN_OR_PARTIAL; no claimed saving"
+  }
+}
