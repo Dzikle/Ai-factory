@@ -16,6 +16,17 @@ integration approval. No new image, scheduler or task database is needed.
 
 ## Submit a task and see progress
 
+For repository preflight and owner-approved feature-branch publication, use
+[`python -m milestone2.publish`](PUBLISH.md). It preserves unrelated local
+work, checks the exact Paperclip approval, and saves a verifiable publication
+receipt. It does not merge, deploy, approve tasks or start services.
+
+**Script-first follow-up — 2026-10-03:** 22 new real-Git/HTTP-boundary tests
+passed; full Python suite **205 tests, OK, 2 optional live tests skipped**.
+Independent review findings were reproduced and fixed, then re-reviewed.
+[Verification record](results/script-publication-20261003.json) distinguishes
+local integration tests from unperformed live GitHub/Paperclip publication.
+
 From the repository root, use Python 3.11+ (or prefix commands with
 `uv run --offline --no-project`). Authentication stays in the existing ignored
 board state file, never in a task, workflow preset or command-line token.

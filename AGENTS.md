@@ -67,6 +67,12 @@ overlapping system without a new evidence-backed decision record.
 
 - Build the smallest vertical slice that proves a real capability before adding generic infrastructure.
 - Do not create an LLM agent for work that deterministic code can perform reliably.
+- Script repeatable mechanical steps (Git/GitHub publication, preflight, test
+  invocation, artifact hashes and receipts). Reuse an existing command first;
+  add a small tested script when a step repeats. Agents supply explicit task
+  inputs and interpret exceptions, rather than re-deriving command sequences.
+  Scripts must preserve human approval, credential containment and truthful
+  partial/failure results.
 - Do not create an abstraction merely because future implementations are imaginable. Earn abstractions with real use cases.
 - Do not introduce multiple overlapping providers for the same capability without measured benefit.
 - Do not build learned model routing before enough telemetry exists to evaluate it.

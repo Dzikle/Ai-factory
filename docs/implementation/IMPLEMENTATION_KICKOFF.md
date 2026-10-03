@@ -41,6 +41,13 @@ pending native tasks, change review/permission controls, merge `main`, enable
 deferred components, or authorize autonomous self-improvement. Subsequent work
 starts from a requested real feature/task rather than another mandatory milestone.
 
+**Requested follow-up — 2026-10-03:** Repeatable mechanical work is now
+script-first under `AGENTS.md`. The first bounded batch supplies
+[repository preflight, approved Git publication and receipts](../../milestone2/PUBLISH.md)
+using existing Git/`gh` and Paperclip interfaces, without a new milestone,
+service, workflow authority or production deployment. Verification is recorded
+in [the script-publication result](../../milestone2/results/script-publication-20261003.json).
+
 Every milestone must end with a runnable demonstration and recorded acceptance
 evidence. Do not add an index, service, generic adapter, or framework merely to
 complete a checklist; add it when the next demonstration needs it. A blocked

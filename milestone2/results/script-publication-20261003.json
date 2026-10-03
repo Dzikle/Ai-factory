@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-03",
+  "feature": "script-first repository preflight, approved feature-branch publication and evidence receipt",
+  "scope": "trusted-local; requested follow-up, not a new mandatory milestone",
+  "baseRevision": "590127edc0bb6c299cbb7a2c4efc80d21ae95fcc",
+  "sourceSha256": {
+    "milestone2/publish.py": "09d5bf39aa0c72065c6af5f457e2a21bb20ac77b2b1a296610262c7cd83fa465",
+    "tests/test_publish.py": "1ab85b36bbe7ac54e037fe0b77962215cafdd1bec15ddf0235ceb54f0d66a6d2"
+  },
+  "runtime": {
+    "platform": "Windows",
+    "python": "3.13.15",
+    "git": "2.52.0.windows.1",
+    "gh": "2.92.0",
+    "newProductionDependencies": []
+  },
+  "focusedTests": {
+    "command": "uv run --offline --no-project python -m unittest discover -s tests -p test_publish.py -v",
+    "run": 22,
+    "passed": 22,
+    "seconds": 51.571,
+    "git": "real temporary repositories and local bare remotes",
+    "paperclip": "HTTP boundary fixture; native server not started",
+    "github": "account-denial external gh response fixture; no live push"
+  },
+  "fullSuite": {
+    "command": "uv run --offline --no-project --with 'jsonschema[format]==4.25.1' --with 'PyYAML==6.0.2' python -m milestone3.check",
+    "run": 205,
+    "passed": 203,
+    "skipped": 2,
+    "skipReason": "existing opt-in live integration tests",
+    "failures": 0,
+    "seconds": 88.741
+  },
+  "regressionEvidence": [
+    "Read-only preflight and exact plan/tree/diff SHA-256 binding",
+    "Dirty files, untracked work, staged work and index bytes preserved",
+    "Candidate history flattened; unrelated intermediate commits excluded",
+    "Stale or incomplete approval, non-owner/agent/deleted comment and wrong plan denied",
+    "Wrong remote/account, protected branch and out-of-scope changes denied",
+    "Live remote base must equal approved base before a new push",
+    "Concurrent branch creation denied by empty expected-ref creation-only CAS",
+    "Lost push response reconciled by exact remote SHA; absent uncertain push not retried",
+    "Lost receipt response reconciled without duplicate POST; pending receipt can resume",
+    "Receipt replay idempotent; unrelated or empty existing receipt not overwritten",
+    "API redirect does not forward board credentials",
+    "Git replacement refs ignored and hidden submodule changes remain scope-checked"
+  ],
+  "review": {
+    "independent": true,
+    "initialImportantFindings": 3,
+    "findings": "replacement refs; ignored submodule diff; index stat-cache mutation",
+    "resolution": "each reproduced RED then fixed; focused/full suites GREEN",
+    "finalImportantFindings": 0,
+    "method": "read-only static re-review; no live runtime claim"
+  },
+  "otherChecks": ["CLI help", "git diff --check"],
+  "livePublicationPerformedForTests": false,
+  "servicesStartedOrChanged": false,
+  "websiteChangedOrDeployed": false,
+  "tokenSavingsMeasured": false,
+  "taskAuthority": "Paperclip; local receipt is external-write evidence only",
+  "limits": [
+    "No PR creation, merge, deployment, fetch/import or service lifecycle automation",
+    "No automatic task approval or model/workflow changes",
+    "GitHub SSH configuration remains trusted; gh check is not SSH-key identity proof",
+    "No atomic cross-system transaction between approval revocation and Git push",
+    "Completed stage flags are not independent proof of exact reviewer-tested bytes",
+    "Live GitHub and Paperclip publication remains to be exercised on an actually approved task"
+  ]
+}
