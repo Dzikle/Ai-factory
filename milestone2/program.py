@@ -406,7 +406,8 @@ def store_outcome(client, parent_id, outcome):
     return {"document": "outcome", "revisionId": document.get("revisionId")}
 
 
-def _atomic_write_json(path, value):    target = Path(path)
+def _atomic_write_json(path, value):
+    target = Path(path)
     tmp = target.with_name(f"{target.name}.tmp-{os.getpid()}")
     tmp.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, target)
