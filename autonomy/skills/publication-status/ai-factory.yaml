@@ -1,0 +1,14 @@
+schema_version: 1
+skill: publication-status
+skill_version: 0.1.0
+lifecycle: experimental
+risk: medium
+roles:
+  - orchestrator
+required_capabilities:
+  - repo.read
+  - git.read
+optional_capabilities:
+  - artifact.write
+eval_refs:
+  - evals/publication-status-v1

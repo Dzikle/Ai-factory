@@ -1,0 +1,17 @@
+schema_version: 1
+skill: repository-preflight
+skill_version: 0.1.0
+lifecycle: experimental
+risk: low
+roles:
+  - developer
+  - reviewer
+  - qa
+required_capabilities:
+  - repo.read
+  - git.read
+  - git.diff.read
+optional_capabilities:
+  - knowledge.search
+eval_refs:
+  - evals/repository-preflight-v1

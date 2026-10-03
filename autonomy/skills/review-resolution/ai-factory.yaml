@@ -1,0 +1,18 @@
+schema_version: 1
+skill: review-resolution
+skill_version: 0.1.0
+lifecycle: experimental
+risk: low
+roles:
+  - reviewer
+required_capabilities:
+  - repo.read
+  - git.read
+  - git.diff.read
+  - validation.run
+  - knowledge.search
+denied_capabilities:
+  - repo.write
+  - repo.merge
+eval_refs:
+  - evals/review-resolution-v1

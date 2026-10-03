@@ -100,3 +100,22 @@ incident / lesson
 → reusable tool/check
 → deterministic enforcement where practical
 ```
+
+## Canonical operational skills (self-enhancement V1)
+
+Six bounded packages under this directory describe procedures but never grant
+runtime authority. Each pairs a portable `SKILL.md` with an `ai-factory.yaml`
+sidecar (`schema_version: 1`, `skill_version: 0.1.0`, `lifecycle:
+experimental`); sidecars carry no `runtime_grants` key and cannot add tools.
+
+| Skill | Command reused | Write boundary |
+| --- | --- | --- |
+| `repository-preflight` | `python -m milestone2.task status`, `python -m milestone3.check` | read-only |
+| `verified-commit` | `python -m milestone3.check` | task branch only |
+| `publication-status` | `python -m milestone2.publish preflight`, `python -m milestone2.publish publish` | read-only unless an operator supplies the existing exact approval inputs |
+| `review-resolution` | `python -m milestone2.task status`, `python -m milestone3.check` | findings close only with candidate-linked evidence |
+| `deferred-finding` | `python -m milestone2.task status` | emits the finding record; creates no task |
+| `scoped-audit` | `python -m milestone2.program status` | read-only |
+
+Reviewer skills deny `repo.write` and `repo.merge`; publication remains
+operator-only and receives no agent runtime grant.

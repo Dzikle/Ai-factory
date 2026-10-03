@@ -14,6 +14,12 @@ repositories:
 allowed_skills:
   - repository-discovery
   - code-review
+  - repository-preflight
+  - verified-commit
+  - publication-status
+  - review-resolution
+  - deferred-finding
+  - scoped-audit
 allowed_capabilities:
   - repo.read
   - repo.search

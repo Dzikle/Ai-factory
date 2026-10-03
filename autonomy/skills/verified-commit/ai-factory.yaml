@@ -1,0 +1,15 @@
+schema_version: 1
+skill: verified-commit
+skill_version: 0.1.0
+lifecycle: experimental
+risk: medium
+roles:
+  - developer
+required_capabilities:
+  - repo.read
+  - repo.write
+  - git.read
+  - git.diff.read
+  - validation.run
+eval_refs:
+  - evals/verified-commit-v1

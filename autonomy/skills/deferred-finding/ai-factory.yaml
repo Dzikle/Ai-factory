@@ -1,0 +1,16 @@
+schema_version: 1
+skill: deferred-finding
+skill_version: 0.1.0
+lifecycle: experimental
+risk: low
+roles:
+  - developer
+  - reviewer
+  - qa
+required_capabilities:
+  - repo.read
+  - artifact.write
+optional_capabilities:
+  - memory.search
+eval_refs:
+  - evals/deferred-finding-v1
