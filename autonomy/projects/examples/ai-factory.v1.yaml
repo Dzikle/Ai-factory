@@ -27,7 +27,3 @@ denied_capabilities:
   - production.deploy
 memory_namespace: ai-factory
 knowledge_project_filter: ai-factory
-evidence_sources:
-  git: {max_bytes: 48000}
-  opensearch-git-docs: {max_bytes: 24000}
-  mempalace: {max_bytes: 24000}
