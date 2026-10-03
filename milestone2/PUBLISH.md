@@ -136,3 +136,24 @@ Later scripts should automate the next actually repeated mechanical step,
 reusing existing commands. PR creation/merge/deployment, generic task workflows,
 service lifecycle and automatic test-command generation are not part of this
 first batch.
+
+## Agent discovery — verified 2026-10-03
+
+`AGENTS.md`, the autonomy index, role instructions and the deployed
+Developer/Reviewer fixtures now point to these commands. The existing runtime
+source and knowledge projection were refreshed, without rewriting old task
+worktrees. A fresh native OpenCode run **AIF-60** discovered this guide and
+successfully executed `python3 -m milestone2.publish preflight --help`. Its
+structured answer retained the Developer/Reviewer no-publication restriction
+and owner-approval requirement. This proves representative command discovery,
+not every harness, permission isolation or live publication.
+[Evidence and limits](results/script-discovery-20261003.json).
+
+The read-only proof checker verifies saved native run identity, immutable
+source revision, typed answers and actual completed CLI execution. It dispatches
+no agent and performs no publication. Keep native logs and board credentials
+private; the committed record contains only selected public evidence.
+
+```powershell
+python -m milestone2.scripts.script_discovery_proof --run .milestone0/script-discovery-live-inline-final-20261003/native-run.json --log .milestone0/script-discovery-live-inline-final-20261003/native-log.json --revision f2ccf4dc85e27991850a2ea734af3def1b9dc130
+```

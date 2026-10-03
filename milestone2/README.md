@@ -27,6 +27,14 @@ Independent review findings were reproduced and fixed, then re-reviewed.
 [Verification record](results/script-publication-20261003.json) distinguishes
 local integration tests from unperformed live GitHub/Paperclip publication.
 
+**Agent-discovery continuation — 2026-10-03:** commands are linked from the
+canonical agent/role instructions and refreshed runtime source/projection.
+Native read-only **AIF-60** found and executed publication preflight help;
+Developer/Reviewer publication rights remain unchanged. The saved-evidence
+checker adds seven regressions; full suite **212 tests, OK, 2 optional skips**.
+[Discovery evidence](results/script-discovery-20261003.json) records the failed
+first probe separately, the successful run, exact revision/profile and cleanup.
+
 From the repository root, use Python 3.11+ (or prefix commands with
 `uv run --offline --no-project`). Authentication stays in the existing ignored
 board state file, never in a task, workflow preset or command-line token.

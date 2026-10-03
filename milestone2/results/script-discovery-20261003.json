@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-03",
+  "feature": "canonical script discovery through existing agent instructions and a native read-only run",
+  "scope": "approved script-first follow-up; no new milestone or coding task",
+  "publicationScriptsRevision": "8cb2cc14de16ec49ad244f0aae2663cdc75759d6",
+  "instructionRevision": "f2ccf4dc85e27991850a2ea734af3def1b9dc130",
+  "github": {
+    "repository": "Dzikle/Ai-factory",
+    "branch": "milestone1-contracts",
+    "bothRevisionsPushedAndReadBack": true,
+    "targetWebsitePushOrDeployment": false
+  },
+  "runtime": {
+    "paperclipImage": "ghcr.io/dzikle/paperclip@sha256:c0d8fe5a94d7cabd475f149b10d7d7444ce003740aeefc0b03e40a6a41199dbf",
+    "sourcePath": "/paperclip/m1-first-task-source",
+    "sourceRevisionTested": "f2ccf4dc85e27991850a2ea734af3def1b9dc130",
+    "sourceAndOriginTrackingRefMatch": true,
+    "sourceRefresh": "Git bundle fetch and fast-forward only; existing task worktrees preserved",
+    "staleIndexLock": "Empty lock from 2026-10-02 preserved as index.lock.saved-script-discovery-20261003 after checking no Git process or active run owned it",
+    "projection": {"canonicalDocuments": 53, "writes": 53, "newWorker": false},
+    "deployedInstructionSha256": {
+      "developer": "fc4d41c974f29ddf41a30ea1d3337516aa1b05cf114b275fbf42370a3ff39f1e",
+      "reviewer": "5a49d872cae397247fd46829e37150a2c5b8b8565b24dd2769d4a370f66c6b97"
+    },
+    "newImagesOrServices": false
+  },
+  "initialAttempt": {
+    "issue": "AIF-59",
+    "issueId": "437cefab-5bcf-45ae-a5d1-f8f703f018e3",
+    "runId": "52ff6fcd-7512-4900-9b3e-71aac0e4c62b",
+    "nativeStatus": "succeeded",
+    "discoveryResult": "NOT PASS",
+    "reason": "Agent found canonical guides but a redundant external instruction-file reread was denied; no actual preflight-help execution or final structured answer",
+    "correction": "Supply the same canonical read-only fixture inline; no external-directory permission expansion",
+    "recovery": "Diagnostic continuations did not qualify as a pass; native agent_paused cancellations retained; issue closed as cancelled, not owner-approved coding work"
+  },
+  "nativeProof": {
+    "status": "PASS",
+    "issue": "AIF-60",
+    "issueId": "87d571c8-56e5-43c5-871b-1ae3705c42da",
+    "runId": "ebdb911b-0ff7-44be-9126-67673cd0e073",
+    "sourceRevision": "f2ccf4dc85e27991850a2ea734af3def1b9dc130",
+    "adapter": "opencode_local",
+    "model": "opencode/muse-spark-1.3-contributor-free",
+    "startedAt": "2026-10-03T12:57:31.569Z",
+    "finishedAt": "2026-10-03T12:58:00.963Z",
+    "observedCompletedCommand": "python3 -m milestone2.publish preflight --help",
+    "commandProof": "Native completed bash event contains CLI usage with --repo and --plan; model assertion alone is rejected",
+    "answers": {
+      "publicationModule": "milestone2.publish",
+      "guide": "milestone2/PUBLISH.md",
+      "preflightSubcommand": "preflight",
+      "publicationSubcommand": "publish",
+      "testModule": "milestone3.check",
+      "developerMayPublish": false,
+      "reviewerMayPublish": false,
+      "ownerApprovalRequired": true,
+      "preflightHelpExecuted": true
+    },
+    "nativeReadPaths": [
+      "AGENTS.md",
+      "milestone2/PUBLISH.md",
+      "milestone3/README.md",
+      "milestone2/fixtures/script-discovery-probe.md",
+      "autonomy/agents/developer.md",
+      "autonomy/agents/reviewer.md",
+      "milestone2/README.md"
+    ],
+    "effectiveExternalMcpToolsBeforeAndAfter": ["IndexMappingTool", "ListIndexTool", "MsearchTool", "SearchIndexTool"],
+    "nativeLogUtf8Bytes": 219813,
+    "nativeLogSha256": "9967cf9e93100acf2f6a6ca10911bd023c07f699e5852e3d540c4f78a68f7e72",
+    "worktreeHeadIndependentlyVerified": true,
+    "worktreeCleanAfterRun": true,
+    "usage": {"inputTokens": 36509, "cachedInputTokens": 120983, "outputTokens": 2444, "reportedCostUsd": 0, "costStatus": "reported"},
+    "privateEvidenceDirectory": ".milestone0/script-discovery-live-inline-final-20261003",
+    "privateEvidencePublished": false
+  },
+  "cleanupObserved": {
+    "actorPaused": true,
+    "originalConfigurationRestored": true,
+    "effectiveMcpToolsUnchanged": true,
+    "bothDiagnosticIssuesCancelled": true,
+    "bothIssueExecutionAndCheckoutLocksCleared": true,
+    "diagnosticLeaseStates": {
+      "AIF-59": {"expired": 1, "released": 1},
+      "AIF-60": {"expired": 1, "released": 1}
+    },
+    "pausedAgents": 115,
+    "queuedOrRunningRuns": 0
+  },
+  "verification": {
+    "proofModule": "milestone2.scripts.script_discovery_proof",
+    "newRegressionTests": 7,
+    "fullSuiteCommand": "uv run --offline --no-project --with 'jsonschema[format]==4.25.1' --with 'PyYAML==6.0.2' python -m milestone3.check",
+    "testsRun": 212,
+    "passed": 210,
+    "skipped": 2,
+    "skipReason": "existing opt-in live integration tests",
+    "failures": 0,
+    "seconds": 91.147
+  },
+  "limits": [
+    "One representative native OpenCode run, not every provider or existing session",
+    "Fresh tasks use refreshed instructions/source; old task worktrees and sessions were not rewritten",
+    "Read-only discovery/help, not live target-repository publication or hard access-isolation proof",
+    "Only an operator/authorized orchestrator may publish with exact live owner approval",
+    "No task/control-plane, capability or workflow authority changed",
+    "No token-savings, invoice-cost or model-performance comparison is claimed"
+  ]
+}
