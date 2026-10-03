@@ -753,3 +753,47 @@ changing other projects' Docker settings, then prove the governed native SSH
 task path (workspace/context/MCP bindings and cleanup) before unpausing the
 selected task agents. Do not mark isolation complete from DNS or container
 configuration alone. Milestone 0/1 stay complete; Milestone 2 remains in progress.
+
+## Self-enhancement programs: one authorization, four waves
+
+`python -m milestone2.program` submits and inspects a governed
+self-enhancement program: one idempotent backlog parent issue plus four
+dependency-ordered child wave issues, all bound to a single validated
+authorization digest. Child waves carry independent review stages but no
+per-wave human approval gate; remote publication, merge, deployment, and
+service restart remain unavailable unless the persisted envelope explicitly
+allows the exact action and an existing command supports it.
+
+Submission requires the private operator state file (owner identity plus
+board credential, via `AIF_PAPERCLIP_STATE` or `--state`); agent/run
+identities are rejected. The state file is ignored local input and is never
+copied into a task description, document, workspace, or runtime environment.
+
+```powershell
+$env:AIF_PAPERCLIP_STATE = '.milestone0/self-enhancement/operator-state.json'
+python -m milestone2.program submit --workflow .milestone0/self-enhancement/workflow.json --program milestone2/tasks/self-enhancement-program.json --dry-run
+python -m milestone2.program submit --workflow .milestone0/self-enhancement/workflow.json --program milestone2/tasks/self-enhancement-program.json --output .milestone0/self-enhancement/submission.json
+python -m milestone2.program submit --workflow .milestone0/self-enhancement/workflow.json --program milestone2/tasks/self-enhancement-program.json --output .milestone0/self-enhancement/submission.json --start
+$program = Get-Content -Raw -LiteralPath '.milestone0/self-enhancement/submission.json' | ConvertFrom-Json
+python -m milestone2.program status $program.parentId
+```
+
+Behavior:
+
+- `submit --dry-run` validates the program and prints every payload without
+  network or filesystem writes.
+- `submit` without `--start` leaves all five issues in backlog. `--start`
+  sets only the first unblocked wave to `todo`; selected agents must already
+  be active, and `--start` is rejected for any read-only classification
+  rather than allocating a runtime.
+- Every write uses a stable request key, document content, or
+  `clientRequestId`: rerunning after an interruption (parent creation,
+  authorization-document write, each child POST, blocker PATCH, or receipt
+  creation) converges to the same five issue IDs and one receipt. A replay
+  whose stored project, parent, title, request key, document digest,
+  blockers, or policy differs stops instead of overwriting.
+- `submit --output` atomically writes the same receipt object it returns
+  (parent/child IDs, digest, and Paperclip URL paths, no secrets).
+- `status` reads Paperclip's authoritative parent/child state and rejects
+  cross-company rows, more than eight children, duplicate IDs, unexpected
+  child titles, or a missing authorization document/digest.

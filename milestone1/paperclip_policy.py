@@ -13,6 +13,11 @@ def _agent_id(value: str) -> str:
     return str(parsed)
 
 
+def program_agent_id(value: str) -> str:
+    """Validate a Paperclip agent UUID for program submission payloads."""
+    return _agent_id(value)
+
+
 def engineering_execution_policy(
     developer_agent_id: str,
     validator_agent_id: str,
