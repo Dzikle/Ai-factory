@@ -13,6 +13,7 @@ import json
 import os
 import re
 import sys
+import uuid as std_uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import URLError
@@ -102,6 +103,16 @@ def authorization_digest(program):
 def wave_request_key(program, wave):
     """Stable per-wave idempotency key derived from the program request key."""
     return f"{program['request_key']}:{wave['id']}"
+
+
+def authorization_receipt_id(request_key):
+    """Deterministic UUID for the authorization receipt comment.
+
+    Live Paperclip requires ``clientRequestId`` to be a UUID. Deriving a
+    UUIDv5 from the stable program request key plus the receipt purpose keeps
+    replays on exactly the same ID without changing issue request keys.
+    """
+    return str(std_uuid.uuid5(std_uuid.NAMESPACE_URL, f"{request_key}:authorization-receipt"))
 
 
 def parent_title(program):
@@ -198,8 +209,11 @@ def build_submission(state, workflow, program, *, start=False, now=None, health=
         "executionPolicy": policy,
     }
     receipt = {
-        "body": f"Authorized self-enhancement program sha256:{digest}",
-        "clientRequestId": f"{program['request_key']}:authorization-receipt",
+        "body": (
+            f"Authorized self-enhancement program {program['program_id']} "
+            f"(request {program['request_key']}) sha256:{digest}"
+        ),
+        "clientRequestId": authorization_receipt_id(program["request_key"]),
         "authorUserId": owner,
     }
     children = []

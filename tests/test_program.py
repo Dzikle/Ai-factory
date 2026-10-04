@@ -5,12 +5,13 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import unittest
+from uuid import UUID
 
 import yaml
 
 from milestone0.scripts.paperclip_admission import ApiError
 from milestone2.program import (
-    authorization_digest, classify_task, program_execution_policy,
+    authorization_digest, authorization_receipt_id, classify_task, program_execution_policy,
     build_program_report, read_program_status, store_outcome,
     store_verification_contract, submit_program,
 )
@@ -93,6 +94,7 @@ class FakePaperclip:
             self.documents[key] = value
             return 201, deepcopy(value)
         if method == "POST" and path.endswith("/comments"):
+            UUID(payload.get("clientRequestId"))
             if not any(row.get("clientRequestId") == payload.get("clientRequestId") for row in self.comments):
                 self.comments.append(deepcopy(payload))
             return 201, deepcopy(payload)
@@ -125,6 +127,12 @@ class ProgramTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             classify_task(intent="free form prose!", scope_verb="report", size="small", risk="low", change_type="read_only")
 
+    def test_authorization_receipt_id_is_deterministic_uuid(self):
+        first = authorization_receipt_id("self-enhancement-test")
+        self.assertEqual(first, authorization_receipt_id("self-enhancement-test"))
+        UUID(first)
+        self.assertNotEqual(first, authorization_receipt_id("other-key"))
+
     def test_digest_is_canonical_and_scope_sensitive(self):
         program = sample_program()
         digest = authorization_digest(program)
@@ -136,7 +144,8 @@ class ProgramTests(unittest.TestCase):
 
     def test_submit_creates_one_parent_and_dependency_ordered_children_and_replays(self):
         client = FakePaperclip()
-        result = submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), sample_program(), start=True,
+        program = sample_program()
+        result = submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), program, start=True,
                                 now=datetime(2026, 10, 3, tzinfo=timezone.utc))
         self.assertEqual(5, len(client.issues))
         children = [client.issues[row["id"]] for row in result["waves"]]
@@ -144,8 +153,13 @@ class ProgramTests(unittest.TestCase):
         self.assertEqual([children[0]["id"]], children[1]["blockedByIssueIds"])
         self.assertEqual("todo", children[0]["status"])
         self.assertEqual(1, len(client.comments))
-        self.assertEqual(result, submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), sample_program(), start=True,
+        receipt_id = UUID(client.comments[0]["clientRequestId"])
+        self.assertIn(program["request_key"], client.comments[0]["body"])
+        self.assertIn(result["digest"], client.comments[0]["body"])
+        self.assertEqual(result, submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), program, start=True,
                                                 now=datetime(2026, 10, 3, tzinfo=timezone.utc)))
+        self.assertEqual(1, len(client.comments))
+        self.assertEqual(str(receipt_id), client.comments[0]["clientRequestId"])
 
     def test_read_status_rejects_unexpected_or_cross_company_children(self):
         client = FakePaperclip()
@@ -247,9 +261,11 @@ class RealShapeReplayTests(unittest.TestCase):
         _, parent_via_api = client.request("GET", f"/api/issues/{first['parentId']}")
         self.assertNotIn("idempotencyKey", parent_via_api)
         self.assertIn(program["request_key"], parent_via_api.get("title", ""))
+        receipt_id = UUID(client.comments[0]["clientRequestId"])
         second = submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), program, start=False,
                                 now=datetime(2026, 10, 3, tzinfo=timezone.utc))
         self.assertEqual(first, second)
+        self.assertEqual(str(receipt_id), client.comments[0]["clientRequestId"])
         self.assertEqual(5, len(client.issues))
         parents = [issue for issue in client.issues.values() if not issue.get("parentId")]
         children = [issue for issue in client.issues.values() if issue.get("parentId") == first["parentId"]]
