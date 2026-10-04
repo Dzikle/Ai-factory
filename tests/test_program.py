@@ -8,9 +8,11 @@ import unittest
 
 import yaml
 
+from milestone0.scripts.paperclip_admission import ApiError
 from milestone2.program import (
     authorization_digest, classify_task, program_execution_policy,
-    read_program_status, submit_program,
+    build_program_report, read_program_status, store_outcome,
+    store_verification_contract, submit_program,
 )
 
 
@@ -35,9 +37,19 @@ def sample_program() -> dict:
 
 
 class FakePaperclip:
+    """Live-shaped revisioned-document fake: text bodies with latestRevisionId."""
+
     def __init__(self):
         self.issues, self.documents, self.comments = {}, {}, []
         self.next_id = 1
+        self.document_puts = 0
+        self.document_gets = 0
+        self.last_put_payload = None
+
+    @staticmethod
+    def _doc_key(path):
+        parts = path.split("/")
+        return f"{parts[3]}/{parts[5]}"
 
     def request(self, method, path, payload=None, expected=None):
         if method == "GET" and path == f"/api/projects/{PROJECT}":
@@ -53,14 +65,33 @@ class FakePaperclip:
             issue = {**deepcopy(payload), "id": issue_id, "identifier": f"AIF-{self.next_id}", "companyId": COMPANY}
             self.issues[issue_id] = issue
             return 201, deepcopy(issue)
+        if method == "GET" and "/documents/" in path:
+            self.document_gets += 1
+            key = self._doc_key(path)
+            if key not in self.documents:
+                raise ApiError(method, path, 404, {"message": "document not found"})
+            return 200, deepcopy(self.documents[key])
         if method == "PUT" and "/documents/" in path:
-            key = path.rsplit("/", 1)[1]
+            key = self._doc_key(path)
+            name = path.rsplit("/", 1)[1]
+            self.last_put_payload = deepcopy(payload)
+            assert isinstance(payload, dict), payload
+            assert payload.get("format") == "markdown", payload
+            assert isinstance(payload.get("body"), str), payload
+            assert isinstance(payload.get("title"), str) and payload["title"], payload
+            assert "content" not in payload and "revisionId" not in payload, payload
+            assert "baseRevisionId" not in payload, payload
+            json.loads(payload["body"])
             current = self.documents.get(key)
-            if current and current["content"] != payload["content"]:
-                raise ValueError("document conflict")
-            value = current or {**deepcopy(payload), "id": f"doc-{key}", "revisionId": f"rev-{key}"}
+            if current is not None:
+                if current["body"] != payload["body"]:
+                    raise ValueError("document conflict")
+                return 200, deepcopy(current)
+            self.document_puts += 1
+            value = {"id": f"doc-{name}", "title": payload["title"], "format": "markdown",
+                     "body": payload["body"], "latestRevisionId": f"rev-{name}-1"}
             self.documents[key] = value
-            return 200, deepcopy(value)
+            return 201, deepcopy(value)
         if method == "POST" and path.endswith("/comments"):
             if not any(row.get("clientRequestId") == payload.get("clientRequestId") for row in self.comments):
                 self.comments.append(deepcopy(payload))
@@ -73,8 +104,6 @@ class FakePaperclip:
             return 200, deepcopy(self.issues[path.rsplit("/", 1)[1]])
         if method == "GET" and path.startswith(f"/api/companies/{COMPANY}/issues"):
             return 200, list(deepcopy(self.issues).values())
-        if method == "GET" and "/documents/authorization" in path:
-            return 200, deepcopy(self.documents["authorization"])
         raise AssertionError((method, path, payload))
 
 
@@ -162,10 +191,10 @@ class ProgramReplayTests(unittest.TestCase):
         return submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), sample_program(), start=True,
                               now=datetime(2026, 10, 3, tzinfo=timezone.utc), **kwargs)
 
-    def test_interrupted_submission_replays_without_duplicates(self):        # Full-run request indices: 1-5 scope reads, 6 parent, 7 document,
-        # 8 receipt, 9-12 children, 13-20 blocker reads/writes, 21-22 start.
+    def test_interrupted_submission_replays_without_duplicates(self):        # Full-run request indices: 1-5 scope reads, 6 parent, 7 document GET,
+        # 8 document PUT, 9 receipt, 10-13 children, 14-21 blocker reads/writes, 22-23 start.
         expected = self.submit(FakePaperclip())
-        for fail_at in (7, 8, 9, 10, 11, 12, 13, 16, 22):
+        for fail_at in (7, 8, 9, 10, 11, 13, 14, 17, 23):
             with self.subTest(fail_at=fail_at):
                 client = InterruptingPaperclip(fail_at)
                 with self.assertRaises(ConnectionError):
@@ -262,7 +291,7 @@ class ProgramEvidenceTests(unittest.TestCase):
                                 "reviewerAgentId": REVIEWER, "qaAgentId": QA},
                                program, start=False, now=datetime(2026, 10, 3, tzinfo=timezone.utc),
                                evidence_packs=packs)
-        self.assertIn("evidence-orchestration", client.documents)
+        self.assertTrue(any(key.endswith("/evidence-orchestration") for key in client.documents))
         child = client.issues[first["waves"][0]["id"]]
         self.assertIn("evidence-orchestration", child["description"])
         self.assertIn(packs["orchestration"]["sha256"], child["description"])
@@ -272,6 +301,129 @@ class ProgramEvidenceTests(unittest.TestCase):
                                 program, start=False, now=datetime(2026, 10, 3, tzinfo=timezone.utc),
                                 evidence_packs=packs)
         self.assertEqual(first, second)
+
+
+class RevisionedDocumentTests(unittest.TestCase):
+    """Live revisioned-text contract: create, zero-write replay, conflict, reads, storage."""
+
+    def workflow(self):
+        return {"projectId": PROJECT, "developerAgentId": DEV, "validatorAgentId": VALIDATOR,
+                "reviewerAgentId": REVIEWER, "qaAgentId": QA}
+
+    def submit(self, client, program=None, **kwargs):
+        return submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(),
+                              program or sample_program(), start=False,
+                              now=datetime(2026, 10, 3, tzinfo=timezone.utc), **kwargs)
+
+    @staticmethod
+    def sample_contract(commit="a" * 40):
+        return {"profile": "ai-factory-full", "candidate_commit": commit,
+                "checks": [{"id": "unit", "argv": ["python", "-m", "milestone3.check"]}]}
+
+    @staticmethod
+    def sample_outcome(commit="a" * 40):
+        return {
+            "schemaVersion": 1,
+            "objective": "Prove the one-authorization lifecycle on a docs-only wave.",
+            "candidate": {"commit": commit, "tree": "b" * 40},
+            "changes": [{"path": "docs/guide.md", "summary": "Clarify the lifecycle stages."}],
+            "verification": {"candidate_commit": commit, "status": "passed",
+                             "failed_checks": [], "missing_checks": []},
+            "review": {"candidate_commit": commit, "verdict": "approve",
+                       "reviewer": "independent-reviewer"},
+            "external_evidence": [{"kind": "ci", "candidate_commit": commit, "status": "passed",
+                                   "uri": "https://ci.example.invalid/jobs/1"}],
+            "authorization": {"digest": "c" * 64, "scope": "docs-only wave"},
+            "knowledge_impact": "verify",
+            "deferred_findings": [{"summary": "Stale diagram.", "severity": "low"}],
+            "metrics": {"tests_run": 12, "tests_passed": 12, "usage": "unknown"},
+            "unresolved_items": [],
+            "rollback": "Revert the wave branch; no migration or deployment occurred.",
+            "next_disposition": "Proceed to the next wave.",
+            "status": "accepted",
+        }
+
+    def test_initial_create_uses_live_revisioned_shape(self):
+        client = FakePaperclip()
+        result = self.submit(client)
+        key = f"{result['parentId']}/authorization"
+        stored = client.documents[key]
+        self.assertEqual("markdown", stored["format"])
+        self.assertEqual("authorization", stored["title"])
+        self.assertIn("latestRevisionId", stored)
+        self.assertNotIn("content", stored)
+        self.assertNotIn("revisionId", stored)
+        self.assertNotIn("baseRevisionId", client.last_put_payload)
+        parsed = json.loads(stored["body"])
+        self.assertEqual(parsed["digest"], result["digest"])
+        self.assertEqual(stored["body"], json.dumps(parsed, sort_keys=True, separators=(",", ":")))
+        self.assertEqual(stored["latestRevisionId"], result["authorizationDocumentRevision"])
+        self.assertGreaterEqual(client.document_gets, 1)
+
+    def test_replay_writes_no_new_revision_and_keeps_stable_revision(self):
+        client = FakePaperclip()
+        first = self.submit(client)
+        puts, gets = client.document_puts, client.document_gets
+        revision = first["authorizationDocumentRevision"]
+        second = self.submit(client)
+        self.assertEqual(first, second)
+        self.assertEqual(puts, client.document_puts)
+        self.assertEqual(revision, second["authorizationDocumentRevision"])
+        self.assertGreater(client.document_gets, gets)
+
+    def test_conflict_on_different_content_and_malformed_body(self):
+        client = FakePaperclip()
+        result = self.submit(client)
+        key = f"{result['parentId']}/authorization"
+        other = json.loads(client.documents[key]["body"])
+        other["digest"] = "0" * 64
+        client.documents[key]["body"] = json.dumps(other, sort_keys=True, separators=(",", ":"))
+        with self.assertRaisesRegex(ValueError, "conflict"):
+            self.submit(client)
+        client.documents[key]["body"] = "not-json{{{"
+        with self.assertRaisesRegex(ValueError, "malformed|conflict|missing"):
+            self.submit(client)
+        with self.assertRaisesRegex(ValueError, "malformed|missing|conflict"):
+            read_program_status(client, result["parentId"], COMPANY)
+
+    def test_status_and_report_reads_use_live_documents(self):
+        client = FakePaperclip()
+        result = self.submit(client)
+        status = read_program_status(client, result["parentId"], COMPANY)
+        self.assertEqual(result["digest"], status["digest"])
+        self.assertEqual(4, len(status["waves"]))
+        outcome = self.sample_outcome()
+        stored = store_outcome(client, result["parentId"], outcome)
+        _, live = client.request("GET", f"/api/issues/{result['parentId']}/documents/outcome")
+        self.assertEqual(live["latestRevisionId"], stored["revisionId"])
+        self.assertEqual(outcome, json.loads(live["body"]))
+        built = build_program_report(client, result["parentId"], COMPANY)
+        self.assertEqual(outcome, built["outcome"])
+        self.assertIn("## Objective", built["markdown"])
+        self.assertEqual(status, built["status"])
+
+    def test_verification_and_outcome_storage_replay_and_conflict(self):
+        client = FakePaperclip()
+        result = self.submit(client)
+        parent_id = result["parentId"]
+        contract = self.sample_contract()
+        first = store_verification_contract(client, parent_id, "planning", contract)
+        puts = client.document_puts
+        second = store_verification_contract(client, parent_id, "planning", contract)
+        self.assertEqual(first, second)
+        self.assertEqual(puts, client.document_puts)
+        _, live = client.request("GET", f"/api/issues/{parent_id}/documents/verification-planning")
+        self.assertEqual(live["latestRevisionId"], first["revisionId"])
+        altered = self.sample_contract(commit="b" * 40)
+        with self.assertRaisesRegex(ValueError, "conflict"):
+            store_verification_contract(client, parent_id, "planning", altered)
+        outcome = self.sample_outcome()
+        first_outcome = store_outcome(client, parent_id, outcome)
+        replayed = store_outcome(client, parent_id, outcome)
+        self.assertEqual(first_outcome, replayed)
+        tampered = self.sample_outcome(commit="b" * 40)
+        with self.assertRaisesRegex(ValueError, "conflict"):
+            store_outcome(client, parent_id, tampered)
 
 
 if __name__ == "__main__":

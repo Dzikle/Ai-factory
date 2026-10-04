@@ -253,6 +253,85 @@ def _check_replay(label, expected, actual, fields):
             raise ValueError(f"replay conflict on {label}: field {field} differs; refusing to overwrite")
 
 
+def _canonical_json_body(value):
+    """Serialize JSON canonically for storage in a revisioned-text body."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def _parse_json_body(document, label):
+    if not isinstance(document, dict):
+        raise ValueError(f"{label} is missing")
+    body = document.get("body")
+    if not isinstance(body, str) or not body:
+        raise ValueError(f"{label} is missing")
+    try:
+        parsed = json.loads(body)
+    except ValueError as exc:
+        raise ValueError(f"{label} is malformed; refusing to use it") from exc
+    return parsed
+
+
+def _store_json_document(client, parent_id, name, value, *, title=None, label=None):
+    """Idempotently store one JSON value in a live Paperclip revisioned document.
+
+    Live documents are revisioned text: creation sends
+    ``{title, format: "markdown", body}`` without ``baseRevisionId`` and
+    reads back ``{body, latestRevisionId}``. This adapter GETs before PUT,
+    creates only on 404, performs no write when identical canonical content
+    already exists, and fails closed on malformed or different content.
+    """
+    item = label or f"{name} document"
+    canonical = _canonical_json_body(value)
+    path = f"/api/issues/{parent_id}/documents/{name}"
+    try:
+        _, existing = client.request("GET", path)
+    except ApiError as exc:
+        if exc.status != 404:
+            raise
+        existing = None
+    if existing is None:
+        payload = {
+            "title": text(title or name, "title", 200),
+            "format": "markdown",
+            "body": canonical,
+        }
+        try:
+            _, created = client.request("PUT", path, payload, expected=(200, 201))
+        except (ApiError, ValueError) as exc:
+            raise ValueError(f"{item} conflict for parent {parent_id}; refusing to overwrite") from exc
+        if not isinstance(created, dict) or not created.get("latestRevisionId"):
+            raise ValueError(f"{item} create did not return latestRevisionId")
+        return created.get("latestRevisionId")
+    if not isinstance(existing, dict):
+        raise ValueError(f"{item} is malformed; refusing to overwrite")
+    stored_body = existing.get("body")
+    latest = existing.get("latestRevisionId")
+    if not isinstance(stored_body, str) or not latest:
+        raise ValueError(f"{item} is malformed; refusing to overwrite")
+    try:
+        stored_parsed = json.loads(stored_body)
+    except ValueError as exc:
+        raise ValueError(f"{item} is malformed; refusing to overwrite") from exc
+    if _canonical_json_body(stored_parsed) != canonical:
+        raise ValueError(f"{item} conflict for parent {parent_id}; refusing to overwrite")
+    return latest
+
+
+def _read_json_document(client, parent_id, name, *, label=None):
+    """Read one JSON value from a live revisioned document, failing closed."""
+    item = label or f"{name} document"
+    path = f"/api/issues/{parent_id}/documents/{name}"
+    try:
+        _, document = client.request("GET", path)
+    except ApiError as exc:
+        raise ValueError(f"{item} is missing") from exc
+    parsed = _parse_json_body(document, item)
+    latest = document.get("latestRevisionId") if isinstance(document, dict) else None
+    if not latest:
+        raise ValueError(f"{item} is missing")
+    return parsed, latest
+
+
 def submit_program(client, company_id, state, workflow, program, *, start=False, now=None,
                    health=None, capability_manifests=None, evidence_packs=None):
     """Idempotently create one parent plus four dependency-ordered children.
@@ -284,23 +363,25 @@ def submit_program(client, company_id, state, workflow, program, *, start=False,
     _check_replay("parent issue", plan["parent"], parent, ("projectId", "title", "idempotencyKey"))
     parent_id = parent["id"]
 
-    document_path = f"/api/issues/{parent_id}/documents/authorization"
     try:
-        _, document = client.request("PUT", document_path, {"content": plan["authorizationDocument"]}, expected=(200,))
-    except (ApiError, ValueError) as exc:
+        revision = _store_json_document(
+            client, parent_id, "authorization", plan["authorizationDocument"],
+            title="authorization", label="authorization document",
+        )
+    except ValueError as exc:
         raise ValueError(f"authorization document conflict for parent {parent_id}; refusing to overwrite") from exc
-    revision = document.get("revisionId")
 
     client.request("POST", f"/api/issues/{parent_id}/comments", plan["receipt"], expected=(200, 201))
 
     evidence_revisions = {}
     for wave_id, pack in plan["evidencePacks"].items():
         try:
-            _, stored = client.request("PUT", f"/api/issues/{parent_id}/documents/evidence-{wave_id}",
-                                       {"content": pack}, expected=(200,))
-        except (ApiError, ValueError) as exc:
+            evidence_revisions[wave_id] = _store_json_document(
+                client, parent_id, f"evidence-{wave_id}", pack,
+                title=f"evidence-{wave_id}", label=f"evidence document for wave {wave_id}",
+            )
+        except ValueError as exc:
             raise ValueError(f"evidence document conflict for wave {wave_id}; refusing to overwrite") from exc
-        evidence_revisions[wave_id] = stored.get("revisionId")
 
     child_ids = []
     for child in plan["children"]:
@@ -356,10 +437,10 @@ def read_program_status(client, parent_id, company_id):
     if not isinstance(parent, dict) or parent.get("companyId") != company_id:
         raise ValueError("parent issue does not belong to the configured company")
     try:
-        _, document = client.request("GET", f"/api/issues/{parent_id}/documents/authorization")
-        stored = document.get("content") or {}
+        stored, _ = _read_json_document(
+            client, parent_id, "authorization", label="program authorization document")
         stored_program, stored_digest = stored.get("program"), stored.get("digest")
-    except (ApiError, KeyError, AttributeError) as exc:
+    except (ValueError, KeyError, AttributeError) as exc:
         raise ValueError("program authorization document is missing") from exc
     if not isinstance(stored_program, dict) or not stored_digest:
         raise ValueError("program authorization document is missing")
@@ -396,9 +477,11 @@ def read_program_status(client, parent_id, company_id):
 def store_verification_contract(client, parent_id, wave_id, contract):
     """Store a wave's verification contract before that child starts."""
     validate_verification_contract(contract)
-    _, document = client.request("PUT", f"/api/issues/{parent_id}/documents/verification-{wave_id}",
-                                 {"content": contract}, expected=(200,))
-    return {"document": f"verification-{wave_id}", "revisionId": document.get("revisionId")}
+    revision = _store_json_document(
+        client, parent_id, f"verification-{wave_id}", contract,
+        title=f"verification-{wave_id}", label=f"verification document for wave {wave_id}",
+    )
+    return {"document": f"verification-{wave_id}", "revisionId": revision}
 
 
 def store_outcome(client, parent_id, outcome):
@@ -408,16 +491,17 @@ def store_outcome(client, parent_id, outcome):
     validator, never inferred here.
     """
     validate_outcome_report(outcome)
-    _, document = client.request("PUT", f"/api/issues/{parent_id}/documents/outcome",
-                                 {"content": outcome}, expected=(200,))
-    return {"document": "outcome", "revisionId": document.get("revisionId")}
+    revision = _store_json_document(
+        client, parent_id, "outcome", outcome,
+        title="outcome", label="program outcome document",
+    )
+    return {"document": "outcome", "revisionId": revision}
 
 
 def build_program_report(client, parent_id, company_id):
     """Project the stored outcome report; lineage comes from the record."""
     status = read_program_status(client, parent_id, company_id)
-    _, document = client.request("GET", f"/api/issues/{parent_id}/documents/outcome")
-    outcome = (document.get("content") or {}) if isinstance(document, dict) else {}
+    outcome, _ = _read_json_document(client, parent_id, "outcome", label="program outcome document")
     validate_outcome_report(outcome)
     return {"status": status, "outcome": outcome, "markdown": render_markdown(outcome)}
 
