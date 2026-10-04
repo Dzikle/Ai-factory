@@ -71,6 +71,20 @@ class MaintenanceSafetyTests(unittest.TestCase):
             audit = apply_patch(root, patch, preview)
             self.assertEqual(preview["after_sha256"], audit["after_sha256"])
             self.assertEqual("alpha new_text omega\n", (root / "note.md").read_text(encoding="utf-8"))
+            self.assertEqual(preview["updated_text"].encode("utf-8"), (root / "note.md").read_bytes())
+            self.assertEqual(preview["after_sha256"],
+                             hashlib.sha256((root / "note.md").read_bytes()).hexdigest())
+            # CRLF content must round-trip byte-exact: write_text would
+            # translate the LF in each CRLF pair again (CR CR LF) on Windows.
+            (root / "crlf.md").write_bytes(b"alpha old_text omega\r\n")
+            crlf_digest = hashlib.sha256((root / "crlf.md").read_bytes()).hexdigest()
+            crlf_patch = {"path": "crlf.md", "expected_sha256": crlf_digest,
+                          "old_text": "old_text", "new_text": "new_text"}
+            crlf_preview = preview_patch(root, crlf_patch)
+            crlf_audit = apply_patch(root, crlf_patch, crlf_preview)
+            self.assertEqual(crlf_preview["after_sha256"], crlf_audit["after_sha256"])
+            self.assertEqual(b"alpha new_text omega\r\n", (root / "crlf.md").read_bytes())
+            self.assertNotIn(b"\r\r\n", (root / "crlf.md").read_bytes())
             (root / "note.md").write_text("someone else edited\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "re-preview"):
                 apply_patch(root, patch, preview)

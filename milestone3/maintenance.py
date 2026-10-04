@@ -94,7 +94,7 @@ def apply_patch(root, patch, preview):
     fresh = preview_patch(root, patch)
     if fresh["after_sha256"] != preview.get("after_sha256"):
         raise ValueError("preview does not match current source; re-preview before applying")
-    target.write_text(preview["updated_text"], encoding="utf-8")
+    target.write_bytes(preview["updated_text"].encode("utf-8"))
     return {"path": patch["path"], "before_sha256": preview["before_sha256"],
             "after_sha256": preview["after_sha256"],
             "bytes_written": len(preview["updated_text"].encode("utf-8"))}
