@@ -223,10 +223,24 @@ class RealShapedPaperclip(FakePaperclip):
     """Mimic real Paperclip: accept idempotencyKey but omit it from responses.
 
     Paperclip dedupes issue creation on the request-only idempotencyKey yet
-    intentionally omits that field from issue responses. Identity on replay
-    remains pinned by project, title (which embeds the request key), parent
-    lineage, policy, blockers, and the authorization document.
+    intentionally omits that field from issue responses. It also normalizes the
+    stored execution policy with generated stage/participant ``id`` values,
+    explicit ``userId: null``, and ``approvalsNeeded: 1`` while preserving
+    authorization semantics. Identity on replay remains pinned by project,
+    title (which embeds the request key), parent lineage, semantic policy,
+    blockers, and the authorization document.
     """
+
+    @staticmethod
+    def _server_policy(policy):
+        normalized = deepcopy(policy)
+        for stage_index, stage in enumerate(normalized.get("stages", [])):
+            stage.setdefault("id", f"stage-{stage_index + 1}")
+            stage.setdefault("approvalsNeeded", 1)
+            for participant_index, participant in enumerate(stage.get("participants", [])):
+                participant.setdefault("id", f"participant-{stage_index + 1}-{participant_index + 1}")
+                participant.setdefault("userId", None)
+        return normalized
 
     @staticmethod
     def _strip_issue(issue):
@@ -236,6 +250,10 @@ class RealShapedPaperclip(FakePaperclip):
         return issue
 
     def request(self, method, path, payload=None, expected=None):
+        if method == "POST" and path == f"/api/companies/{COMPANY}/issues" and isinstance(payload, dict):
+            payload = deepcopy(payload)
+            if isinstance(payload.get("executionPolicy"), dict):
+                payload["executionPolicy"] = self._server_policy(payload["executionPolicy"])
         status, body = super().request(method, path, payload, expected)
         if isinstance(body, dict) and (
             path == f"/api/companies/{COMPANY}/issues"
@@ -261,6 +279,15 @@ class RealShapeReplayTests(unittest.TestCase):
         _, parent_via_api = client.request("GET", f"/api/issues/{first['parentId']}")
         self.assertNotIn("idempotencyKey", parent_via_api)
         self.assertIn(program["request_key"], parent_via_api.get("title", ""))
+        # Server normalization preserves semantics with generated IDs/defaults.
+        stored_child = client.issues[first["waves"][0]["id"]]
+        stored_policy = stored_child["executionPolicy"]
+        for stage in stored_policy["stages"]:
+            self.assertIn("id", stage)
+            self.assertEqual(1, stage["approvalsNeeded"])
+            for participant in stage["participants"]:
+                self.assertIn("id", participant)
+                self.assertIsNone(participant["userId"])
         receipt_id = UUID(client.comments[0]["clientRequestId"])
         second = submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), program, start=False,
                                 now=datetime(2026, 10, 3, tzinfo=timezone.utc))
@@ -272,6 +299,54 @@ class RealShapeReplayTests(unittest.TestCase):
         self.assertEqual(1, len(parents))
         self.assertEqual(4, len(children))
         self.assertEqual(1, len(client.comments))
+
+    def _tampered_client(self, mutate):
+        client = RealShapedPaperclip()
+        program = sample_program()
+        first = submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), program, start=False,
+                               now=datetime(2026, 10, 3, tzinfo=timezone.utc))
+        mutate(client.issues[first["waves"][0]["id"]]["executionPolicy"])
+        return client, program
+
+    def _assert_replay_conflict(self, client, program):
+        with self.assertRaisesRegex(ValueError, "policy.*differ|conflict"):
+            submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), program, start=False,
+                           now=datetime(2026, 10, 3, tzinfo=timezone.utc))
+
+    def test_normalized_policy_ignores_ids_and_nullables_but_rejects_tampering(self):
+        # Removed stage.
+        client, program = self._tampered_client(lambda policy: policy["stages"].pop())
+        self._assert_replay_conflict(client, program)
+        # Reordered stages with distinct agents.
+        def reorder(policy):
+            policy["stages"][0], policy["stages"][1] = policy["stages"][1], policy["stages"][0]
+        client, program = self._tampered_client(reorder)
+        self._assert_replay_conflict(client, program)
+        # Changed agent.
+        client, program = self._tampered_client(
+            lambda policy: policy["stages"][0]["participants"][0].__setitem__("agentId", DEV))
+        self._assert_replay_conflict(client, program)
+        # Human approval stage.
+        client, program = self._tampered_client(lambda policy: policy["stages"].__setitem__(0, {
+            "id": "stage-1", "type": "human_approval", "approvalsNeeded": 1,
+            "participants": [{"id": "participant-1-1", "type": "user", "userId": "owner"}]}))
+        self._assert_replay_conflict(client, program)
+        # Changed approval count.
+        client, program = self._tampered_client(lambda policy: policy["stages"][0].__setitem__("approvalsNeeded", 2))
+        self._assert_replay_conflict(client, program)
+        # Weakened mode.
+        client, program = self._tampered_client(lambda policy: policy.__setitem__("mode", "relaxed"))
+        self._assert_replay_conflict(client, program)
+        # Weakened review rounds.
+        client, program = self._tampered_client(lambda policy: policy.__setitem__("maxReviewRounds", 1))
+        self._assert_replay_conflict(client, program)
+        # Weakened comment requirement.
+        client, program = self._tampered_client(lambda policy: policy.__setitem__("commentRequired", False))
+        self._assert_replay_conflict(client, program)
+        # Changed participant identity via userId.
+        client, program = self._tampered_client(
+            lambda policy: policy["stages"][0]["participants"][0].__setitem__("userId", "someone-else"))
+        self._assert_replay_conflict(client, program)
 
 
 class StubSource:

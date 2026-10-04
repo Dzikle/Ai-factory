@@ -254,6 +254,84 @@ def build_submission(state, workflow, program, *, start=False, now=None, health=
     }
 
 
+def _normalize_policy_participant(participant):
+    if not isinstance(participant, dict):
+        raise ValueError("replay conflict on execution policy: participant differs; refusing to overwrite")
+    allowed = {"type", "agentId", "userId", "id"}
+    for key in participant:
+        if key not in allowed:
+            raise ValueError("replay conflict on execution policy: participant differs; refusing to overwrite")
+    ptype = participant.get("type")
+    agent_id = participant.get("agentId")
+    user_id = participant.get("userId")
+    # Equivalent nullable representation: missing and null are identical.
+    if agent_id is None and "agentId" not in participant:
+        agent_id = None
+    if user_id is None:
+        user_id = None
+    return (ptype, agent_id, user_id)
+
+
+def _normalize_policy_stage(stage):
+    if not isinstance(stage, dict):
+        raise ValueError("replay conflict on execution policy: stage differs; refusing to overwrite")
+    allowed = {"type", "participants", "approvalsNeeded", "id"}
+    for key in stage:
+        if key not in allowed:
+            raise ValueError("replay conflict on execution policy: stage differs; refusing to overwrite")
+    participants = stage.get("participants")
+    if not isinstance(participants, list):
+        raise ValueError("replay conflict on execution policy: stage differs; refusing to overwrite")
+    approvals = stage.get("approvalsNeeded", 1)
+    # Treat omitted requested value as the Paperclip default 1; null is equivalent.
+    if approvals is None and ("approvalsNeeded" not in stage or stage.get("approvalsNeeded") is None):
+        approvals = 1
+    return (
+        stage.get("type"),
+        approvals,
+        tuple(_normalize_policy_participant(item) for item in participants),
+    )
+
+
+def _normalize_execution_policy(policy):
+    if not isinstance(policy, dict):
+        raise ValueError("replay conflict on execution policy: policy differs; refusing to overwrite")
+    for key in policy:
+        if key not in ("mode", "commentRequired", "maxReviewRounds", "stages"):
+            raise ValueError("replay conflict on execution policy: policy differs; refusing to overwrite")
+    stages = policy.get("stages")
+    if not isinstance(stages, list):
+        raise ValueError("replay conflict on execution policy: policy differs; refusing to overwrite")
+    return (
+        policy.get("mode"),
+        policy.get("commentRequired"),
+        policy.get("maxReviewRounds"),
+        tuple(_normalize_policy_stage(stage) for stage in stages),
+    )
+
+
+def _check_execution_policy_replay(label, expected, actual):
+    """Compare execution policies semantically, failing closed.
+
+    Paperclip preserves authorization semantics but normalizes storage with
+    generated stage/participant ``id`` values, explicit ``userId: null``, and
+    ``approvalsNeeded: 1``. Only those generated IDs and equivalent
+    nullable/default representations are ignored. Any difference in mode,
+    commentRequired, maxReviewRounds, ordered stage types, approvalsNeeded, or
+    ordered participant type/agentId/userId identity fails closed.
+    """
+    try:
+        if _normalize_execution_policy(expected) != _normalize_execution_policy(actual):
+            raise ValueError(f"replay conflict on {label}: execution policy differs; refusing to overwrite")
+    except ValueError as exc:
+        message = str(exc)
+        if message.startswith("replay conflict on"):
+            if label not in message:
+                raise ValueError(f"replay conflict on {label}: execution policy differs; refusing to overwrite") from exc
+            raise
+        raise ValueError(f"replay conflict on {label}: execution policy differs; refusing to overwrite") from exc
+
+
 def _check_replay(label, expected, actual, fields):
     for field in fields:
         if field == "idempotencyKey" and "idempotencyKey" not in actual:
@@ -413,7 +491,8 @@ def submit_program(client, company_id, state, workflow, program, *, start=False,
         _, issue = client.request("POST", f"/api/companies/{company_id}/issues", payload, expected=(200, 201))
         _check_replay(f"child wave {child['wave']}", {**payload, "parentId": parent_id}, issue,
                        ("projectId", "parentId", "title", "idempotencyKey"))
-        _check_replay(f"child wave {child['wave']} policy", {"executionPolicy": child["executionPolicy"]}, issue, ("executionPolicy",))
+        _check_execution_policy_replay(
+            f"child wave {child['wave']} policy", child["executionPolicy"], issue.get("executionPolicy"))
         child_ids.append(issue["id"])
 
     wave_index = {child["wave"]: child_ids[position] for position, child in enumerate(plan["children"])}
