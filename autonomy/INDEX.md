@@ -42,6 +42,7 @@ This is the context router for AI Factory. Load the smallest relevant set of doc
 - Versioned Git contracts → [`contracts/README.md`](contracts/README.md)
 - Self-enhancement lifecycle design (approved) → [`../docs/superpowers/specs/2026-10-03-self-enhancement-lifecycle-design.md`](../docs/superpowers/specs/2026-10-03-self-enhancement-lifecycle-design.md)
 - Self-enhancement implementation plan (approved) → [`../docs/superpowers/plans/2026-10-03-v1-self-enhancement-lifecycle.md`](../docs/superpowers/plans/2026-10-03-v1-self-enhancement-lifecycle.md)
+- Self-enhancement completion record → [`../docs/implementation/V1_SELF_ENHANCEMENT_COMPLETION_2026-10-04.md`](../docs/implementation/V1_SELF_ENHANCEMENT_COMPLETION_2026-10-04.md)
 - Self-enhancement program policy → [`policies/self-enhancement.v1.yaml`](policies/self-enhancement.v1.yaml)
 - Self-enhancement program submission → [`../milestone2/README.md`](../milestone2/README.md) (`python -m milestone2.program`)
 

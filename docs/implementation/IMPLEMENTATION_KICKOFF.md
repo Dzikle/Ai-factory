@@ -802,10 +802,11 @@ human authorization as now stated in `AGENTS.md`, `autonomy/GOALS.md`,
 
 Bootstrap evidence: [`milestone4/results/self-enhancement-v1-20261003.json`](../../milestone4/results/self-enhancement-v1-20261003.json)
 records the exact source revision, per-task commits, offline test counts with
-RED/GREEN evidence, and remaining live-proof limitations. The live current-V1
-bootstrap issue, deterministic Validator, independent Reviewer, QA, the single
-final owner integration approval, and the successor-V1 canary in a
-disposable/test project remain authoritative and are not claimed here.
+RED/GREEN evidence, and the live-proof limitations that still existed at that
+bootstrap stage. Those live gates and the successor canary are now complete;
+the exact integrated identity, compatibility corrections, verification counts,
+canary results, operational boundaries, and cleanup disposition are recorded in
+[`V1_SELF_ENHANCEMENT_COMPLETION_2026-10-04.md`](V1_SELF_ENHANCEMENT_COMPLETION_2026-10-04.md).
 
 ## 9. Explicit post-V1 deferrals
 
