@@ -1,0 +1,3 @@
+# Preserve native evidence bytes across Windows checkouts and digest verification.
+*.json -text
+qa/*.json -text

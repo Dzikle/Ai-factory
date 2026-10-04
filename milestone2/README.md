@@ -26,8 +26,10 @@ For another repository question:
 3. Choose agent **Licitacija Assistant**, not **Milestone 0** (the human account).
 4. Choose **Ask** mode, then create/send the task. Read its reply in the task.
 
-The assistant is available on demand; timed heartbeats are disabled. All 95
-historical fixture agents remain paused. Do not resume the whole organization.
+The successful AIF-77 configuration is retained, but the assistant is currently
+paused following the AIF-78 correction below. Its earlier free-provider success
+does not prove current availability. Timed heartbeats are disabled. Historical
+fixture agents remain paused; do not resume the whole organization.
 The model is already configured; there is no need to choose one for each question.
 
 This assistant reads the existing partial Git snapshot at `0b8cb9647bf08cb8c269c1c89ad746d0db76d95c`,
@@ -57,6 +59,50 @@ Deployment uses the existing persistent
 and the existing context-plugin files at `/paperclip/m1-context-enricher-plugin/dist/`.
 Managed role instructions and native configuration are updated through
 Paperclip's supported agent APIs. No new controller image or website change.
+
+## AIF-78 coding routing — corrected 2026-10-04
+
+**AIF-78 is waiting for owner approval, 3/4 gates passed.** It had been assigned
+to the read-only Assistant in Standard mode with no engineering policy. A
+company-wide Factory kickoff fixture then required an irrelevant MCP lookup.
+The operator paused the wrong assignee, checked idle locks/worktree, reassigned
+the same issue and attached the existing native independent policy. No duplicate
+issue, wrapper adapter, scheduler or custom workflow state was introduced.
+
+Four clearly named, task-selected roles now exist: **Licitacija Developer,
+Validator, Reviewer and QA**. Developer/Reviewer use native **Codex / OpenAI,
+gpt-5.6-sol, low effort**, authenticated through the existing ChatGPT login.
+Validator/QA are deterministic browser scripts, not models. OpenCode's free
+Muse provider rejected the attempted coding runs; those failures are retained,
+not counted as successful execution or cost savings.
+
+The extra inner Codex Linux namespace sandbox could not launch (`bwrap` denied).
+The existing owner-approved trusted-local Docker profile is used explicitly:
+`--sandbox danger-full-access`, bypass flag false. Reviewer is a separate trusted
+read-only role, not a claimed OS/filesystem boundary. Exact external MCP catalogs
+for these four roles are empty; no broad grants or privileged credentials were added.
+
+The fixture has a bounded, operator-configured `excludedProjectIds` list, scoped
+by company through Paperclip's `configChanged`/startup replay. Only this Licitacija
+project is excluded. Missing/other project IDs still use the original fail-closed
+Factory behavior; Ask/process omissions are unchanged. A no-context artifact
+records the deliberate omission. Re-enable and full idle-controller restart
+replayed the saved scope without a resave; approvals and artifact hashes survived.
+
+The native Developer reused the earlier AIF-58 candidate on AIF-78's own branch;
+fresh independent tests, Reviewer and QA verified the same commit/tree. All five
+real-browser cases passed (360/390/412px, existing guide, inherited-key rejection,
+context path, ordinary profile help). No new website fix was authored here and
+**no website push, shared-branch merge or deployment occurred**.
+
+[Evidence and screenshots](results/licitacija-routing-20261004/README.md).
+These role fixtures are this known-file frontend task's bindings, not universal
+agents or a full backend build. For a new coding task use the existing
+`task submit` command with a verified task-class workflow and current role/test
+contract. Do not assign coding work to Assistant or reuse this narrow four-file
+profile for arbitrary tasks. UI assignment alone does not add review gates.
+The proposed generic existing-issue `route` command was not shipped: the deployed
+PATCH API has no conditional-write guard against concurrent board edits.
 
 ## Submit a task and see progress
 

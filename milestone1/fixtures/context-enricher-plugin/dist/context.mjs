@@ -5,10 +5,12 @@ import { promisify } from "node:util";
 const execFile = promisify(execFileCallback);
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
-export function contextOmissionReason(params) {
+export function contextOmissionReason(params, config = {}) {
   // Paperclip's authoritative Ask mode does not need an engineering kickoff.
   if (params.taskContext?.paperclipWake?.issue?.workMode === "ask") return "read-only-question";
   if (params.adapterType === "process" && params.runtimeMcpServers?.length === 0) return "deterministic-stage";
+  if (typeof params.taskContext?.projectId === "string" &&
+      config.excludedProjectIds?.includes(params.taskContext.projectId)) return "project-outside-fixture";
   return null;
 }
 

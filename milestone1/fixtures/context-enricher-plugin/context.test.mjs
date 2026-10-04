@@ -30,6 +30,24 @@ test("ordinary engineering tasks still require verified context", () => {
   }
 });
 
+test("operator-excluded projects do not receive another repository's kickoff", () => {
+  const config = { excludedProjectIds: ["licitacija-project"] };
+  assert.equal(contextModule.contextOmissionReason({
+    adapterType: "opencode_local", runtimeMcpServers: [],
+    taskContext: { projectId: "licitacija-project" },
+  }, config), "project-outside-fixture");
+  for (const projectId of ["factory-project", undefined]) {
+    assert.equal(contextModule.contextOmissionReason({
+      adapterType: "opencode_local", runtimeMcpServers: [],
+      taskContext: { projectId, paperclipWake: { issue: { projectId: "licitacija-project" } } },
+    }, config), null);
+  }
+  assert.equal(contextModule.contextOmissionReason({
+    adapterType: "opencode_local", runtimeMcpServers: [],
+    taskContext: { projectId: "licitacija-project" },
+  }), null);
+});
+
 test("deterministic no-lookup stages retain their existing omission reason", () => {
   assert.equal(typeof contextModule.contextOmissionReason, "function");
   assert.equal(contextModule.contextOmissionReason({

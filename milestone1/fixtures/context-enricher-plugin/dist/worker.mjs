@@ -6,6 +6,7 @@ import { buildContext, contextOmissionReason, formatContextPrompt, parseSearchRe
 
 const DOCUMENT_PATH = "docs/implementation/IMPLEMENTATION_KICKOFF.md";
 const ARTIFACT_DIR = "/paperclip/milestone1-context";
+const companyConfigs = new Map();
 
 async function callMcp(server, method, params, id) {
   const response = await fetch(server.url, {
@@ -25,7 +26,7 @@ async function enrich(params) {
   if (!params?.runId || !params?.workspace?.cwd) {
     throw new Error("run workspace is missing");
   }
-  const omissionReason = contextOmissionReason(params);
+  const omissionReason = contextOmissionReason(params, companyConfigs.get(params.companyId));
   if (omissionReason) {
     const bytes = Buffer.from(JSON.stringify({ schemaVersion: 1, kind: "no-context", runId: params.runId }) + "\n");
     const digest = createHash("sha256").update(bytes).digest("hex");
@@ -88,7 +89,16 @@ input.on("line", async (line) => {
   if (!("id" in request)) return;
   try {
     let result;
-    if (request.method === "initialize") result = { ok: true, supportedMethods: ["health", "shutdown", "enrichRunContext"] };
+    if (request.method === "initialize") result = { ok: true, supportedMethods: ["health", "shutdown", "enrichRunContext", "configChanged"] };
+    else if (request.method === "configChanged") {
+      const { companyId, config } = request.params ?? {};
+      const ids = config?.excludedProjectIds ?? [];
+      if (typeof companyId !== "string" || !companyId || !Array.isArray(ids) || ids.length > 32 ||
+          ids.some((id) => typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id))) throw new Error("invalid project scope config");
+      companyConfigs.set(companyId, { excludedProjectIds: [...ids] });
+      process.stderr.write(`Git context scope loaded: ${ids.length} excluded projects\n`);
+      result = { ok: true };
+    }
     else if (request.method === "health") result = { status: "ok" };
     else if (request.method === "shutdown") result = { ok: true };
     else if (request.method === "enrichRunContext") result = await enrich(request.params);
