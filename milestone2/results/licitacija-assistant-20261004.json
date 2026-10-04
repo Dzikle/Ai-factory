@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-04",
+  "scope": "Owner-approved AIF-77 read-only repository question; no website implementation/publication",
+  "status": "ANSWERED_AND_DONE",
+  "companyId": "f1251cc6-d826-4629-978c-ebcf3e6ba62a",
+  "projectId": "a5758cd0-d9c4-4f3f-a004-2194691f6ef3",
+  "agentId": "179cc6ab-59f6-4c58-b7b9-1f3f5edc4aae",
+  "agentName": "Licitacija Assistant",
+  "issueId": "1b80354b-e406-429e-b452-54fa18aea88f",
+  "identifier": "AIF-77",
+  "runId": "98b82a36-233e-48ad-92c4-ca02163c615a",
+  "nativeCommentId": "eed5dd7d-288e-44a6-8fb3-aab2d2c2c007",
+  "adapter": "opencode_local",
+  "paperclipRuntimeMode": "legacy",
+  "executionMeaning": "Built-in native OpenCode CLI adapter; not Paperclip persistent-native session mode",
+  "model": "opencode/muse-spark-1.3-contributor-free",
+  "versions": {
+    "controllerImage": "ghcr.io/dzikle/paperclip@sha256:fcca079223714bc67c3e87e14f64e57594d720b54ae69f84d18c774491b1995f",
+    "controllerSourceRevision": "9570a362e7cd9f4b9f277806f308ecad0ae6aabb",
+    "opencode": "1.18.33",
+    "controllerPython": "3.13.5",
+    "pluginManifestVersion": "0.1.0",
+    "pluginWorkerSha256": "e923f1c75e7605c189109a3ef22cf953ef17e825c04e81a2eea160c92e1975e7",
+    "pluginContextSha256": "9cc8201668d6835e640c7d92046dc53d4805a23e5595fabe6b36fdbb8bc2c581",
+    "liveTestReplyHelperSha256": "951fd19f55b5277ae25503973f29719a3cef9a1803af782044b7f3906db8897e",
+    "deployedReplyHelperSha256": "57b3d089319ba87f74a0890a08bfcab8a8064b9a9b7e2c031ba7ae4ccdfd91f1",
+    "postTestHardening": "Response-status assertion, terminal/stale-run refusal and ambient-proxy denial added after live test; RED/GREEN regressions, no additional model dispatch"
+  },
+  "observations": {
+    "workMode": "ask",
+    "taskStatus": "done",
+    "agentStatus": "idle",
+    "timedHeartbeatEnabled": false,
+    "maxConcurrentRuns": 1,
+    "otherCompanyAgentsPaused": 95,
+    "checkoutRunId": null,
+    "executionRunId": null,
+    "externalMcpAllowedToolNames": [],
+    "externalMcpProfiles": 0,
+    "externalMcpInstalledConnections": 0,
+    "repositoryCwd": "/paperclip/licita-help-source",
+    "repositoryHeadBeforeAndAfter": "0b8cb9647bf08cb8c269c1c89ad746d0db76d95c",
+    "repositoryStatusBeforeAndAfter": "clean",
+    "actualReadPaths": [
+      "src/main/webapp/WEB-INF/views/homespace/pages/index.html",
+      "src/main/webapp/WEB-INF/views/homespace/pages/account.html"
+    ],
+    "profileHtml": "Absent in this partial snapshot; account.html is the actual account page",
+    "completionHelperOutput": {"status": "answered"},
+    "commentAuthorMatchesAgent": true,
+    "commentCreatedByRunMatchesRun": true,
+    "leasesForAllSetupRuns": {"released": 5, "failed": 2, "active": 0, "allReleasedAtPresent": true},
+    "leaseVerificationBoundary": "Terminal state/lock checks only; not a new crash-recovery admission suite",
+    "nativePermissionDenialObserved": "Earlier run rejected a combined shell command; separate allowed Git commands succeeded",
+    "nativePermissionBoundary": "Default-deny OpenCode policy; edit/write and general shell denied. Trusted-local filesystem/network isolation remains deferred."
+  },
+  "context": {
+    "reason": "read-only-question",
+    "promptMarkdown": null,
+    "ref": "file:///paperclip/milestone1-context/98b82a36-233e-48ad-92c4-ca02163c615a.json",
+    "sha256": "2a11ca684de964111d8bbe6badd6b80e6f408c0ef4e7877df7d83979276f727f",
+    "byteSize": 87,
+    "digestIndependentlyVerified": true
+  },
+  "attemptHistory": [
+    {"runId": "5231c37f-6927-4a60-8b3c-4c1c0f6f448e", "result": "failed before provider invocation: engineering fixture required MCP on Ask task"},
+    {"runId": "bc117ae1-a3b9-4a0c-9e13-d1165f5b4216", "result": "same pre-run failure; assistant paused"},
+    {"runId": "16d0022e-05e3-4f5c-be4a-f35a8be0aa1f", "result": "scheduled retry cancelled by pause"},
+    {"runId": "5a7e88bf-939d-49a8-8003-ad2e9974ec61", "result": "successful repository reads/answer; missing task disposition"},
+    {"runId": "6396b05e-9db3-4ece-956b-6cce7a41158e", "result": "Paperclip automatic follow-up published native answer but task remained blocked"},
+    {"runId": "054db47b-8eb3-46b4-a4a4-781de8c6fed3", "result": "answer succeeded; helper rejected existing internal service hostname"},
+    {"runId": "4fd332ba-544b-42ae-9419-063009734927", "result": "automatic disposition follow-up; assistant paused to stop retries"},
+    {"runId": "98b82a36-233e-48ad-92c4-ca02163c615a", "result": "reads, native answer and scoped task completion all passed"}
+  ],
+  "successfulFinalRunUsageOnly": {
+    "inputTokens": 19802,
+    "outputTokens": 910,
+    "cachedInputTokens": 93478,
+    "costUsd": 0,
+    "costStatus": "reported",
+    "boundary": "Provider-reported final native run only, not total remediation/session cost or claimed token savings"
+  },
+  "tests": {
+    "setupAndReply": "18/18 passed",
+    "fullPythonBeforeReviewCorrections": "280 tests OK; 2 optional live skips; 114.972 seconds",
+    "fullPythonFinal": "284 tests OK; 2 optional live skips; 85.811 seconds",
+    "contextPlugin": "14/14 passed; 3 omission regressions RED before fix",
+    "controllerHostnameRegression": "Rejected known internal service hostname before fix; passes after fix",
+    "reviewRegressions": "Unsafe existing-agent reuse, coding/non-Ask reuse, ambient proxy routing and stale terminal reply each reproduced before correction",
+    "liveSetupReplay": "existing_no_changes; mutations false; runtimeConfigurationVerified false"
+  },
+  "independentCodeReview": {
+    "initialImportantFindings": 4,
+    "corrections": [
+      "Existing-agent automatic reuse removed; no-change replay is not runtime verification",
+      "Coding-policy tasks and non-Ask replay rejected",
+      "HTTP proxies and redirects disabled for reply helper and owner setup transport",
+      "Terminal/stale replies rejected rather than claiming another run's completion"
+    ],
+    "finalVerdict": "Ready within fix-only scope; no remaining concrete Important findings",
+    "boundary": "Source/targeted test review only; reviewer made no live API calls and did not assess OS isolation"
+  },
+  "limitations": [
+    "Only the existing local partial Git snapshot was read; no production/database/latest-remote access asserted",
+    "Assistant is read-only for repository content; its only write is its own bounded Ask reply/completion",
+    "No Developer/Reviewer/QA or publication rights were added",
+    "No new image, external MCP grant, scheduler, task engine or general Context Resolver was introduced",
+    "Historical fixture agents remain visible but paused"
+  ]
+}

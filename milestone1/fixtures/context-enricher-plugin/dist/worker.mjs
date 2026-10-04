@@ -2,7 +2,7 @@ import { createInterface } from "node:readline";
 import { createHash } from "node:crypto";
 
 import { publishArtifact } from "./artifact.mjs";
-import { buildContext, formatContextPrompt, parseSearchResult } from "./context.mjs";
+import { buildContext, contextOmissionReason, formatContextPrompt, parseSearchResult } from "./context.mjs";
 
 const DOCUMENT_PATH = "docs/implementation/IMPLEMENTATION_KICKOFF.md";
 const ARTIFACT_DIR = "/paperclip/milestone1-context";
@@ -25,12 +25,12 @@ async function enrich(params) {
   if (!params?.runId || !params?.workspace?.cwd) {
     throw new Error("run workspace is missing");
   }
-  // A deterministic process validation stage needs no external lookup.
-  if (params.adapterType === "process" && params.runtimeMcpServers?.length === 0) {
+  const omissionReason = contextOmissionReason(params);
+  if (omissionReason) {
     const bytes = Buffer.from(JSON.stringify({ schemaVersion: 1, kind: "no-context", runId: params.runId }) + "\n");
     const digest = createHash("sha256").update(bytes).digest("hex");
     const ref = await publishArtifact(ARTIFACT_DIR, params.runId, bytes);
-    return { artifact: { ref, sha256: digest, mediaType: "application/json", byteSize: bytes.length }, metadata: { reason: "deterministic-stage" } };
+    return { artifact: { ref, sha256: digest, mediaType: "application/json", byteSize: bytes.length }, metadata: { reason: omissionReason } };
   }
   if (params.runtimeMcpServers?.length !== 1) {
     throw new Error("run workspace or governed search capability is missing");

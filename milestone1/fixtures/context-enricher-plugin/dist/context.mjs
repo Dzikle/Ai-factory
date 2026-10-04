@@ -5,6 +5,13 @@ import { promisify } from "node:util";
 const execFile = promisify(execFileCallback);
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
+export function contextOmissionReason(params) {
+  // Paperclip's authoritative Ask mode does not need an engineering kickoff.
+  if (params.taskContext?.paperclipWake?.issue?.workMode === "ask") return "read-only-question";
+  if (params.adapterType === "process" && params.runtimeMcpServers?.length === 0) return "deterministic-stage";
+  return null;
+}
+
 async function git(cwd, ...args) {
   const { stdout } = await execFile("git", ["-C", cwd, ...args], { maxBuffer: 1024 * 1024 });
   return stdout;

@@ -14,6 +14,50 @@ gate recommendation below is superseded for this trusted local prototype.
 Keep credential containment, existing scoped MCP, separate tests/review and owner
 integration approval. No new image, scheduler or task database is needed.
 
+## Phone/dashboard questions — working 2026-10-04
+
+Open the [private dashboard](https://desktop-t58n2b9.tail14d8ec.ts.net/) with
+Tailscale enabled. **AIF-77 / Test2 is answered and Done.**
+
+For another repository question:
+
+1. Choose **New Task** and enter the question.
+2. Choose project **Licitacija mobile import help**.
+3. Choose agent **Licitacija Assistant**, not **Milestone 0** (the human account).
+4. Choose **Ask** mode, then create/send the task. Read its reply in the task.
+
+The assistant is available on demand; timed heartbeats are disabled. All 95
+historical fixture agents remain paused. Do not resume the whole organization.
+The model is already configured; there is no need to choose one for each question.
+
+This assistant reads the existing partial Git snapshot at `0b8cb9647bf08cb8c269c1c89ad746d0db76d95c`,
+not the current live website, its database or the latest remote branch. It has
+no coding, publication or deployment role. Engineering changes still use the
+owner-authorized Developer → validation → independent Reviewer/QA path below.
+
+The existing engineering-context fixture now omits its kickoff lookup for
+Paperclip's authoritative **Ask** mode, recording a no-context artifact instead.
+Ordinary engineering enrichment remains fail-closed. No irrelevant OpenSearch
+grant was added to the assistant. A small run-scoped completion helper posts
+only its own bounded Ask answer and marks that question Done, preventing an
+unnecessary missing-disposition follow-up. This is not an OS sandbox claim.
+
+[Configuration and selected live evidence](results/licitacija-assistant-20261004.json).
+Owner-only, exact AIF-77 provisioning is reproducible with
+`python -m milestone2.scripts.assistant_setup --state <private-state-file>`;
+add `--apply` only with current authorization. This is not a generic task
+submitter or an automatic retry command. The fixture/role/config live under
+`milestone2/{scripts,fixtures,config}`. An existing agent is never automatically
+reused for a new assignment; already-assigned replay reports **no changes**, not
+runtime configuration verification. Coding-policy/non-Ask replay is rejected.
+The completion helper rejects terminal/stale runs and bypasses HTTP proxies and
+redirects; an uncertain result requires inspection, not an automatic repost.
+Deployment uses the existing persistent
+`/paperclip` storage: `assistant_reply.py` at `/paperclip/assistant-reply.py`,
+and the existing context-plugin files at `/paperclip/m1-context-enricher-plugin/dist/`.
+Managed role instructions and native configuration are updated through
+Paperclip's supported agent APIs. No new controller image or website change.
+
 ## Submit a task and see progress
 
 For repository preflight and owner-approved feature-branch publication, use

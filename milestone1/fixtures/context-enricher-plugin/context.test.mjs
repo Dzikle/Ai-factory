@@ -12,6 +12,34 @@ import { publishArtifact } from "./dist/artifact.mjs";
 
 const section = "### 1.4 First runnable task\nImplement one command.\n\n## 5. Milestone 2\nLater.\n";
 
+test("read-only native Ask tasks omit the engineering kickoff lookup", () => {
+  assert.equal(typeof contextModule.contextOmissionReason, "function");
+  assert.equal(contextModule.contextOmissionReason({
+    adapterType: "opencode_local", runtimeMcpServers: [],
+    taskContext: { paperclipWake: { issue: { workMode: "ask" } } },
+  }), "read-only-question");
+});
+
+test("ordinary engineering tasks still require verified context", () => {
+  assert.equal(typeof contextModule.contextOmissionReason, "function");
+  for (const workMode of ["standard", "planning", undefined]) {
+    assert.equal(contextModule.contextOmissionReason({
+      adapterType: "opencode_local", runtimeMcpServers: [],
+      taskContext: { workMode: "ask", paperclipWake: { issue: { workMode } } },
+    }), null);
+  }
+});
+
+test("deterministic no-lookup stages retain their existing omission reason", () => {
+  assert.equal(typeof contextModule.contextOmissionReason, "function");
+  assert.equal(contextModule.contextOmissionReason({
+    adapterType: "process", runtimeMcpServers: [],
+  }), "deterministic-stage");
+  assert.equal(contextModule.contextOmissionReason({
+    adapterType: "process", runtimeMcpServers: [{}],
+  }), null);
+});
+
 async function fixture(t, content = section) {
   const cwd = await mkdtemp(path.join(os.tmpdir(), "aif-m1-context-"));
   t.after(() => rm(cwd, { recursive: true, force: true }));
