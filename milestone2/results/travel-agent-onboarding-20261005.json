@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-05",
+  "scope": "Owner-authorized Travel Agent registration and one read-only native access task",
+  "status": "REGISTERED_ACCESS_PROVED",
+  "companyId": "f1251cc6-d826-4629-978c-ebcf3e6ba62a",
+  "projectId": "ccf950be-d486-4bbf-9817-72459fd9b315",
+  "workspaceId": "ae4a9398-1a96-46f1-9a42-36f480df9825",
+  "source": {
+    "repoUrl": "https://github.com/Dzikle/ai-travel-agent",
+    "branchAtOnboarding": "main",
+    "revision": "fc5d95c2ce0e3606b26dc1d0f954143389cdcbdc",
+    "runtimeCwd": "/paperclip/travel-agent-source",
+    "runtimeBeforeAndAfter": "clean at the same pinned revision",
+    "gitBundleBytes": 509473,
+    "windowsCheckoutHeadUnchanged": "d48d02bd9962a8435cd9d9996e2b184b2e0c00b0",
+    "windowsUntrackedFilePreserved": "apps/traveler/.gitignore",
+    "automaticRemoteSynchronization": false
+  },
+  "agents": {
+    "assistant": "88f70579-187b-4452-990e-0d089068c0e5",
+    "developer": "1a0c51db-63f9-480b-af7f-08142e16978f",
+    "reviewer": "caa13446-3e74-43fb-9232-962c2879b2f5",
+    "tests": "e7ebb7a9-92de-40e5-9903-3c5acd35092b",
+    "qa": "e76ac107-a87d-468e-94d3-d50674793941"
+  },
+  "runtime": {
+    "controllerImage": "ghcr.io/dzikle/paperclip@sha256:fcca079223714bc67c3e87e14f64e57594d720b54ae69f84d18c774491b1995f",
+    "codexCli": "0.158.0",
+    "node": "24.21.0",
+    "python": "3.13.5",
+    "git": "2.47.3",
+    "nativeModel": "gpt-5.6-sol",
+    "configuredReasoningEffort": "low via Codex extraArgs",
+    "timedHeartbeats": false,
+    "maxConcurrentRunsPerAgent": 1,
+    "effectiveExternalCatalogForEveryTravelRole": [],
+    "newImageOrService": false,
+    "trustedLocalNotOsIsolation": true,
+    "deployedStageSha256": "abd070d954538a8209e6d708ef010a3d303f54264debf6d1445bbc1d83e957e2",
+    "deployedWorkspaceGuardSha256": "9fdb6e172052caec1396182e7212c36c8e1b613dd3e4005d8a12aa14187db69d",
+    "replyHelperSha256": "57b3d089319ba87f74a0890a08bfcab8a8064b9a9b7e2c031ba7ae4ccdfd91f1"
+  },
+  "accessTask": {
+    "identifier": "AIF-79",
+    "issueId": "f0a9fc10-0140-4559-a58b-915159577167",
+    "runId": "0c1af0df-ca04-4d65-86ae-599da33e6de9",
+    "commentId": "88143cd6-7691-4040-9a97-cc0c01120e2b",
+    "workMode": "ask",
+    "status": "done",
+    "runStatus": "succeeded",
+    "exitCode": 0,
+    "adapter": "codex_local",
+    "requestedModelInResult": "gpt-5.6-sol",
+    "startedAt": "2026-10-04T22:19:06.678Z",
+    "finishedAt": "2026-10-04T22:19:44.484Z",
+    "reads": ["package.json", "README.md"],
+    "gitChecks": ["git rev-parse HEAD", "git status --porcelain=v1"],
+    "observedPackage": "ai-travel-agent",
+    "observedProject": "Wayfinder",
+    "declaredTestCommand": "pnpm build && vitest run",
+    "declaredTypecheckCommand": "pnpm -r typecheck",
+    "applicationChecksExecuted": false,
+    "checkoutRunIdAfterCompletion": null,
+    "executionRunIdAfterCompletion": null,
+    "environmentLeaseId": "879ff8d8-555e-4229-a0d6-b7fffa1fde17",
+    "environmentLeaseStatus": "released",
+    "environmentLeaseReleasedAt": "2026-10-04T22:19:49.540Z"
+  },
+  "context": {
+    "pluginId": "48373d49-16b3-4d17-b4e9-31efecebf902",
+    "scopeChange": "Travel project appended to saved exclusions; existing Licitacija exclusion and other settings preserved",
+    "accessTaskReason": "read-only-question",
+    "ref": "file:///paperclip/milestone1-context/0c1af0df-ca04-4d65-86ae-599da33e6de9.json",
+    "sha256": "7605da6719a3fa5bafd62b2038267445f75a86bd6d8feb9755c8db12671d19fc",
+    "byteSize": 87,
+    "digestIndependentlyVerified": true,
+    "travelRetrievalOrMemoryImplemented": false
+  },
+  "usage": {
+    "boundary": "Native AIF-79 run only; not total onboarding/session cost or a savings claim",
+    "billingType": "subscription_included",
+    "inputTokens": 544,
+    "outputTokens": 40,
+    "cachedInputTokens": 29952,
+    "costUsd": null,
+    "costStatus": "unknown"
+  },
+  "verification": {
+    "projectProvisioning": "11/11 pass; instruction/env drift reproduced before correction",
+    "workspaceGuard": "8/8 Node tests pass; implementation import RED before guard",
+    "fullFactoryPythonBeforeReviewCorrections": "291 tests OK, 2 optional live tests skipped, 153.212 seconds",
+    "fullFactoryPythonFinal": "295 tests OK, 2 optional live tests skipped, 94.625 seconds",
+    "stageSyntax": "node --check passed in deployed controller",
+    "liveReplay": "Same project and five agent IDs; managed native instructions verified; external catalogs empty",
+    "workflowPayloadPreview": "Existing build_payload produced separate Tests/Reviewer/QA/owner participants and backlog status; no API call or coding task creation",
+    "codingPipeline": "Configured only; no Travel Agent coding task dispatched or app test suite executed"
+  },
+  "independentCodeReview": {
+    "initialImportantFindings": 2,
+    "corrections": [
+      "Project subtree and canonical-path checks precede validation cloning; native stage also checks project identity",
+      "Provisioning replay rejects unexpected environment keys and verifies managed native instruction files through supported APIs"
+    ],
+    "processCompatibility": "Real replay showed process adapters have no managed LLM bundle; corrected preset/provisioner and added RED/GREEN regression",
+    "finalFocusedVerdict": "No critical or important findings in bounded process-adapter re-review; 11 provisioning tests passed",
+    "boundary": "Source and focused tests only; reviewer did not access Docker, private state, live APIs or execute the app suite"
+  },
+  "limits": [
+    "Same Paperclip company; separate project/workspaces/roles, not separate OS security instances",
+    "No app changes, credentials copied, live-provider access, deployments or new services",
+    "Coding policy requires the existing operator command; UI assignee selection alone is insufficient",
+    "First real coding task must prove execution and dependency readiness; QA is not browser UX or live booking proof",
+    "Native subscription cost/quota is not inferred from zero Paperclip spentMonthlyCents",
+    "API-redacted environment values are not exhaustively reverified on replay"
+  ]
+}

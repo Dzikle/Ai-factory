@@ -16,6 +16,11 @@ integration approval. No new image, scheduler or task database is needed.
 
 ## Phone/dashboard questions — working 2026-10-04
 
+**Travel Agent added 2026-10-05:** its separate project and five roles are
+registered, and native read-only **AIF-79 passed**. See [Travel Agent usage and
+limits](TRAVEL_AGENT.md) for phone questions and the prepared coding preset.
+No Travel Agent application changes or app test execution occurred.
+
 Open the [private dashboard](https://desktop-t58n2b9.tail14d8ec.ts.net/) with
 Tailscale enabled. **AIF-77 / Test2 is answered and Done.**
 
@@ -83,8 +88,9 @@ read-only role, not a claimed OS/filesystem boundary. Exact external MCP catalog
 for these four roles are empty; no broad grants or privileged credentials were added.
 
 The fixture has a bounded, operator-configured `excludedProjectIds` list, scoped
-by company through Paperclip's `configChanged`/startup replay. Only this Licitacija
-project is excluded. Missing/other project IDs still use the original fail-closed
+by company through Paperclip's `configChanged`/startup replay. This Licitacija
+project and the separately registered Travel Agent project are excluded.
+Missing/other project IDs still use the original fail-closed
 Factory behavior; Ask/process omissions are unchanged. A no-context artifact
 records the deliberate omission. Re-enable and full idle-controller restart
 replayed the saved scope without a resave; approvals and artifact hashes survived.

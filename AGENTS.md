@@ -91,6 +91,7 @@ from the **AI Factory repository root**:
 | Inspect an exact publication candidate, without pushing | `python -m milestone2.publish preflight` — `milestone2/PUBLISH.md` |
 | Publish the exact owner-approved candidate and record evidence | `python -m milestone2.publish publish` — `milestone2/PUBLISH.md`; operator/authorized orchestrator only |
 | Run the pinned complete Python checks | `python -m milestone3.check` — `milestone3/README.md` |
+| Register the prepared Travel Agent project/roles, without dispatch | `python -m milestone2.scripts.project_setup` — `milestone2/TRAVEL_AGENT.md`; owner/operator only |
 
 Use `--help` and the linked instructions to supply explicit inputs. Do not
 reimplement these operations or claim configured policy proves execution.

@@ -1,0 +1,95 @@
+{
+  "setupKey": "travel-agent-v1",
+  "expectedSourceRevision": "fc5d95c2ce0e3606b26dc1d0f954143389cdcbdc",
+  "contextPluginId": "48373d49-16b3-4d17-b4e9-31efecebf902",
+  "project": {
+    "name": "Travel Agent",
+    "description": "Wayfinder / Dzikle/ai-travel-agent. Separate project workspace and role history in the existing trusted-local AI Factory. GitHub main is pinned at onboarding; no live-service access or deployment permission. Owner setup key: travel-agent-v1.",
+    "status": "in_progress",
+    "idempotencyKey": "ai-factory:travel-agent-v1",
+    "workspace": {
+      "name": "Travel Agent Git source",
+      "cwd": "/paperclip/travel-agent-source",
+      "repoUrl": "https://github.com/Dzikle/ai-travel-agent",
+      "repoRef": "fc5d95c2ce0e3606b26dc1d0f954143389cdcbdc",
+      "defaultRef": "fc5d95c2ce0e3606b26dc1d0f954143389cdcbdc",
+      "isPrimary": true,
+      "metadata": { "setupKey": "travel-agent-v1", "sourceBranch": "main", "sourceRevision": "fc5d95c2ce0e3606b26dc1d0f954143389cdcbdc" }
+    },
+    "executionWorkspacePolicy": {
+      "enabled": true,
+      "defaultMode": "isolated_workspace",
+      "sharedWorkspaceConcurrency": "serialize",
+      "workspaceStrategy": {
+        "type": "git_worktree",
+        "baseRef": "fc5d95c2ce0e3606b26dc1d0f954143389cdcbdc",
+        "worktreeParentDir": "/paperclip/m1-first-task-worktrees/travel-agent"
+      }
+    }
+  },
+  "agents": [
+    {
+      "name": "Travel Agent Assistant", "role": "general", "title": "Repository questions (Ask only)",
+      "adapterType": "codex_local",
+      "adapterConfig": {
+        "cwd": "/paperclip/travel-agent-source", "model": "gpt-5.6-sol", "timeoutSec": 240,
+        "extraArgs": ["--sandbox", "danger-full-access", "-c", "model_reasoning_effort=\"low\""],
+        "dangerouslyBypassApprovalsAndSandbox": false,
+        "env": { "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "safe.directory", "GIT_CONFIG_VALUE_0": "*" }
+      },
+      "runtimeConfig": { "heartbeat": { "enabled": false, "maxConcurrentRuns": 1 } },
+      "permissions": { "canCreateAgents": false, "canCreateSkills": false },
+      "budgetMonthlyCents": 1000,
+      "metadata": { "setupKey": "travel-agent-v1:assistant" },
+      "instruction": "milestone2/fixtures/travel-agent-assistant.md"
+    },
+    {
+      "name": "Travel Agent Developer", "role": "engineer", "title": "Travel Agent implementation",
+      "adapterType": "codex_local",
+      "adapterConfig": {
+        "cwd": "/paperclip/travel-agent-source", "model": "gpt-5.6-sol", "timeoutSec": 600,
+        "extraArgs": ["--sandbox", "danger-full-access", "-c", "model_reasoning_effort=\"low\""],
+        "dangerouslyBypassApprovalsAndSandbox": false,
+        "env": { "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "safe.directory", "GIT_CONFIG_VALUE_0": "*" }
+      },
+      "runtimeConfig": { "heartbeat": { "enabled": false, "maxConcurrentRuns": 1 } },
+      "permissions": { "canCreateAgents": false, "canCreateSkills": false },
+      "budgetMonthlyCents": 1000,
+      "metadata": { "setupKey": "travel-agent-v1:developer" },
+      "instruction": "milestone2/fixtures/travel-agent-developer.md"
+    },
+    {
+      "name": "Travel Agent Reviewer", "role": "general", "title": "Independent Travel Agent review",
+      "adapterType": "codex_local",
+      "adapterConfig": {
+        "cwd": "/paperclip/travel-agent-source", "model": "gpt-5.6-sol", "timeoutSec": 600,
+        "extraArgs": ["--sandbox", "danger-full-access", "-c", "model_reasoning_effort=\"low\""],
+        "dangerouslyBypassApprovalsAndSandbox": false,
+        "env": { "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "safe.directory", "GIT_CONFIG_VALUE_0": "*" }
+      },
+      "runtimeConfig": { "heartbeat": { "enabled": false, "maxConcurrentRuns": 1 } },
+      "permissions": { "canCreateAgents": false, "canCreateSkills": false },
+      "budgetMonthlyCents": 1000,
+      "metadata": { "setupKey": "travel-agent-v1:reviewer" },
+      "instruction": "milestone2/fixtures/travel-agent-reviewer.md"
+    },
+    {
+      "name": "Travel Agent Tests", "role": "qa", "title": "Deterministic test/type/migration checks",
+      "adapterType": "process",
+      "adapterConfig": { "command": "node", "args": ["/paperclip/travel-agent-stage.mjs", "tests"], "timeoutSec": 1200 },
+      "runtimeConfig": { "heartbeat": { "enabled": false, "maxConcurrentRuns": 1 } },
+      "permissions": { "canCreateAgents": false, "canCreateSkills": false },
+      "budgetMonthlyCents": 0,
+      "metadata": { "setupKey": "travel-agent-v1:tests" }
+    },
+    {
+      "name": "Travel Agent QA", "role": "qa", "title": "Deterministic travel-behavior regression checks",
+      "adapterType": "process",
+      "adapterConfig": { "command": "node", "args": ["/paperclip/travel-agent-stage.mjs", "qa"], "timeoutSec": 1200 },
+      "runtimeConfig": { "heartbeat": { "enabled": false, "maxConcurrentRuns": 1 } },
+      "permissions": { "canCreateAgents": false, "canCreateSkills": false },
+      "budgetMonthlyCents": 0,
+      "metadata": { "setupKey": "travel-agent-v1:qa" }
+    }
+  ]
+}
