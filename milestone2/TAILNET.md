@@ -91,3 +91,27 @@ and [Serve CLI](https://tailscale.com/docs/reference/tailscale-cli/serve).
 - Zero queued/running runs and all 115 agents paused before and after the change.
 - These probes used this host's Tailscale URL. A second device's access-policy
   grant and a successful existing-owner browser login were not tested.
+
+## Mobile selector fix — 2026-10-04
+
+The owner fork now serves image commit
+`9570a362e7cd9f4b9f277806f308ecad0ae6aabb`, pinned in
+`compose/paperclip-native-mcp.yaml`. The old mobile fixed-position override
+collapsed Radix's popup wrapper to 10px, hiding project/assignee/model choices.
+The fix restores normal content sizing and leaves positioning to Radix.
+Nine browser regressions (including the real New Task dialog), 35 focused unit
+tests and UI typecheck/build passed. Keyboard checks emulate viewports, not a
+physical Android device. The broader UI suite/audit is not fully green; exact
+failures and deployment evidence are in
+[the result record](results/mobile-picker-fix-20261004.json).
+
+Paired database/storage backups preceded the update. All seven authority-table
+checksums and the schema were preserved, with the same credentials, volume,
+networks and loopback binding. Local and tailnet pages serve the repaired CSS;
+anonymous access remains denied. All agents remain paused. AIF-75 is still
+unassigned and was not started. This is a layout fix, not a permission grant.
+
+Refresh the phone page (or use Paperclip's update prompt, if shown), then reopen
+New Task and its Project/Assignee/model selector. Physical-phone confirmation
+is the remaining user check. Previous image/backup material is retained for
+rollback; no unrelated Docker resources were removed.

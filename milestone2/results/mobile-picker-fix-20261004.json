@@ -1,0 +1,100 @@
+{
+  "status": "DEPLOYED_LAYOUT_FIX_PASS",
+  "scope": "Repair existing mobile project/assignee/model selector layout; no task, permission, adapter or schema changes",
+  "source": {
+    "repository": "https://github.com/Dzikle/paperclip",
+    "branch": "ai-factory/mobile-picker-layout",
+    "base": "aafc937cf5e5e3bbf04d57a12b4e6fd791fb3610",
+    "imageCommit": "9570a362e7cd9f4b9f277806f308ecad0ae6aabb",
+    "regressionTestCommit": "8aa9124120658345c4d1fb23c6e386d7c72a107b",
+    "testCommitNote": "Follow-up commits change only browser tests/config; production code is identical to imageCommit",
+    "productionChange": "ui/src/index.css: remove fixed-position/width/transform overrides; Radix Popper retains positioning and content width",
+    "upstreamSubmission": false
+  },
+  "image": {
+    "reference": "ghcr.io/dzikle/paperclip@sha256:fcca079223714bc67c3e87e14f64e57594d720b54ae69f84d18c774491b1995f",
+    "amd64Manifest": "sha256:c7fc54537ad7f772243556d1b46af19ef9cc8e8ee0261d06ebe10efeb98ea0ab",
+    "workflow": "https://github.com/Dzikle/paperclip/actions/runs/37206871226",
+    "build": "PASS: normal production Dockerfile, amd64/arm64 builds, manifest publication and PID-1 orphan-reaping gate",
+    "runtimeVersions": {"node": "24.21.0", "opencode": "1.18.33", "codexCli": "0.158.0"},
+    "previousReference": "ghcr.io/dzikle/paperclip@sha256:c0d8fe5a94d7cabd475f149b10d7d7444ce003740aeefc0b03e40a6a41199dbf"
+  },
+  "verification": {
+    "hostVersions": {"node": "24.14.0", "pnpm": "9.15.4", "vitest": "4.1.11"},
+    "baselineBrowser": "FAIL as expected: mobile picker measured 10px wide against >=240px assertion; desktop control passed",
+    "browser": {
+      "command": "pnpm exec playwright test --config tests/storybook-visual/picker-layout.config.ts",
+      "passed": 9,
+      "failed": 0,
+      "coverage": "320/390px mobile and desktop selectors; filtered assignee/project/model selection; actual New Task form; existing visual-viewport/keyboard constraints",
+      "limitation": "Chromium automation and emulated keyboard/visual viewport; physical Android keyboard not directly tested"
+    },
+    "focusedUnit": {
+      "command": "pnpm --filter @paperclipai/ui exec vitest run src/components/InlineEntitySelector.test.tsx src/components/NewIssueDialog.test.tsx --maxWorkers=2 --silent --reporter=dot",
+      "passed": 35,
+      "failed": 0
+    },
+    "uiTypecheck": "PASS: pnpm --filter @paperclipai/ui typecheck",
+    "uiBuild": "PASS: pnpm --filter @paperclipai/ui build (existing Vite/CSS/chunk-size warnings remain)",
+    "fullUiSuite": {
+      "command": "pnpm --filter @paperclipai/ui exec vitest run --maxWorkers=2 --silent --reporter=json --outputFile=../tests/storybook-visual/test-results/picker-layout-ui-suite.json",
+      "passed": 6531,
+      "failed": 10,
+      "skipped": 0,
+      "failureGroups": {
+        "locale/time formatting in CaseFieldsPanel, IssueProperties and TaskChatStatusPill": 4,
+        "installed duplicate Lezer dependency/highlighting graph": 5,
+        "unchanged chat connector source-contract assertion": 1
+      },
+      "boundary": "These test/dependency/source surfaces are unchanged by the selector fix; no full-suite green or fresh dependency-install baseline claim"
+    },
+    "tokenAudit": "NOT GREEN: 109 existing violations (78 color literals, 31 bracket literals) outside this production CSS deletion; not remediated in this task",
+    "globalVisualBaseline": "Not claimed: repository's initial manifest has zero snapshots and no downloadable baseline archive",
+    "serverDatabaseDockerfileLockfileDiff": "Empty against previous runtime source"
+  },
+  "cutover": {
+    "status": "PASS",
+    "backupDirectory": ".milestone0/ui-selector-cutover-20261004/ (private, Git-ignored)",
+    "databaseBackupSha256": "ec4ece73099831fee11b470a5aca3eef97715876d956ae41791a01b2da665d26",
+    "storageBackupSha256": "c961331fda45c180fd4c603bdee5eb1fbb6de537e2a3f3fd2ededc51681e5ad9",
+    "dumpEntries": 2142,
+    "storageEntries": 23487,
+    "backupVerification": "Dump/table-of-contents and storage tar listing/hash checks; not a fresh restore drill",
+    "configuredEnvironmentSha256Before": "870374265bdd2f9d40d24f4b4de8568d4a8bc87de6c128c7526ddc3ede5239a3",
+    "configuredEnvironmentSha256After": "870374265bdd2f9d40d24f4b4de8568d4a8bc87de6c128c7526ddc3ede5239a3",
+    "effectiveConfiguredEnvironmentMatches": true,
+    "changedImageEnvironmentKeys": ["PAPERCLIP_BUILD_COMMIT", "PAPERCLIP_BUILD_VERSION"],
+    "controllerHealth": "healthy",
+    "schema": "PostgreSQL 17.11; Drizzle 283|1790018362070; image 282 migration files / 0283_jittery_psynapse.sql",
+    "authorityRecordsBeforeAndAfter": {
+      "companies": {"count": 6, "rows_md5": "75ca447f424535d9ac491cd8b49e33fe"},
+      "agents": {"count": 115, "rows_md5": "9ffcb12822f84bac3814013d97ce1038"},
+      "issues": {"count": 80, "rows_md5": "85f401a7c60740761ad55372b137e3be"},
+      "heartbeat_runs": {"count": 353, "rows_md5": "9e8cbd0c43118639533e2819c5e59e16"},
+      "project_workspaces": {"count": 2, "rows_md5": "0925dfb8d08d20df7bb5db8dbb435ca0"},
+      "execution_workspaces": {"count": 36, "rows_md5": "099336e82199d64428e2c7028d006de4"},
+      "environment_leases": {"count": 330, "rows_md5": "542b99495fa5e4680a204aaf347acf1c"}
+    },
+    "dataVolume": "aif-m0-fork-restore-data:/paperclip",
+    "networks": ["aif-m0-paperclip_default", "aif-m1-runner-net"],
+    "binding": "127.0.0.1:13101:3100",
+    "agentsPausedAcrossCompanies": 115,
+    "queuedOrRunningRuns": 0,
+    "currentCompanyCatalog": {"projects": 3, "agents": 95, "allAgentsPaused": true},
+    "testTask": {"identifier": "AIF-75", "status": "todo", "projectId": null, "assigneeAgentId": null, "executionRunId": null},
+    "httpProbes": {
+      "addresses": ["http://localhost:13101/", "https://desktop-t58n2b9.tail14d8ec.ts.net/"],
+      "dashboard": 200,
+      "health": 200,
+      "anonymousSession": 401,
+      "anonymousCompanies": 403,
+      "stylesheet": "/assets/index-CWrg2p7r.css",
+      "servedPickerRule": "max-height:calc(100dvh - calc(var(--spacing) * 8))!important;animation:none!important",
+      "healthCommitMatchesImageCommit": true
+    },
+    "otherServicesRecreated": false,
+    "rollback": "Previous immutable image retained; use the same Compose/env/volume/network configuration with previousReference, while idle. No schema rollback required",
+    "agentActivationAuthorized": false,
+    "taskAssignmentAuthorized": false
+  }
+}
