@@ -78,3 +78,6 @@ Additional isolation and the existing post-V1 deferrals remain unchanged.
 See the [accepted implementation scope](docs/implementation/IMPLEMENTATION_KICKOFF.md),
 [task commands](milestone2/README.md), and
 [acceptance record](milestone4/results/local-v1-acceptance-20260930.json).
+
+Dashboard access: `http://localhost:13101/`, or the configured private
+[Tailscale HTTPS route](milestone2/TAILNET.md) from an allowed tailnet device.

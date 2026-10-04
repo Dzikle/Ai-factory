@@ -1,0 +1,12 @@
+# Optional private dashboard access through host Tailscale Serve.
+# Append after the admitted controller and native-MCP Compose files.
+services:
+  paperclip-fork:
+    environment:
+      PAPERCLIP_ALLOWED_HOSTNAMES: localhost,127.0.0.1,paperclip-fork,${AIF_TAILNET_HOST:?set the exact device MagicDNS hostname}
+      PAPERCLIP_PUBLIC_URL: https://${AIF_TAILNET_HOST:?set the exact device MagicDNS hostname}
+      PAPERCLIP_AUTH_BASE_URL_MODE: auto
+      BETTER_AUTH_TRUSTED_ORIGINS: http://localhost:13101,http://127.0.0.1:13101
+      # Existing native cookie compatibility selects non-Secure cookies only for
+      # HTTP loopback requests; HTTPS requests keep their secure-cookie instance.
+      PAPERCLIP_MANAGED_RUNTIME_PUBLIC_URL: https://${AIF_TAILNET_HOST:?set the exact device MagicDNS hostname}
