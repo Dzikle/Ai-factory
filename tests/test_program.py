@@ -176,6 +176,59 @@ class ProgramReplayTests(unittest.TestCase):
                 self.assertEqual(1, len(client.comments))
 
 
+class RealShapedPaperclip(FakePaperclip):
+    """Mimic real Paperclip: accept idempotencyKey but omit it from responses.
+
+    Paperclip dedupes issue creation on the request-only idempotencyKey yet
+    intentionally omits that field from issue responses. Identity on replay
+    remains pinned by project, title (which embeds the request key), parent
+    lineage, policy, blockers, and the authorization document.
+    """
+
+    @staticmethod
+    def _strip_issue(issue):
+        if isinstance(issue, dict):
+            issue = deepcopy(issue)
+            issue.pop("idempotencyKey", None)
+        return issue
+
+    def request(self, method, path, payload=None, expected=None):
+        status, body = super().request(method, path, payload, expected)
+        if isinstance(body, dict) and (
+            path == f"/api/companies/{COMPANY}/issues"
+            or path.startswith("/api/issues/")
+        ):
+            if "title" in body and "projectId" in body:
+                body = self._strip_issue(body)
+        elif isinstance(body, list) and path.startswith(f"/api/companies/{COMPANY}/issues"):
+            body = [self._strip_issue(row) for row in body]
+        return status, body
+
+
+class RealShapeReplayTests(unittest.TestCase):
+    def workflow(self):
+        return {"projectId": PROJECT, "developerAgentId": DEV, "validatorAgentId": VALIDATOR,
+                "reviewerAgentId": REVIEWER, "qaAgentId": QA}
+
+    def test_real_shaped_responses_replay_to_single_program(self):
+        client = RealShapedPaperclip()
+        program = sample_program()
+        first = submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), program, start=False,
+                               now=datetime(2026, 10, 3, tzinfo=timezone.utc))
+        _, parent_via_api = client.request("GET", f"/api/issues/{first['parentId']}")
+        self.assertNotIn("idempotencyKey", parent_via_api)
+        self.assertIn(program["request_key"], parent_via_api.get("title", ""))
+        second = submit_program(client, COMPANY, {"userId": "owner"}, self.workflow(), program, start=False,
+                                now=datetime(2026, 10, 3, tzinfo=timezone.utc))
+        self.assertEqual(first, second)
+        self.assertEqual(5, len(client.issues))
+        parents = [issue for issue in client.issues.values() if not issue.get("parentId")]
+        children = [issue for issue in client.issues.values() if issue.get("parentId") == first["parentId"]]
+        self.assertEqual(1, len(parents))
+        self.assertEqual(4, len(children))
+        self.assertEqual(1, len(client.comments))
+
+
 class StubSource:
     def query(self, *, text, filters, max_hits, max_bytes):
         return [{"path": "docs/note.md"}]

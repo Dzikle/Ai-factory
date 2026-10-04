@@ -242,6 +242,13 @@ def build_submission(state, workflow, program, *, start=False, now=None, health=
 
 def _check_replay(label, expected, actual, fields):
     for field in fields:
+        if field == "idempotencyKey" and "idempotencyKey" not in actual:
+            # Real Paperclip issue responses omit the request-only
+            # idempotencyKey even though creation accepts it and dedupes on
+            # it. Identity remains pinned by title (which embeds the request
+            # key) plus the fail-closed project/parent/policy/blocker and
+            # document checks performed alongside this comparison.
+            continue
         if actual.get(field) != expected.get(field):
             raise ValueError(f"replay conflict on {label}: field {field} differs; refusing to overwrite")
 
