@@ -91,3 +91,21 @@ inspection, not automatic retry or wake. Live replay reused the same IDs.
 This preset is instance-specific, not a discovery service.
 
 [Selected evidence](results/travel-agent-onboarding-20261005.json).
+
+## Documentation-first work — AIF-80
+
+On 2026-10-06 the owner requested the intended operating flow: find existing
+requirements, identify unfinished behavior, then dispatch implementation to
+AI Factory. The source documents are `docs/architecture/ai-agent.md`, tool
+contracts, grounding tests and conversation evaluations in the pinned Travel
+Agent repo. Historical audits must be checked against current code, not blindly
+reimplemented.
+
+The first bounded slice is **AIF-80: Enforce the documented bound on Travel
+Agent tool feedback**. It was dispatched through the existing task command
+and verified running on its own native Developer branch, with independent
+Tests/Reviewer/QA and final owner approval. The operator did not implement the
+app fix. [Task brief](tasks/travel-agent-bounded-tool-feedback.json) and
+[dispatch receipt](results/travel-agent-dispatch-20261006.json) preserve the
+requirements, scope and submission identity. Read AIF-80 in Paperclip for live
+progress; dispatch does not mean the fix or its gates have passed.

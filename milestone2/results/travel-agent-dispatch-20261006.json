@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-06",
+  "scope": "Owner requested documentation discovery followed by AI Factory implementation dispatch",
+  "statusAtDispatchReadback": "IN_PROGRESS_DEVELOPER",
+  "requirements": {
+    "repository": "Dzikle/ai-travel-agent",
+    "sourceRevision": "fc5d95c2ce0e3606b26dc1d0f954143389cdcbdc",
+    "primary": "docs/architecture/ai-agent.md",
+    "supporting": [
+      "docs/architecture/tool-contracts.md",
+      "docs/testing/agent-grounding.md",
+      "docs/testing/conversation-evals.md"
+    ],
+    "historicalAuditNotReimplemented": "docs/audits/iterative-agent-loop-audit.md describes an older single-call implementation; current pinned source already has an iterative loop",
+    "chosenGap": "compactToolResult does not recheck the oversize fallback's serialized length; long groundedFacts/error fields can defeat the existing 7500-character bound",
+    "remoteFreshness": "Uses the admitted project source pin. Default gh account returned 404 for private main lookup; no new latest-remote claim or source update."
+  },
+  "dispatch": {
+    "command": "python -m milestone2.task submit --workflow milestone2/config/travel-agent-workflow.json --task milestone2/tasks/travel-agent-bounded-tool-feedback.json --start",
+    "requestKey": "travel-agent:bounded-tool-feedback:fc5d95c:20261006:v1",
+    "identifier": "AIF-80",
+    "issueId": "f2130c97-fc09-4caa-a1f2-19ae595dd208",
+    "projectId": "ccf950be-d486-4bbf-9817-72459fd9b315",
+    "developerAgentId": "1a0c51db-63f9-480b-af7f-08142e16978f",
+    "runId": "3375d4d0-8f78-4da9-9b27-4d3e91f4a72d",
+    "runStartedAt": "2026-10-06T17:38:54.634Z",
+    "runStatusAtReadback": "running",
+    "adapter": "codex_local",
+    "configuredModel": "gpt-5.6-sol",
+    "stageCount": 4,
+    "completedStagesAtReadback": 0,
+    "participants": "Separate deterministic Tests, native Reviewer, deterministic QA, final owner approval",
+    "workspaceMode": "isolated_workspace",
+    "workspace": "/paperclip/m1-first-task-worktrees/travel-agent/AIF-80-enforce-the-documented-bound-on-travel-agent-tool-feedback",
+    "branch": "AIF-80-enforce-the-documented-bound-on-travel-agent-tool-feedback"
+  },
+  "context": {
+    "reason": "project-outside-fixture",
+    "ref": "file:///paperclip/milestone1-context/3375d4d0-8f78-4da9-9b27-4d3e91f4a72d.json",
+    "sha256": "f903f013b651cd5601a4a29a25626b826121e558b9c4f57eb05a21c380a8fd10",
+    "meaning": "Supported omission of unrelated Factory kickoff retrieval; task carries exact repo-local requirement paths"
+  },
+  "verification": {
+    "sourceBeforeDispatch": "Runtime primary checkout clean at the pinned source revision",
+    "rolePreflight": "Selected four engineering roles idle; actual effective external MCP catalogs empty",
+    "taskPreview": "Existing task command dry-run passed and built independent review/approval policy",
+    "submission": "Existing native task command returned AIF-80; readback confirmed in_progress and one running native Developer run",
+    "operatorAppImplementation": false,
+    "appChecksComplete": false,
+    "independentGatesComplete": false,
+    "publicationOrDeployment": false
+  },
+  "operationalNote": "The owner-only project_setup replay's Docker Git probe failed after restart due to Git safe-directory ownership. Source was verified with a command-scoped exception; no global Git policy or agent settings were changed. This did not block native task/worktree dispatch.",
+  "authority": "This is a dispatch receipt, not a workflow state store. Read Paperclip AIF-80 for current progress."
+}
