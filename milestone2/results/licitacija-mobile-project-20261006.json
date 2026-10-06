@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-06",
+  "authorization": "Owner requested a separate project for the Licitacija mobile app.",
+  "status": "REGISTERED — PLANNING ONLY",
+  "companyId": "f1251cc6-d826-4629-978c-ebcf3e6ba62a",
+  "projectId": "25196096-52aa-4cb9-9c5e-7a07ec790602",
+  "workspaceId": "b2162465-7bb2-4e9c-bdd0-f8a54546467e",
+  "provisioner": "Existing milestone2.scripts.project_setup.configure helper; inspect, apply, supported API readback, non-mutating replay.",
+  "projectConfiguration": {
+    "name": "Licitacija Mobile App",
+    "description": "Expo / React Native app in Dzikle/licitacija.mk, component mobile/. Separate mobile-app project and task history from the website/import-help project. Repository-linked planning only: dedicated runtime source, mobile roles and validation gates are not provisioned. No task dispatch, live-service access or deployment. Owner setup key: licitacija-mobile-app-v1.",
+    "status": "planned",
+    "idempotencyKey": "ai-factory:licitacija-mobile-app-v1",
+    "executionWorkspacePolicy": null,
+    "workspace": {
+      "name": "Licitacija mobile app (mobile/)",
+      "sourceType": "git_repo",
+      "cwd": null,
+      "repoUrl": "https://github.com/Dzikle/licitacija.mk",
+      "repoRef": "main",
+      "defaultRef": "main",
+      "isPrimary": true,
+      "metadata": {
+        "setupKey": "licitacija-mobile-app-v1",
+        "componentPath": "mobile",
+        "registrationMode": "repository-linked-planning-only",
+        "runtimeProvisioned": false,
+        "scopeEnforced": false
+      }
+    }
+  },
+  "source": {
+    "componentConfirmed": "mobile/package.json identifies licitacija-mk-mobile, Expo / React Native.",
+    "contracts": ["AGENTS.md", "mobile/AGENTS.md"],
+    "runtimeSourceRevision": null,
+    "remoteMainVerified": false,
+    "sourceCopied": false,
+    "localUncommittedChangesPreserved": true
+  },
+  "contextScope": {
+    "pluginId": "48373d49-16b3-4d17-b4e9-31efecebf902",
+    "change": "Append only the new project ID to the unrelated Factory fixture's excludedProjectIds.",
+    "otherSettingsPreserved": true
+  },
+  "verification": {
+    "projectAndWorkspaceApiReadback": "PASS",
+    "nonMutatingProvisionerReplay": "PASS — same project ID",
+    "agentIdsUnchanged": "PASS",
+    "otherContextSettingsAndExclusionsPreserved": "PASS"
+  },
+  "limits": {
+    "dedicatedAgentsProvisioned": false,
+    "validationGatesProvisioned": false,
+    "taskDispatched": false,
+    "newContainersOrImages": false,
+    "applicationEdits": false,
+    "liveServiceOrDeploymentAccessGranted": false,
+    "separation": "Paperclip project/task history only; component metadata does not enforce filesystem or permission isolation."
+  },
+  "nextAction": "Prepare a committed mobile runtime snapshot, dedicated mobile roles and validation gates before dispatching a first bounded task. Do not reuse the old frontend-only import-help workspace as the native mobile app."
+}
