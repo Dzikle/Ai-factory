@@ -1,0 +1,237 @@
+{
+  "setupKey": "licitacija-mobile-app-v1",
+  "expectedSourceRevision": "7c3dbd0ed96722d98cb2847885fe226cf5ae86e9",
+  "contextPluginId": "48373d49-16b3-4d17-b4e9-31efecebf902",
+  "projectUpgrade": {
+    "projectId": "25196096-52aa-4cb9-9c5e-7a07ec790602",
+    "from": {
+      "name": "Licitacija Mobile App",
+      "description": "Expo / React Native app in Dzikle/licitacija.mk, component mobile/. Separate mobile-app project and task history from the website/import-help project. Repository-linked planning only: dedicated runtime source, mobile roles and validation gates are not provisioned. No task dispatch, live-service access or deployment. Owner setup key: licitacija-mobile-app-v1.",
+      "status": "planned",
+      "idempotencyKey": "ai-factory:licitacija-mobile-app-v1",
+      "executionWorkspacePolicy": null,
+      "workspace": {
+        "name": "Licitacija mobile app (mobile/)",
+        "sourceType": "git_repo",
+        "cwd": null,
+        "repoUrl": "https://github.com/Dzikle/licitacija.mk",
+        "repoRef": "main",
+        "defaultRef": "main",
+        "isPrimary": true,
+        "metadata": {
+          "setupKey": "licitacija-mobile-app-v1",
+          "componentPath": "mobile",
+          "registrationMode": "repository-linked-planning-only",
+          "runtimeProvisioned": false,
+          "scopeEnforced": false
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Licitacija Mobile App",
+    "description": "Expo / React Native app in Dzikle/licitacija.mk, component mobile/. Dedicated committed mobile-only snapshot, Assistant/Developer/Reviewer and independent scripted Tests/QA. Trusted-local profile, not OS isolation. No live-service, native build, app-store or deployment permission. Owner setup key: licitacija-mobile-app-v1.",
+    "status": "planned",
+    "idempotencyKey": "ai-factory:licitacija-mobile-app-v1",
+    "workspace": {
+      "name": "Licitacija mobile committed source",
+      "sourceType": "local_path",
+      "cwd": "/paperclip/licitacija-mobile-source",
+      "repoUrl": "https://github.com/Dzikle/licitacija.mk",
+      "repoRef": "7c3dbd0ed96722d98cb2847885fe226cf5ae86e9",
+      "defaultRef": "7c3dbd0ed96722d98cb2847885fe226cf5ae86e9",
+      "isPrimary": true,
+      "metadata": {
+        "setupKey": "licitacija-mobile-app-v1",
+        "componentPath": "mobile",
+        "canonicalSourceRevision": "c1fa8bd42249635960def34f2034f6d03cf4e0ab",
+        "snapshotGitHead": "7c3dbd0ed96722d98cb2847885fe226cf5ae86e9",
+        "sourceScope": "committed mobile/ and focused docs; Google service config excluded",
+        "runtimeProvisioned": true,
+        "scopeEnforced": false
+      }
+    },
+    "executionWorkspacePolicy": {
+      "enabled": true,
+      "defaultMode": "isolated_workspace",
+      "sharedWorkspaceConcurrency": "serialize",
+      "workspaceStrategy": {
+        "type": "git_worktree",
+        "baseRef": "7c3dbd0ed96722d98cb2847885fe226cf5ae86e9",
+        "worktreeParentDir": "/paperclip/m1-first-task-worktrees/licitacija-mobile"
+      }
+    }
+  },
+  "agents": [
+    {
+      "name": "Licitacija Mobile Assistant",
+      "role": "general",
+      "title": "Mobile repository questions (Ask only)",
+      "adapterType": "codex_local",
+      "adapterConfig": {
+        "cwd": "/paperclip/licitacija-mobile-source",
+        "model": "gpt-5.6-sol",
+        "timeoutSec": 240,
+        "extraArgs": [
+          "--sandbox",
+          "danger-full-access",
+          "-c",
+          "model_reasoning_effort=\"low\""
+        ],
+        "dangerouslyBypassApprovalsAndSandbox": false,
+        "env": {
+          "GIT_CONFIG_COUNT": "1",
+          "GIT_CONFIG_KEY_0": "safe.directory",
+          "GIT_CONFIG_VALUE_0": "*"
+        }
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": false,
+          "maxConcurrentRuns": 1
+        }
+      },
+      "permissions": {
+        "canCreateAgents": false,
+        "canCreateSkills": false
+      },
+      "budgetMonthlyCents": 1000,
+      "metadata": {
+        "setupKey": "licitacija-mobile-app-v1:assistant"
+      },
+      "instruction": "milestone2/fixtures/licitacija-mobile-assistant.md"
+    },
+    {
+      "name": "Licitacija Mobile Developer",
+      "role": "engineer",
+      "title": "Expo mobile implementation",
+      "adapterType": "codex_local",
+      "adapterConfig": {
+        "cwd": "/paperclip/licitacija-mobile-source",
+        "model": "gpt-5.6-sol",
+        "timeoutSec": 600,
+        "extraArgs": [
+          "--sandbox",
+          "danger-full-access",
+          "-c",
+          "model_reasoning_effort=\"low\""
+        ],
+        "dangerouslyBypassApprovalsAndSandbox": false,
+        "env": {
+          "GIT_CONFIG_COUNT": "1",
+          "GIT_CONFIG_KEY_0": "safe.directory",
+          "GIT_CONFIG_VALUE_0": "*"
+        }
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": false,
+          "maxConcurrentRuns": 1
+        }
+      },
+      "permissions": {
+        "canCreateAgents": false,
+        "canCreateSkills": false
+      },
+      "budgetMonthlyCents": 1000,
+      "metadata": {
+        "setupKey": "licitacija-mobile-app-v1:developer"
+      },
+      "instruction": "milestone2/fixtures/licitacija-mobile-developer.md"
+    },
+    {
+      "name": "Licitacija Mobile Reviewer",
+      "role": "general",
+      "title": "Independent mobile code review",
+      "adapterType": "codex_local",
+      "adapterConfig": {
+        "cwd": "/paperclip/licitacija-mobile-source",
+        "model": "gpt-5.6-sol",
+        "timeoutSec": 600,
+        "extraArgs": [
+          "--sandbox",
+          "danger-full-access",
+          "-c",
+          "model_reasoning_effort=\"low\""
+        ],
+        "dangerouslyBypassApprovalsAndSandbox": false,
+        "env": {
+          "GIT_CONFIG_COUNT": "1",
+          "GIT_CONFIG_KEY_0": "safe.directory",
+          "GIT_CONFIG_VALUE_0": "*"
+        }
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": false,
+          "maxConcurrentRuns": 1
+        }
+      },
+      "permissions": {
+        "canCreateAgents": false,
+        "canCreateSkills": false
+      },
+      "budgetMonthlyCents": 1000,
+      "metadata": {
+        "setupKey": "licitacija-mobile-app-v1:reviewer"
+      },
+      "instruction": "milestone2/fixtures/licitacija-mobile-reviewer.md"
+    },
+    {
+      "name": "Licitacija Mobile Tests",
+      "role": "qa",
+      "title": "Deterministic mobile type/test/lint checks",
+      "adapterType": "process",
+      "adapterConfig": {
+        "command": "node",
+        "args": [
+          "/paperclip/licitacija-mobile-stage.mjs",
+          "tests"
+        ],
+        "timeoutSec": 1200
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": false,
+          "maxConcurrentRuns": 1
+        }
+      },
+      "permissions": {
+        "canCreateAgents": false,
+        "canCreateSkills": false
+      },
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "setupKey": "licitacija-mobile-app-v1:tests"
+      }
+    },
+    {
+      "name": "Licitacija Mobile QA",
+      "role": "qa",
+      "title": "Independent mobile behavior regression checks",
+      "adapterType": "process",
+      "adapterConfig": {
+        "command": "node",
+        "args": [
+          "/paperclip/licitacija-mobile-stage.mjs",
+          "qa"
+        ],
+        "timeoutSec": 1200
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": false,
+          "maxConcurrentRuns": 1
+        }
+      },
+      "permissions": {
+        "canCreateAgents": false,
+        "canCreateSkills": false
+      },
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "setupKey": "licitacija-mobile-app-v1:qa"
+      }
+    }
+  ]
+}

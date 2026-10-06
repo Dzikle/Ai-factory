@@ -92,6 +92,7 @@ from the **AI Factory repository root**:
 | Publish the exact owner-approved candidate and record evidence | `python -m milestone2.publish publish` — `milestone2/PUBLISH.md`; operator/authorized orchestrator only |
 | Run the pinned complete Python checks | `python -m milestone3.check` — `milestone3/README.md` |
 | Register the prepared Travel Agent project/roles, without dispatch | `python -m milestone2.scripts.project_setup` — `milestone2/TRAVEL_AGENT.md`; owner/operator only |
+| Attach/reconcile the prepared Licitacija native mobile roles, without dispatch | Same provisioner with `milestone2/config/licitacija-mobile-project.json` — `milestone2/LICITACIJA_MOBILE.md`; owner/operator only |
 
 Use `--help` and the linked instructions to supply explicit inputs. Do not
 reimplement these operations or claim configured policy proves execution.

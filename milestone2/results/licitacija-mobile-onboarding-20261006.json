@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-06",
+  "authorization": "Owner approved attaching dedicated mobile agents and validation checks; no coding-task dispatch.",
+  "status": "ROLES ATTACHED — BASELINE READINESS PASSED",
+  "companyId": "f1251cc6-d826-4629-978c-ebcf3e6ba62a",
+  "projectId": "25196096-52aa-4cb9-9c5e-7a07ec790602",
+  "workspaceId": "b2162465-7bb2-4e9c-bdd0-f8a54546467e",
+  "planningRegistration": "licitacija-mobile-project-20261006.json",
+  "projectAndWorkspaceIdsPreserved": true,
+  "leadAgentId": "e4dee9d4-6d10-40bd-90ea-3d9ae126d1a6",
+  "agentIds": {
+    "assistant": "e4dee9d4-6d10-40bd-90ea-3d9ae126d1a6",
+    "developer": "98ebc4ca-7b32-4cd5-a0dc-383df160c638",
+    "reviewer": "c8642701-072b-4c68-a6fc-ebb2f6e03b05",
+    "tests": "16a4d0b5-ca06-48a7-a58d-17b6cca30434",
+    "qa": "b86b65b9-70ac-41a1-ab4e-063c884ba357"
+  },
+  "nativeRoles": {
+    "adapter": "codex_local",
+    "model": "gpt-5.6-sol",
+    "provider": "OpenAI via existing signed-in Codex",
+    "effort": "low",
+    "budgetMonthlyCentsPerRole": 1000
+  },
+  "scriptedRoles": [
+    "Tests",
+    "QA"
+  ],
+  "allFiveAgentStates": "idle",
+  "timedHeartbeatsEnabled": false,
+  "effectiveExternalMcpCatalogPerAgent": [],
+  "effectiveCatalogVerifiedWithSupportedApi": true,
+  "source": {
+    "canonicalRepository": "Dzikle/licitacija.mk",
+    "canonicalSourceRevision": "c1fa8bd42249635960def34f2034f6d03cf4e0ab",
+    "runtimeCwd": "/paperclip/licitacija-mobile-source",
+    "snapshotGitHead": "7c3dbd0ed96722d98cb2847885fe226cf5ae86e9",
+    "snapshotGitTree": "3fdc9529e126c29d013e01ede66529219c819971",
+    "archiveBytes": 4689920,
+    "archiveSha256": "2486f408e997825866b024bd99962a55089591891567486ce25f0aea06205a60",
+    "files": 236,
+    "lineEndingConvertedFiles": 232,
+    "exactBytesOrOnlyLfToCrlf": true,
+    "noOtherChanges": true,
+    "scope": "Tracked mobile/ plus AGENTS.md, docs/ai/INDEX.md, mobile preview and mobile/web gap audit; mobile/google-services.json excluded.",
+    "privateEnvOrUncommittedFilesCopied": false,
+    "emptyPublicEnvExampleIncluded": true,
+    "remoteMainFreshnessVerified": false,
+    "continuouslySynchronized": false,
+    "workingTreeCleanAfterReadinessSmoke": true,
+    "publicationNote": "Synthetic mobile subset, not an upstream branch; no direct replacement-repository push or shared merge. Future integration needs an owner-approved canonical-repository candidate."
+  },
+  "deployedFiles": {
+    "/paperclip/licitacija-mobile-stage.mjs": "752289f4b81a5073823cd5059edde751a719a01898305921da4489e45131bbe4",
+    "/paperclip/licitacija-mobile-policy.mjs": "1f13a4667d9e55ecc90ec2482f5f197d2ac91c873fee2e8af5c83d98fe7b1463",
+    "/paperclip/licitacija-mobile-stage-config.json": "b1e97ee4802586e28565eb3288703cc9212530cda864dacf5606bc79ce450dcf"
+  },
+  "bindingChecks": {
+    "sourcePinAndConfigurationPreview": "PASS",
+    "nativeApiReadback": "PASS",
+    "ownedProjectUpgradeAndApplyReplay": "PASS — same IDs, no duplicate roles",
+    "noTasksDispatched": "PASS — zero mobile tasks at readback",
+    "stageSyntaxOnController": "PASS",
+    "deployedFileDigestsMatchLocalFiles": "PASS",
+    "sourceBytesVerified": "PASS — exact canonical bytes or LF-to-CRLF conversion only"
+  },
+  "readinessSmoke": {
+    "mode": "Temporary committed copy; not a Paperclip task/stage decision",
+    "node": "24.21.0",
+    "npm": "11.19.0",
+    "frozenInstall": "PASS — npm ci --ignore-scripts --no-audit --no-fund; 988 packages",
+    "typecheck": "PASS",
+    "tests": "PASS — 82 tests, 27 files",
+    "lint": "PASS",
+    "focusedQa": "PASS — 19 tests, six files",
+    "childEnvironmentKeys": [
+      "CI",
+      "EXPO_NO_TELEMETRY",
+      "HOME",
+      "PATH",
+      "npm_config_cache"
+    ],
+    "temporaryCopyAndNpmCacheRemoved": true,
+    "dependencyWarnings": "Existing uuid/rimraf/inflight/glob deprecations; no dependency versions changed and no vulnerability audit claimed."
+  },
+  "factoryVerification": {
+    "focusedProvisioner": "17 tests passed",
+    "newMobilePolicy": "4 tests passed",
+    "foundationAndWorkspaceNodeChecks": "27 tests passed",
+    "pinnedCompletePythonSuiteAfterReviewFixes": "301 tests passed; two opt-in skips",
+    "review": "Independent focused read-only review; two Important upgrade drift/identity findings reproduced RED and fixed GREEN. No second review claimed.",
+    "reviewExcludedAreas": "Live/API compatibility and deployed bindings covered by operator readback/replay/digests; source provenance covered by per-file comparison. No private state was exposed to the reviewer."
+  },
+  "limits": {
+    "trustedLocalNotOsIsolation": true,
+    "fullNativeWorkflowYetExercised": false,
+    "nativeProviderAccessTaskYetRun": false,
+    "physicalDeviceOrNativeBuildTesting": false,
+    "releaseTargetOrSigningCheck": false,
+    "liveApiOrDeploymentAccessGranted": false,
+    "applicationFilesEdited": false,
+    "newContainerOrImage": false,
+    "oldAdmissionAgentsResumed": false,
+    "pushOrMergePerformed": false
+  },
+  "nextAction": "Use Licitacija Mobile Assistant in Ask mode, or authorize a bounded coding task through the saved five-stage workflow."
+}

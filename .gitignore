@@ -1,4 +1,5 @@
 .milestone0/
+.milestone2/
 .paperclip/worktrees/
 __pycache__/
 *.py[cod]

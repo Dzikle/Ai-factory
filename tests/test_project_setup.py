@@ -58,6 +58,85 @@ class ProjectSetupTests(unittest.TestCase):
             self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
         self.assertEqual(self.client.writes, [])
 
+    def prepare_owned_upgrade(self):
+        self.preset['project']['workspace'].update(sourceType='local_path', defaultRef='1' * 40, isPrimary=True)
+        self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+        original = deepcopy(self.preset['project'])
+        self.preset['projectUpgrade'] = {'projectId': 'travel-project', 'from': original}
+        self.client.projects[0]['workspaces'][0]['id'] = 'workspace'
+        self.preset['project']['workspace']['cwd'] = '/paperclip/travel-ready-source'
+        self.preset['project']['description'] = 'Owned travel setup with ready source'
+        self.client.writes.clear()
+
+    def test_explicit_owned_project_upgrade_keeps_ids_and_does_not_dispatch(self):
+        self.prepare_owned_upgrade()
+        preview = self.configure(self.client, self.state, self.preset, self.instructions)
+        self.assertTrue(preview.get('projectUpgradeRequired'))
+        self.assertEqual(self.client.writes, [])
+        result = self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+        self.assertEqual(result['projectId'], 'travel-project')
+        self.assertEqual(self.client.projects[0]['workspaces'][0]['id'], 'workspace')
+        self.assertEqual(self.client.projects[0]['workspaces'][0]['cwd'], '/paperclip/travel-ready-source')
+        self.assertEqual(self.client.projects[0]['description'], 'Owned travel setup with ready source')
+        self.assertFalse(any('/issues' in path or '/wakeup' in path for _, path, _ in self.client.writes))
+        self.client.writes.clear()
+        self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+        self.assertEqual(self.client.writes, [])
+
+    def test_owned_upgrade_can_complete_after_workspace_patch_only(self):
+        self.prepare_owned_upgrade()
+        self.client.projects[0]['workspaces'][0].update(self.preset['project']['workspace'])
+        self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+        self.assertEqual(self.client.projects[0]['description'], 'Owned travel setup with ready source')
+
+    def test_upgrade_rejects_wrong_project_id_or_unrecognized_workspace_before_writes(self):
+        for drift in ('id', 'workspace'):
+            with self.subTest(drift=drift):
+                self.setUp()
+                self.prepare_owned_upgrade()
+                if drift == 'id':
+                    self.preset['projectUpgrade']['projectId'] = 'another-project'
+                else:
+                    self.client.projects[0]['workspaces'][0]['cwd'] = '/foreign'
+                with self.assertRaises(ValueError):
+                    self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+                self.assertEqual(self.client.writes, [])
+
+    def test_upgrade_rejects_foreign_id_even_when_target_configuration_matches(self):
+        self.prepare_owned_upgrade()
+        self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+        self.client.writes.clear()
+        self.client.projects[0]['id'] = 'foreign-project'
+        with self.assertRaises(ValueError):
+            self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+        self.assertEqual(self.client.writes, [])
+
+    def test_upgrade_does_not_recreate_a_missing_or_renamed_approved_project(self):
+        for missing in (True, False):
+            with self.subTest(missing=missing):
+                self.setUp()
+                self.prepare_owned_upgrade()
+                if missing:
+                    self.client.projects.clear()
+                else:
+                    self.client.projects[0]['name'] = 'Renamed'
+                with self.assertRaises(ValueError):
+                    self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+                self.assertEqual(self.client.writes, [])
+
+    def test_upgrade_rejects_execution_workspace_drift_after_target_is_installed(self):
+        for key, value in [('sourceType', 'remote_managed'), ('defaultRef', 'foreign-branch'),
+                           ('isPrimary', False), ('name', 'Foreign workspace')]:
+            with self.subTest(key=key):
+                self.setUp()
+                self.prepare_owned_upgrade()
+                self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+                self.client.writes.clear()
+                self.client.projects[0]['workspaces'][0][key] = value
+                with self.assertRaises(ValueError):
+                    self.configure(self.client, self.state, self.preset, self.instructions, apply=True)
+                self.assertEqual(self.client.writes, [])
+
     def test_foreign_same_name_agent_stops_before_project_creation(self):
         self.client.agents = [{'id': 'other', 'name': 'Travel Agent Assistant', 'metadata': {}}]
         with self.assertRaises(ValueError):
@@ -138,6 +217,12 @@ class FixtureClient:
             if '/plugins/plugin/config?' in path:
                 return 200, {'configJson': deepcopy(self.config)}
         self.writes.append((method, path, deepcopy(body)))
+        if method == 'PATCH' and path == '/api/projects/travel-project/workspaces/workspace':
+            self.projects[0]['workspaces'][0].update(deepcopy(body))
+            return 200, deepcopy(self.projects[0]['workspaces'][0])
+        if method == 'PATCH' and path == '/api/projects/travel-project':
+            self.projects[0].update(deepcopy(body))
+            return 200, deepcopy(self.projects[0])
         if method == 'POST' and path.endswith('/projects'):
             project = deepcopy(body)
             workspace = project.pop('workspace')

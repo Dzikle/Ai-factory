@@ -21,14 +21,33 @@ def configure(client, state, preset, instructions, *, apply=False):
     if len(matches) > 1:
         raise ValueError('Ambiguous project; operator reconciliation required')
     project = matches[0] if matches else None
+    upgrade = preset.get('projectUpgrade')
+    if upgrade is not None and (project is None or project['id'] != upgrade.get('projectId')):
+        raise ValueError('Recorded upgrade project is missing, renamed or has a different identity')
+    upgrade_required = False
     if project:
         workspaces = project.get('workspaces') or []
         wanted = project_body['workspace']
-        if (project.get('companyId') != company or project.get('description') != project_body['description']
-                or len(workspaces) != 1 or any(workspaces[0].get(k) != wanted.get(k)
-                                               for k in ('cwd', 'repoRef', 'repoUrl', 'metadata'))
-                or project.get('executionWorkspacePolicy') != project_body.get('executionWorkspacePolicy')):
+        keys = ('cwd', 'repoRef', 'repoUrl', 'metadata', 'name', 'sourceType', 'defaultRef', 'isPrimary')
+        def parent_matches(expected):
+            return (project.get('description') == expected.get('description')
+                    and project.get('executionWorkspacePolicy') == expected.get('executionWorkspacePolicy'))
+        def workspace_matches(expected):
+            return len(workspaces) == 1 and all(workspaces[0].get(k) == expected.get(k)
+                                               for k in keys if k in expected)
+        if project.get('companyId') != company or len(workspaces) != 1:
             raise ValueError('Same-name project is foreign or configuration has drifted')
+        if not (parent_matches(project_body) and workspace_matches(wanted)):
+            upgrade = preset.get('projectUpgrade') or {}
+            original = upgrade.get('from') or {}
+            # Only the recorded registration or this exact target is eligible;
+            # mixed states allow recovery after one of the two supported PATCHes.
+            if (upgrade.get('projectId') != project['id'] or original.get('name') != project_body['name']
+                    or not workspaces[0].get('id')
+                    or not (parent_matches(original) or parent_matches(project_body))
+                    or not (workspace_matches(original.get('workspace') or {}) or workspace_matches(wanted))):
+                raise ValueError('Same-name project is foreign or configuration has drifted')
+            upgrade_required = True
     owned = {}
     for desired in preset['agents']:
         found = [a for a in agents if a.get('name') == desired['name']]
@@ -72,9 +91,14 @@ def configure(client, state, preset, instructions, *, apply=False):
         raise ValueError('Unexpected context scope; operator reconciliation required')
     if not apply:
         return {'status': 'ready', 'mutations': False, 'projectId': project['id'] if project else None,
+                'projectUpgradeRequired': upgrade_required,
                 'agentIds': {name: a['id'] for name, a in owned.items()}}
     if project is None:
         _, project = client.request('POST', f'/api/companies/{company}/projects', project_body, expected=(201,))
+    elif upgrade_required:
+        client.request('PATCH', f'/api/projects/{project["id"]}/workspaces/{workspaces[0]["id"]}', wanted)
+        parent = {k: v for k, v in project_body.items() if k not in ('workspace', 'idempotencyKey')}
+        _, project = client.request('PATCH', f'/api/projects/{project["id"]}', parent)
     for desired in preset['agents']:
         if desired['name'] not in owned:
             body = deepcopy(desired)
@@ -117,7 +141,8 @@ def main():
         path.relative_to(ROOT)
         instructions[agent['instruction']] = path.read_text(encoding='utf-8')
     workspace = preset['project']['workspace']
-    revision = subprocess.run(['docker', 'exec', args.container, 'git', '-C', workspace['cwd'],
+    revision = subprocess.run(['docker', 'exec', args.container, 'git', '-c',
+                               'safe.directory=' + workspace['cwd'], '-C', workspace['cwd'],
                                'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=20, check=True)
     if revision.stdout.strip() != preset['expectedSourceRevision']:
         raise ValueError('Runtime source differs from the pinned onboarding revision')
