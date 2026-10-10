@@ -3,7 +3,7 @@
 # with milestone0/compose/paperclip-fork-readmission.yaml as the first Compose file.
 services:
   paperclip-fork:
-    image: ghcr.io/dzikle/paperclip@sha256:fcca079223714bc67c3e87e14f64e57594d720b54ae69f84d18c774491b1995f
+    image: ghcr.io/dzikle/paperclip@sha256:bb0a8a00a903a38e5542c14cb9db7f6ae7ae47cf13a57c671866d64ce66b1d4e
     networks:
       - baseline-postgres
       - native-runner

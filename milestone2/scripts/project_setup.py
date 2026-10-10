@@ -12,6 +12,24 @@ from milestone2.scripts.assistant_reply import NoRedirect
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def probe_source(container, cwd, expected_revision):
+    docker = ['docker', 'exec', '--user', '1000:1000', container]
+    try:
+        status = subprocess.run(docker + ['git', '-C', cwd, 'status', '--porcelain'],
+                               capture_output=True, text=True, timeout=20, check=True)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError('Controller runtime user cannot inspect the source checkout') from exc
+    if status.stdout.strip():
+        raise ValueError('Runtime source checkout is not clean')
+    try:
+        revision = subprocess.run(docker + ['git', '-C', cwd, 'rev-parse', 'HEAD'],
+                                  capture_output=True, text=True, timeout=20, check=True)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError('Controller runtime user cannot resolve source revision') from exc
+    if revision.stdout.strip() != expected_revision:
+        raise ValueError('Runtime source differs from the pinned onboarding revision')
+
+
 def configure(client, state, preset, instructions, *, apply=False):
     company = state['companyId']
     project_body = deepcopy(preset['project'])
@@ -141,11 +159,7 @@ def main():
         path.relative_to(ROOT)
         instructions[agent['instruction']] = path.read_text(encoding='utf-8')
     workspace = preset['project']['workspace']
-    revision = subprocess.run(['docker', 'exec', args.container, 'git', '-c',
-                               'safe.directory=' + workspace['cwd'], '-C', workspace['cwd'],
-                               'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=20, check=True)
-    if revision.stdout.strip() != preset['expectedSourceRevision']:
-        raise ValueError('Runtime source differs from the pinned onboarding revision')
+    probe_source(args.container, workspace['cwd'], preset['expectedSourceRevision'])
     client = Client(state['baseUrl'], state['boardApiKey'])
     client.opener = build_opener(ProxyHandler({}), HTTPCookieProcessor(client.cookies), NoRedirect())
     print(json.dumps(configure(client, state, preset, instructions, apply=args.apply)))

@@ -1,0 +1,31 @@
+{
+  "companyId": "f1251cc6-d826-4629-978c-ebcf3e6ba62a",
+  "ownerUserId": "LjQ4Q61OIw6pqGxCJKoQEOpcFzO9dOsx",
+  "subscriptionQualificationRunId": "7b4d4b48-f054-47a5-afe1-8984432911f8",
+  "projects": {
+    "a5758cd0-d9c4-4f3f-a004-2194691f6ef3": {
+      "label": "Licitacija Web", "cwd": "/paperclip/licita-help-source",
+      "orchestratorAgentId": "179cc6ab-59f6-4c58-b7b9-1f3f5edc4aae",
+      "developerAgentId": "2b3026ff-9bfa-41a6-b3fd-f1947e3b4ad4",
+      "validatorAgentId": "37fde23e-1aa5-45dc-a153-db577e2d2299",
+      "reviewerAgentId": "9e054f8a-f3f1-4cff-9466-aae5cf2a929a",
+      "qaAgentId": "e30ac7f4-746b-4c93-b627-af35e5c309b8"
+    },
+    "ccf950be-d486-4bbf-9817-72459fd9b315": {
+      "label": "Travel Agent", "cwd": "/paperclip/travel-agent-source",
+      "orchestratorAgentId": "88f70579-187b-4452-990e-0d089068c0e5",
+      "developerAgentId": "1a0c51db-63f9-480b-af7f-08142e16978f",
+      "validatorAgentId": "e7ebb7a9-92de-40e5-9903-3c5acd35092b",
+      "reviewerAgentId": "caa13446-3e74-43fb-9232-962c2879b2f5",
+      "qaAgentId": "e76ac107-a87d-468e-94d3-d50674793941"
+    },
+    "25196096-52aa-4cb9-9c5e-7a07ec790602": {
+      "label": "Licitacija Mobile", "cwd": "/paperclip/licitacija-mobile-source",
+      "orchestratorAgentId": "e4dee9d4-6d10-40bd-90ea-3d9ae126d1a6",
+      "developerAgentId": "98ebc4ca-7b32-4cd5-a0dc-383df160c638",
+      "validatorAgentId": "16a4d0b5-ca06-48a7-a58d-17b6cca30434",
+      "reviewerAgentId": "c8642701-072b-4c68-a6fc-ebb2f6e03b05",
+      "qaAgentId": "b86b65b9-70ac-41a1-ab4e-063c884ba357"
+    }
+  }
+}

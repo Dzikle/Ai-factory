@@ -2,6 +2,7 @@
 import importlib.util
 import unittest
 from copy import deepcopy
+from unittest.mock import patch
 
 
 class ProjectSetupTests(unittest.TestCase):
@@ -26,6 +27,42 @@ class ProjectSetupTests(unittest.TestCase):
         }
         self.instructions = {'assistant.md': 'Read only the assigned travel repository.'}
         self.client = FixtureClient()
+
+    def test_source_probe_admits_only_clean_pinned_checkout_as_controller_user(self):
+        from milestone2.scripts.project_setup import probe_source
+
+        completed = [
+            type('Completed', (), {'stdout': '', 'stderr': '', 'returncode': 0})(),
+            type('Completed', (), {'stdout': 'a' * 40 + '\n', 'stderr': '', 'returncode': 0})(),
+        ]
+        with patch('milestone2.scripts.project_setup.subprocess.run', side_effect=completed) as run:
+            probe_source('paperclip', '/paperclip/source', 'a' * 40)
+
+        self.assertEqual(run.call_count, 2)
+        for call in run.call_args_list:
+            command = call.args[0]
+            self.assertEqual(command[:5], ['docker', 'exec', '--user', '1000:1000', 'paperclip'])
+            self.assertNotIn('-c', command)
+            self.assertFalse(any('safe.directory' in arg for arg in command))
+        self.assertEqual(run.call_args_list[0].args[0][5:],
+                         ['git', '-C', '/paperclip/source', 'status', '--porcelain'])
+        self.assertEqual(run.call_args_list[1].args[0][5:],
+                         ['git', '-C', '/paperclip/source', 'rev-parse', 'HEAD'])
+
+    def test_source_probe_reports_dirty_or_wrong_revision_checkout(self):
+        from milestone2.scripts.project_setup import probe_source
+
+        for outputs, message in [
+            ([type('Completed', (), {'stdout': ' M file.py\n', 'stderr': '', 'returncode': 0})()],
+             'not clean'),
+            ([type('Completed', (), {'stdout': '', 'stderr': '', 'returncode': 0})(),
+              type('Completed', (), {'stdout': 'b' * 40 + '\n', 'stderr': '', 'returncode': 0})()],
+             'pinned onboarding revision'),
+        ]:
+            with self.subTest(message=message), patch(
+                    'milestone2.scripts.project_setup.subprocess.run', side_effect=outputs):
+                with self.assertRaisesRegex(ValueError, message):
+                    probe_source('paperclip', '/paperclip/source', 'a' * 40)
 
     def test_preview_performs_no_writes(self):
         result = self.configure(self.client, self.state, self.preset, self.instructions)

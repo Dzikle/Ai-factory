@@ -896,6 +896,15 @@ Behavior:
 - `report PARENT --output outcome.md` renders the stored program outcome
   report as Markdown after validating its fields and candidate lineage.
 
+## Automatic project task entry
+
+For ordinary project work, select the registered project in Paperclip, enter a
+task, and start it with no specialist/workflow assignment. The opted-in project
+Orchestrator persists a plan, answers analysis, or delegates coding through
+native independent stages and owner approval. Explicit workflows below remain
+supported. See [the contract and live evidence](../docs/implementation/AUTOMATIC_TASK_ENTRY.md)
+for qualified profiles, bounded fallback, provisioning and remaining limits.
+
 ## Whole-lifecycle command sequence
 
 Each lifecycle operation lives on its owning module; there is no second
