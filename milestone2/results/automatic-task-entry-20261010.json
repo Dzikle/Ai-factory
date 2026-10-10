@@ -25,6 +25,12 @@
     "qualificationBoundary": "Previously successful same-company native run with claimed adapter/model; not inferred from an installed binary or catalogue, not a future availability guarantee",
     "taskAuthority": "Paperclip only; no second task queue, scheduler, retry timer or workflow database"
   },
+  "analysisProof": {
+    "identifier": "AIF-81", "issueId": "04dfb866-2f3b-4693-afe2-ea5e8c5bba31", "status": "done",
+    "planKind": "analysis", "planRevisionId": "c4e77cdc-a033-464f-be2f-749fab8c9dd7",
+    "planSha256": "d221732ab08d2d96ac8776667b33a56d66d2ab09300415b97335b5354c81c255",
+    "answerBytes": 1076, "boundary": "Recovered same-issue analysis result persisted in native plan; not a source implementation or mobile acceptance"
+  },
   "codingProof": {
     "issueId": "7c9addfe-9826-4e55-89c5-fe6048e78a3b",
     "identifier": "AIF-82",
@@ -55,7 +61,7 @@
     "costPerAcceptedCorrectTask": "unknown: partial native usage and no owner-accepted outcome"
   },
   "fallbackProof": {
-    "status": "PENDING_FINAL_IMAGE_RETRY",
+    "status": "RESPONSE_PROVEN_BUT_DURABILITY_FAILED; RECEIPT_FIX_BUILD_PENDING",
     "identifier": "AIF-83",
     "issueId": "921832f8-854d-4d48-9667-82d35b797c91",
     "canaryAgentId": "34ccd568-56a2-416d-9591-158388fb2a60",
@@ -64,22 +70,40 @@
     "observedCompatibilityGap": "OpenCode 1.18.35 emitted typed APIError with numeric 403 and no tools/text/completed step; APICallError-only parser missed it",
     "compatibilityRegression": "RED for native APIError fixture, then GREEN; typed status/no-work/invalid-stream gates retained",
     "initialUnsuccessfulAttempts": "Preserved in native history; canary paused before bounded final-image retry",
-    "sentinelProofBoundary": "Requires succeeded native run plus exact Codex item.completed/agent_message text AIF_NATIVE_FALLBACK_READY; prompt substring is not accepted"
+    "sentinelProofBoundary": "Requires succeeded native run plus exact native result summary (app-server mode) or Codex item.completed/agent_message text AIF_NATIVE_FALLBACK_READY; prompt substring is not accepted",
+    "realTypedPrimaryRunId": "8d5c1010-4f3e-472e-8180-fe37c23bcc51",
+    "realCodexSuccessRunId": "e3ba6a81-03ee-4762-836a-6458b3cd0b1e",
+    "laterUnwantedFreshPair": {"primaryRunId":"7dba4bf0-f809-4d42-a777-cc0a89e8ab99","codexRunId":"cf6fc976-7d70-47bb-a606-3f713afed2b5"},
+    "responseEvidence": "Native succeeded / claimed codex_local / usage model gpt-5.6-sol / exact assistant result summary sentinel; configured logical agent remained opencode_local",
+    "durabilityDefect": "Direct runtime initialization retained claimed adapter but dropped sealed providerFallback receipt; canary paused. These successful responses are not accepted as bounded fallback/durability proof",
+    "receiptFixCommit": "e40e5b9730280b549e8adc1aec9114bd133d85d2",
+    "receiptFixBuild": "https://github.com/Dzikle/paperclip/actions/runs/38077164921",
+    "receiptRegression": "Actual Linux database regression RED: completed receipt undefined. Minimal atomic JSONB preservation -> focused GREEN and serial complete route/fallback suite 24/24 PASS",
+    "canaryPaused": true
   },
   "verification": {
     "factoryPinnedSuite": {"command": "uv run --offline --no-project --with jsonschema[format]==4.25.1 --with PyYAML==6.0.2 python -m milestone3.check", "testsRun": 339, "skipped": 2, "failures": 0, "seconds": 296.433},
     "priorLinuxNativeCore": {"passed": 87, "scope": "Actual Linux native route/intake/fallback/policy tests, including database cases that Windows skipped; a15 production code unchanged by final parser-only fix"},
     "linuxOpenCodeSourceOverlay": {"passed": 64, "failed": 0, "scope": "Full OpenCode source package on exact a15 image with two read-only changed-file overlays, isolated network-none/cpu2/memory768MB/tmpfs256MB test container"},
-    "exactFinalImageOpenCode": "PENDING",
+    "exactFinalImageOpenCode": {"passed": 64, "failed": 0, "files": 7, "seconds": 7.80, "scope": "Full source OpenCode package including 6 parser tests on final immutable image, no source overlays, network-none/cpu2/memory768MB/tmpfs256MB isolated test container"},
     "hostTypechecks": "PASS: Paperclip server, UI, OpenCode adapter on changed sources",
     "fullPaperclipSuite": "NOT GREEN: Windows root wrapper fails before Vitest at spawnSync pnpm ENOENT; broad Linux attempt exhausted disk and did not finish; not repeated",
     "windowsAdapterSuite": "NOT GREEN: 10 failures, 91 pass, 21 skip (stale dist duplicates included); five distinct source symlink/skill fixtures fail with EPERM/ENOENT on Windows",
     "tokenGate": "NOT GREEN: existing 84 color + 31 arbitrary-value violations; no token remediation in this scope",
+    "receiptFixDirectServerTypecheck": "PASS: pnpm --filter @paperclipai/server exec tsc --noEmit; normal typecheck wrapper stops earlier at existing stale generated PRP protocol manifest",
+    "receiptFixFirstSuiteAttempt": "NOT GREEN: positive retry plus two unqualified cases timed out during an overlapping host wrapper run, then teardown FK failed; no cause beyond observed overlap claimed. Focused test and complete serial 24-test rerun subsequently PASS",
     "noexecFixtureCorrection": "Initial isolated tmpfs lacked exec, causing fixture EACCES. Exec enabled only for isolated test tmpfs; no live runtime permission change",
     "independentFeatureReview": "Whole-branch reviewer completed in earlier segment; important ownership, profile routing and board-revision findings fixed RED -> GREEN in one pass; no redundant re-review"
   },
   "finalCutover": {
-    "status": "PENDING",
+    "status": "PASS: authority/schema/configuration preserved",
+    "liveCommit": "94061426a665f7edabe8add6e69de7bba133f8b5",
+    "health": "ok / authenticated / private",
+    "sameAuthorityTables": 7,
+    "sameConfiguredCredentialsNetworksPorts": true,
+    "sameStorageBindingsAndModes": true,
+    "dockerDesktopBindAlias": "Inspect changed the same read-only fixture source from /run/desktop/mnt/host/c/... to C:\\... . Checker normalizes that alias only; changed source, target or write mode still fail closed",
+    "schema": "Unchanged Drizzle journal 283|1790018362070; no migrations in final parser compatibility commit",
     "backupDirectory": ".milestone0/automatic-entry-final-cutover-20261010/ (private, Git-ignored)",
     "databaseBackupBytes": 9187735,
     "storageBackupBytes": 1015531570,

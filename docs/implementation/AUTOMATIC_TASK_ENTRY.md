@@ -80,6 +80,17 @@ no-text/no-tool/no-completed-step guard and one qualified, board-approved switch
 Final deployment, real fallback and restart receipts are being completed; do not
 infer them from these tests.
 
+The compatibility image was deployed and returned the exact native Codex
+assistant sentinel in AIF-83, but it exposed a second durability gap: the direct
+(`legacy` runtime mode) initializer dropped the sealed fallback receipt. An
+unwanted fresh primary/fallback pair followed. The test principal is paused;
+these responses are **not a passing bounded fallback proof**. The three-line
+atomic receipt preservation fix `e40e5b9730280b549e8adc1aec9114bd133d85d2`
+reproduced the missing row evidence RED, then passed the real database regression
+and serial 24-test route/fallback suite. Its replacement image is building.
+Final replay and restart acceptance must use that replacement, not the flawed
+intermediate image. See `milestone2/results/automatic-task-entry-20261010.json`.
+
 ## Using the entry point
 
 In the existing Paperclip dashboard, select Licitacija Web, Travel Agent or
