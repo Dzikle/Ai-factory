@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "sourceKind": "credential-free disposable committed copy",
+  "allowedPaths": ["native_canary/add.py", "native_canary/test_add.py"],
+  "description": "Work only on an owner-prepared disposable trusted source branch, never a live project or main branch. Create native_canary/add.py with pure add(a,b) and native_canary/test_add.py covering positive, negative and zero inputs. Change only those paths. No dependency changes, network, provider calls, credentials, infrastructure, git push, publication, or merge. Commit the candidate locally. Independent Tests and Reviewer must validate the same candidate tree in a credential-free isolated committed copy and write immutable per-run JSON receipts to issue document keys native-qualification-<runId>: schemaVersion=1, runId, agentId, issueId, phase tests/reviewer, candidateTree, verdict passed, validationSource credential-free isolated committed copy. Approve their existing Paperclip review stages only after their real checks. Owner integration remains pending."
+}
