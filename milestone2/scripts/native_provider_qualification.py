@@ -12,6 +12,12 @@ FIELDS = {"schemaVersion","profileId","phase","companyId","projectId","agentId",
           "cwd","requestKey","permissionPolicy","budget"}
 
 
+class NativeProofError(ValueError):
+    def __init__(self, category, issue_id):
+        super().__init__(category)
+        self.category, self.issue_id = category, issue_id
+
+
 def _get(client, path):
     return client.request("GET",path)[1]
 
@@ -35,11 +41,11 @@ def _validate(request):
         raise ValueError("native_budget_or_policy_invalid")
 
 
-def _prepared(client, request):
+def _prepared(client, request, *, require_idle=True):
     _validate(request)
     company, aid, project = request["companyId"],request["agentId"],request["projectId"]
     agent = _get(client,f"/api/agents/{aid}")
-    if not isinstance(agent,dict) or agent.get("id") != aid or agent.get("companyId") != company or agent.get("status") != "idle": raise ValueError("native_agent_not_idle")
+    if not isinstance(agent,dict) or agent.get("id") != aid or agent.get("companyId") != company or (require_idle and agent.get("status") != "idle"): raise ValueError("native_agent_not_idle")
     if agent.get("adapterType") not in {"cline_local","commandcode_local"}: raise ValueError("native_qualification_unsupported")
     state = _get(client,f"/api/agents/{aid}/native-provider-admission?projectId={project}")
     binding = state.get("currentBinding") if isinstance(state,dict) else None
@@ -48,6 +54,11 @@ def _prepared(client, request):
         if binding.get(key) != request[key]: raise ValueError("native_binding_mismatch")
     config = agent.get("adapterConfig") or {}
     if config.get("nativeCostTier") != request["budget"]["tier"] or config.get("maxPaidUsd") != 0: raise ValueError("native_paid_disallowed")
+    timeout = config.get("timeoutSec",600)
+    if request["phase"] == "coding" and (type(timeout) is not int or not 0 < timeout <= request["budget"]["timeoutSec"]):
+        raise ValueError("native_timeout_not_authorized")
+    if require_idle and request["phase"] == "coding" and state.get("codingSourceReady") is not True:
+        raise ValueError("native_canary_source_unprepared")
     workflow = dict(projectId=project,developerAgentId=aid,validatorAgentId=request["validatorAgentId"],reviewerAgentId=request["reviewerAgentId"])
     if request["phase"] == "coding":
         fixture = json.loads((Path(__file__).resolve().parents[1]/"fixtures/native-provider-canary.json").read_text(encoding="utf-8"))
@@ -90,17 +101,17 @@ def submit_qualification(client, request, *, authorized=False):
     try:
         _,updated = client.request("PATCH",f"/api/agents/{request['agentId']}",dict(metadata=dict(nativeProviderQualification=scope)))
         if (updated.get("metadata") or {}).get("nativeProviderQualification") != scope: raise ValueError("unconfirmed")
-    except Exception as error:
-        raise ValueError(f"native_grant_not_confirmed; backlogIssueId={issue_id}; retry same requestKey only") from None
+    except Exception:
+        raise NativeProofError("native_grant_not_confirmed",issue_id) from None
     # Fresh GET-only preflight before starting; controller also rechecks at dispatch.
     _prepared(client,request)
     _,started = client.request("PATCH",f"/api/issues/{issue_id}",dict(status="todo",expectedStatusVersion=issue.get("statusVersion",0)))
-    if started.get("status") != "todo": raise ValueError(f"native_start_not_confirmed; proofIssueId={issue_id}")
+    if started.get("status") != "todo": raise NativeProofError("native_start_not_confirmed",issue_id)
     return dict(schemaVersion=1,issueId=issue_id,phase=request["phase"],bindingFingerprint=request["bindingFingerprint"],status="submitted",mutations=True)
 
 
 def collect_evidence(client, request):
-    agent,state,_,runs = _prepared(client,request)
+    agent,state,_,runs = _prepared(client,request,require_idle=False)
     admission = (agent.get("metadata") or {}).get("nativeProviderAdmission") or {}
     return dict(schemaVersion=1,profileId=request["profileId"],source="integrated",installed="artifact_verified",
                 authenticated="unverified",lastVerifiedAvailable=(admission.get("availability") or {}).get("verifiedAt"),
@@ -121,6 +132,9 @@ def main(argv=None):
         client = Client(task.text(state.get("baseUrl"),"baseUrl",2048),task.text(state.get("boardApiKey"),"boardApiKey",4096))
         result = submit_qualification(client,request,authorized=args.authorize_live_qualification) if args.command == "submit" else (collect_evidence if args.command == "report" else preflight)(client,request)
         print(json.dumps(result,separators=(",",":"),allow_nan=False)); return 0
+    except NativeProofError as error:
+        print(json.dumps(dict(status="failed",category=error.category,issueId=error.issue_id,retry="inspect Paperclip and reuse the same requestKey"),separators=(",",":")))
+        return 1
     except (ApiError,ValueError,OSError):
         print("native_qualification_failed; no automatic retry; inspect the existing requestKey in Paperclip")
         return 1

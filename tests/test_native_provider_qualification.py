@@ -91,3 +91,14 @@ class NativeQualificationTests(unittest.TestCase):
         self.assertEqual("unverified",report["authenticated"])
         self.assertFalse(report["projectAdmitted"])
         self.assertEqual([],self.f.writes)
+    def test_coding_timeout_must_match_authorized_envelope(self):
+        self.f.request.update(phase="coding",permissionPolicy="coding_canary")
+        self.f.request["budget"]["timeoutSec"] = 600
+        self.f.agent["adapterConfig"]["timeoutSec"] = 3600
+        with self.assertRaisesRegex(ValueError,"native_timeout_not_authorized"):
+            preflight(self.client,self.f.request)
+        self.assertEqual([],self.f.writes)
+    def test_paused_report_is_read_only(self):
+        self.f.agent["status"] = "paused"
+        self.assertFalse(collect_evidence(self.client,self.f.request)["mutations"])
+        self.assertEqual([],self.f.writes)
