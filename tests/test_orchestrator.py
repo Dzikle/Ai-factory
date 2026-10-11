@@ -262,6 +262,121 @@ class OrchestratorTests(unittest.TestCase):
         self.run_plan()
         self.assertEqual(7, self.client.issue_patches[-1]["expectedStatusVersion"])
 
+    def test_explicit_priority_beats_profile_name_within_free_tier(self):
+        profiles = self.bindings["projects"][PROJECT]["profiles"]
+        profiles.append({**profiles[0], "id": "z-free", "model": "vendor/better-free", "priority": 1})
+        profiles[0]["priority"] = 20
+        self.run_plan()
+        self.assertEqual("vendor/better-free", self.client.issue["assigneeAdapterOverrides"]["adapterConfig"]["model"])
+
+    def test_unsuitable_task_or_risk_profiles_are_rejected_with_saved_reasons(self):
+        profiles = self.bindings["projects"][PROJECT]["profiles"]
+        profiles[0]["taskKinds"] = ["analysis"]
+        profiles.extend([
+            {**profiles[1], "id": "low-only", "tier": "free", "risks": ["low"]},
+            {"id": "cline", "enabled": False, "unavailableReason": "adapter_not_integrated"},
+            {"id": "lost", "qualified": False},
+        ])
+        self.run_plan()
+        saved = json.loads(self.client.documents[ISSUE, "plan"]["body"])
+        self.assertEqual("strong", saved["selectedProfile"]["id"])
+        self.assertEqual({"cheap": "task_kind_mismatch", "low-only": "risk_mismatch",
+                          "cline": "disabled", "lost": "not_qualified"},
+                         {row["profileId"]: row["reason"] for row in saved["profileSelection"]
+                          if row["status"] == "rejected"})
+
+    def test_paid_profile_is_not_used_without_explicit_project_permission(self):
+        profiles = self.bindings["projects"][PROJECT]["profiles"]
+        profiles[:] = [{**profiles[0], "tier": "paid"}]
+        with self.assertRaisesRegex(ValueError, "qualified"):
+            self.run_plan()
+        self.assertEqual([], self.client.writes)
+        self.bindings["projects"][PROJECT]["allowPaidProfiles"] = True
+        self.run_plan()
+        self.assertEqual("vendor/free", self.client.issue["assigneeAdapterOverrides"]["adapterConfig"]["model"])
+
+    def test_claude_handoff_uses_the_selected_model_without_agent_mutation(self):
+        claude = str(uuid4())
+        self.client.agents[claude] = {"id": claude, "companyId": COMPANY, "status": "idle", "adapterType": "claude_local"}
+        self.bindings["projects"][PROJECT]["profiles"] = [{
+            "id": "claude", "agentId": claude, "adapterType": "claude_local", "model": "sonnet",
+            "tier": "subscription", "qualified": True, "taskKinds": ["coding"], "risks": ["normal"]}]
+        self.run_plan()
+        self.assertEqual(claude, self.client.issue["assigneeAgentId"])
+        self.assertEqual({"adapterConfig": {"model": "sonnet"}}, self.client.issue.get("assigneeAdapterOverrides"))
+        self.assertTrue(all(path.startswith(f"/api/issues/{ISSUE}") for _, path, _ in self.client.writes))
+
+    def test_unintegrated_harness_is_rejected_even_if_marked_qualified(self):
+        self.client.agents[DEVELOPER]["adapterType"] = "cline_local"
+        self.bindings["projects"][PROJECT]["profiles"] = [{
+            "id": "cline", "agentId": DEVELOPER, "adapterType": "cline_local", "model": "some/model",
+            "tier": "free", "qualified": True}]
+        with self.assertRaisesRegex(ValueError, "qualified"):
+            self.run_plan()
+        self.assertEqual([], self.client.writes)
+
+    def test_high_risk_explicit_paid_request_cannot_bypass_subscription_policy(self):
+        profiles = self.bindings["projects"][PROJECT]["profiles"]
+        profiles.append({**profiles[0], "id": "paid", "tier": "paid"})
+        self.bindings["projects"][PROJECT]["allowPaidProfiles"] = True
+        self.plan.update(risk="high", modelProfile="paid")
+        with self.assertRaisesRegex(ValueError, "subscription|qualified"):
+            self.run_plan()
+        self.assertEqual([], self.client.writes)
+
+    def test_duplicate_profile_ids_fail_closed_before_writes(self):
+        profiles = self.bindings["projects"][PROJECT]["profiles"]
+        profiles.append({**profiles[0], "model": "vendor/different"})
+        with self.assertRaisesRegex(ValueError, "duplicate|Duplicate"):
+            self.run_plan()
+        self.assertEqual([], self.client.writes)
+
+    def test_pending_handoff_preserves_selection_audit_when_other_profiles_change(self):
+        request = self.client.request
+        def fail_patch(method, path, body=None):
+            if method == "PATCH":
+                raise ConnectionError("before handoff")
+            return request(method, path, body)
+        self.client.request = fail_patch
+        with self.assertRaises(ConnectionError):
+            self.run_plan()
+        saved = json.loads(self.client.documents[ISSUE, "plan"]["body"])
+        self.assertIn("profileSelection", saved)
+        self.bindings["projects"][PROJECT]["profiles"][1]["qualified"] = False
+        self.client.request = request
+        self.run_plan()
+        self.assertEqual(saved, json.loads(self.client.documents[ISSUE, "plan"]["body"]))
+
+    def test_malformed_suitability_is_skipped_without_raising_an_unbounded_type_error(self):
+        for field, value in (("taskKinds", [{}]), ("risks", [[]]), ("tier", {}), ("priority", True)):
+            with self.subTest(field=field):
+                self.setUp()
+                self.bindings["projects"][PROJECT]["profiles"][0][field] = value
+                try:
+                    self.run_plan()
+                except TypeError as exc:
+                    self.fail(f"Malformed profile escaped controlled rejection: {exc}")
+                saved = json.loads(self.client.documents[ISSUE, "plan"]["body"])
+                self.assertEqual("strong", saved["selectedProfile"]["id"])
+                self.assertEqual("invalid_profile", saved["profileSelection"][0]["reason"])
+
+    def test_legacy_persisted_plan_without_selection_audit_still_replays(self):
+        self.run_plan()
+        document = self.client.documents[ISSUE, "plan"]
+        saved = json.loads(document["body"])
+        del saved["profileSelection"]
+        document["body"] = json.dumps(saved, sort_keys=True, separators=(",", ":"))
+        writes = len(self.client.writes)
+        self.assertEqual("replayed", self.run_plan()["status"])
+        self.assertEqual(writes, len(self.client.writes))
+
+    def test_free_tier_precedes_subscription_even_with_lower_subscription_priority(self):
+        profiles = self.bindings["projects"][PROJECT]["profiles"]
+        profiles[0]["priority"] = 1000
+        profiles[1]["priority"] = 0
+        self.run_plan()
+        self.assertEqual("vendor/free", self.client.issue["assigneeAdapterOverrides"]["adapterConfig"]["model"])
+
 
 class MockClient:
     def __init__(self, issue, agents):

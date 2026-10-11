@@ -1,10 +1,13 @@
 """Automatic task-entry provisioning safety and readiness tests."""
 import unittest
+import json
+from pathlib import Path
+from types import SimpleNamespace
 from copy import deepcopy
 from unittest.mock import patch
 from uuid import uuid4
 
-from milestone2.scripts.automatic_entry_setup import MODEL, configure
+from milestone2.scripts.automatic_entry_setup import configure
 
 
 COMPANY = str(uuid4())
@@ -28,6 +31,8 @@ def preset(*projects):
         "companyId": COMPANY,
         "ownerUserId": OWNER,
         "subscriptionQualificationRunId": str(uuid4()),
+        "modelProfiles": json.loads((Path(__file__).resolve().parents[1] /
+            "milestone2/config/automatic-entry-projects.json").read_text())["modelProfiles"],
         "projects": {str(uuid4()): value for value in projects},
     }
 
@@ -37,6 +42,16 @@ class AutomaticEntrySetupTests(unittest.TestCase):
         self.preset = preset(project("Alpha"))
         self.client = FixtureClient(self.preset)
         self.state = {"companyId": COMPANY}
+        # Provisioner tests may never execute Docker or real provider inference,
+        # including a RED test whose preflight guard is not implemented yet.
+        readiness = patch("milestone2.scripts.automatic_entry_setup._container_readiness_runner",
+                          return_value=SimpleNamespace(returncode=1, stdout="", stderr=""))
+        deployment = patch("milestone2.scripts.automatic_entry_setup.deploy_public_runtime",
+                           return_value=("/code", "/registry.json", "sha", "sha"))
+        readiness.start()
+        deployment.start()
+        self.addCleanup(readiness.stop)
+        self.addCleanup(deployment.stop)
 
     def test_dry_run_performs_no_writes_or_runtime_deployment(self):
         with patch("milestone2.scripts.automatic_entry_setup.deploy_public_runtime") as deploy:
@@ -99,7 +114,7 @@ class AutomaticEntrySetupTests(unittest.TestCase):
             return "/code", "/registry.json", "code-sha", "registry-sha"
 
         def unavailable(profiles, runner):
-            self.assertEqual(MODEL, profiles[0]["model"])
+            self.assertEqual("opencode/nemotron-3.5-lightning-free", profiles[0]["model"])
             return [profiles[1]], [
                 {"profileId": "codex-subscription", "qualification": "priorQualificationNotFreshInference"},
                 {"profileId": "free-opencode", "category": "unavailable"},
@@ -170,6 +185,113 @@ class AutomaticEntrySetupTests(unittest.TestCase):
                       if a["id"] == next(iter(self.preset["projects"].values()))["orchestratorAgentId"])
         self.assertEqual("opencode_local", router["adapterType"])
         self.assertEqual("free-opencode", router["metadata"]["selectedProfileId"])
+
+    def test_catalog_controls_free_model_and_suitability_in_deployed_registry(self):
+        self.preset["modelProfiles"][0].update(model="opencode/other-free", priority=7, risks=["low"])
+        deployed = {}
+        def capture(registry):
+            deployed.update(deepcopy(registry))
+            return "/code", "/registry.json", "sha", "sha"
+        with patch("milestone2.scripts.automatic_entry_setup.deploy_public_runtime", side_effect=capture), \
+                patch("milestone2.scripts.profile_readiness.qualify_available", side_effect=lambda profiles, _: (profiles, [])):
+            configure(self.client, self.state, self.preset, apply=True)
+        project_id = next(iter(self.preset["projects"]))
+        saved = deployed["projects"][project_id]["profiles"][0]
+        self.assertEqual("opencode/other-free", saved["model"])
+        self.assertEqual(7, saved["priority"])
+        self.assertEqual(["low"], saved["risks"])
+        free = next(a for a in self.client.agents if a["id"] == saved["agentId"])
+        router_id = self.preset["projects"][project_id]["orchestratorAgentId"]
+        router = next(a for a in self.client.agents if a["id"] == router_id)
+        self.assertEqual("opencode/other-free", free["adapterConfig"]["model"])
+        self.assertEqual("opencode/other-free", router["adapterConfig"]["model"])
+
+    def test_disabled_requested_harnesses_are_reported_without_creating_agents(self):
+        deployed = {}
+        def capture(registry):
+            deployed.update(deepcopy(registry))
+            return "/code", "/registry.json", "sha", "sha"
+        with patch("milestone2.scripts.automatic_entry_setup.deploy_public_runtime", side_effect=capture), \
+                patch("milestone2.scripts.profile_readiness.qualify_available", side_effect=lambda profiles, _: (profiles, [])):
+            configure(self.client, self.state, self.preset, apply=True)
+        saved = next(iter(deployed["projects"].values()))["profiles"]
+        disabled = {p["id"]: p for p in saved if p.get("enabled") is False}
+        self.assertEqual({"claude", "cline", "command-code"}, set(disabled))
+        self.assertTrue(all(p.get("qualified") is False for p in disabled.values()))
+        self.assertEqual(1, sum(method == "POST" and path.endswith("/agents") for method, path, *_ in self.client.writes))
+
+    def test_claude_profile_requires_matching_native_qualification_before_any_write(self):
+        claude = next(p for p in self.preset["modelProfiles"] if p["id"] == "claude")
+        claude.update(enabled=True, model="sonnet")
+        configured = next(iter(self.preset["projects"].values()))
+        aid, proof = str(uuid4()), str(uuid4())
+        configured["profileBindings"] = {"claude": {"agentId": aid, "qualificationRunId": proof}}
+        self.client.agents.append({"id": aid, "name": "Claude Developer", "companyId": COMPANY, "status": "idle", "adapterType": "claude_local",
+                                   "adapterConfig": {"cwd": configured["cwd"], "model": "sonnet"}})
+        request = self.client.request
+        def api(method, path, body=None, **kwargs):
+            if path == f"/api/heartbeat-runs/{proof}":
+                return 200, {"id": proof, "agentId": aid, "companyId": COMPANY, "status": "succeeded",
+                             "usageJson": {"model": "wrong"}, "runnerProfileJson": {"adapterDispatch": {"adapterType": "claude_local"}}}
+            return request(method, path, body, **kwargs)
+        self.client.request = api
+        with self.assertRaisesRegex(ValueError, "qualification"):
+            configure(self.client, self.state, self.preset, apply=True)
+        self.assertEqual([], self.client.writes)
+
+    def test_qualified_claude_profile_is_bound_without_mutating_its_agent(self):
+        claude = next(p for p in self.preset["modelProfiles"] if p["id"] == "claude")
+        claude.update(enabled=True, model="sonnet")
+        configured = next(iter(self.preset["projects"].values()))
+        aid, proof = str(uuid4()), str(uuid4())
+        configured["profileBindings"] = {"claude": {"agentId": aid, "qualificationRunId": proof}}
+        self.client.agents.append({"id": aid, "name": "Claude Developer", "companyId": COMPANY, "status": "idle", "adapterType": "claude_local",
+                                   "adapterConfig": {"cwd": configured["cwd"], "model": "sonnet"}})
+        request = self.client.request
+        def api(method, path, body=None, **kwargs):
+            if path == f"/api/heartbeat-runs/{proof}":
+                return 200, {"id": proof, "agentId": aid, "companyId": COMPANY, "status": "succeeded",
+                             "usageJson": {"model": "sonnet"}, "runnerProfileJson": {"adapterDispatch": {"adapterType": "claude_local"}}}
+            return request(method, path, body, **kwargs)
+        self.client.request = api
+        deployed = {}
+        def capture(registry):
+            deployed.update(deepcopy(registry))
+            return "/code", "/registry.json", "sha", "sha"
+        with patch("milestone2.scripts.automatic_entry_setup.deploy_public_runtime", side_effect=capture), \
+                patch("milestone2.scripts.profile_readiness.qualify_available", side_effect=lambda profiles, _: (profiles, [])):
+            configure(self.client, self.state, self.preset, apply=True)
+        candidates = [p for p in next(iter(deployed["projects"].values()))["profiles"] if p["id"] == "claude"]
+        self.assertEqual(1, len(candidates))
+        saved = candidates[0]
+        self.assertEqual(aid, saved["agentId"])
+        self.assertTrue(saved["qualified"])
+        self.assertEqual(proof, saved["qualificationRunId"])
+        self.assertFalse(any(method != "GET" and aid in path for method, path, *_ in self.client.writes))
+
+    def test_unsupported_enabled_harness_fails_before_any_write(self):
+        next(p for p in self.preset["modelProfiles"] if p["id"] == "cline")["enabled"] = True
+        with self.assertRaisesRegex(ValueError, "adapter|integrated"):
+            configure(self.client, self.state, self.preset, apply=True)
+        self.assertEqual([], self.client.writes)
+
+    def test_every_project_resumes_only_its_own_bootstrap_and_workflow_agents(self):
+        two = preset(project("Alpha"), project("Beta"))
+        client = FixtureClient(two)
+        for agent in client.agents:
+            agent["status"] = "paused"
+        request = client.request
+        def api(method, path, body=None, **kwargs):
+            result = request(method, path, body, **kwargs)
+            if method == "POST" and path.endswith("/agents"):
+                result[1]["status"] = "paused"
+                client.agents[-1]["status"] = "paused"
+            return result
+        client.request = api
+        with patch("milestone2.scripts.profile_readiness.qualify_available", side_effect=lambda profiles, _: (profiles, [])):
+            configure(client, self.state, two, apply=True)
+        resumed = {path.split("/")[-2] for method, path, *_ in client.writes if method == "POST" and path.endswith("/resume")}
+        self.assertEqual({a["id"] for a in client.agents}, resumed)
 
 
 class FixtureClient:

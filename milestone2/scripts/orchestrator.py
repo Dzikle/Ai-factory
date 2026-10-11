@@ -23,6 +23,7 @@ MAX_ACCEPTANCE_TEXT = 2000
 MAX_PLAN_BYTES = 32_000
 MAX_ANSWER = 8000
 TIERS = {"free": 0, "subscription": 1, "paid": 2}
+NATIVE_MODEL_ADAPTERS = {"codex_local", "opencode_local", "claude_local"}
 
 
 def _uuid(value, name):
@@ -117,54 +118,98 @@ def _get_agents(client, company_id, agent_ids):
     return by_id
 
 
-def _select_profile(project, plan, agents):
+def _profile_selection(project, plan, agents):
     profiles = project.get("profiles", [])
     if profiles is None:
         profiles = []
-    if not isinstance(profiles, list):
-        raise ValueError("profiles must be a list")
+    if not isinstance(profiles, list) or len(profiles) > 64:
+        raise ValueError("profiles must be a list of at most 64 entries")
     valid = []
+    audit = []
     seen = set()
     for row in profiles:
-        if not isinstance(row, dict) or row.get("qualified") is not True:
+        entry = {"profileId": None, "status": "rejected", "reason": "invalid_profile"}
+        audit.append(entry)
+        if not isinstance(row, dict):
             continue
-        if row.get("tier") not in TIERS:
+        try:
+            profile_id = _text(row.get("id"), "profile id", 128)
+        except ValueError:
+            continue
+        entry["profileId"] = profile_id
+        if profile_id in seen:
+            raise ValueError("Duplicate profile id")
+        seen.add(profile_id)
+        if row.get("enabled", True) is False:
+            entry["reason"] = "disabled"
+            continue
+        if row.get("qualified") is not True:
+            entry["reason"] = "not_qualified"
             continue
         try:
             agent_id = _uuid(row.get("agentId"), "profile agentId")
-            profile_id = _text(row.get("id"), "profile id", 128)
             model = _text(row.get("model"), "profile model", 256)
             adapter = _text(row.get("adapterType"), "profile adapterType", 64)
         except ValueError:
             continue
-        agent = agents.get(agent_id, {})
-        if (profile_id in seen or agent.get("status") not in {"idle", "running"}
-                or agent.get("adapterType") != adapter):
+        priority = row.get("priority", 1000)
+        kinds = row.get("taskKinds", ["analysis", "coding"])
+        risks = row.get("risks", ["low", "normal", "high"])
+        if (row.get("enabled", True) is not True or not isinstance(row.get("tier"), str) or row["tier"] not in TIERS
+                or isinstance(priority, bool) or not isinstance(priority, int) or not 0 <= priority <= 10000
+                or not isinstance(kinds, list) or not kinds
+                or any(not isinstance(kind, str) or kind not in {"analysis", "coding"} for kind in kinds)
+                or not isinstance(risks, list) or not risks
+                or any(not isinstance(risk, str) or risk not in {"low", "normal", "high"} for risk in risks)):
             continue
-        seen.add(profile_id)
-        valid.append({"id": profile_id, "agentId": agent_id, "model": model,
-                      "adapterType": adapter, "tier": row["tier"]})
+        if adapter not in NATIVE_MODEL_ADAPTERS:
+            entry["reason"] = "adapter_not_integrated"
+            continue
+        if plan["kind"] not in kinds:
+            entry["reason"] = "task_kind_mismatch"
+            continue
+        if plan["risk"] not in risks:
+            entry["reason"] = "risk_mismatch"
+            continue
+        if row["tier"] == "paid" and project.get("allowPaidProfiles") is not True:
+            entry["reason"] = "paid_not_authorized"
+            continue
+        if plan["risk"] == "high" and row["tier"] != "subscription":
+            entry["reason"] = "high_risk_requires_subscription"
+            continue
+        agent = agents.get(agent_id, {})
+        if agent.get("status") not in {"idle", "running"}:
+            entry["reason"] = "agent_unavailable"
+            continue
+        if agent.get("adapterType") != adapter:
+            entry["reason"] = "adapter_binding_mismatch"
+            continue
+        profile = {"id": profile_id, "agentId": agent_id, "model": model,
+                   "adapterType": adapter, "tier": row["tier"]}
+        entry.update(status="eligible_not_selected", reason="lower_priority")
+        valid.append((profile, priority, entry))
     if not valid:
+        if plan["risk"] == "high":
+            raise ValueError("High-risk plans require a qualified subscription profile")
         raise ValueError("No qualified project developer profile is available")
-    if plan["risk"] == "high" and not any(row["tier"] == "subscription" for row in valid):
-        raise ValueError("High-risk plans require a qualified subscription profile")
     requested = plan.get("modelProfile")
     if requested is not None:
-        choices = [row for row in valid if row["id"] == requested]
+        choices = [row for row in valid if row[0]["id"] == requested]
         if not choices:
             raise ValueError("Requested modelProfile is not a qualified project developer profile")
-        if plan["risk"] == "high" and any(row["tier"] == "subscription" for row in valid) \
-                and choices[0]["tier"] == "free":
-            raise ValueError("High-risk plans must use a configured subscription profile")
-        selected = choices[0]
-        return selected, "requested qualified profile; high-risk tier constraint satisfied"
-    tier_order = {"free": 0, "subscription": 1, "paid": 2}
-    if plan["risk"] == "high" and any(row["tier"] == "subscription" for row in valid):
-        selected = min((row for row in valid if row["tier"] == "subscription"), key=lambda row: row["id"])
-        reason = "high-risk policy selected the configured subscription profile"
+        selected, _, entry = choices[0]
+        reason = "requested qualified profile; task/risk and spending constraints satisfied"
     else:
-        selected = min(valid, key=lambda row: (tier_order[row["tier"]], row["id"]))
-        reason = "qualified free-first policy"
+        selected, _, entry = min(valid, key=lambda row: (TIERS[row[0]["tier"]], row[1], row[0]["id"]))
+        reason = "qualified free-first policy; task/risk suitability then configured tier/priority/id"
+    if plan["risk"] == "high" and requested is None:
+        reason = "high-risk policy selected the configured subscription profile"
+    entry.update(status="selected", reason="requested" if requested else "tier_priority")
+    return selected, reason, audit
+
+
+def _select_profile(project, plan, agents):
+    selected, reason, _ = _profile_selection(project, plan, agents)
     return selected, reason
 
 
@@ -216,7 +261,7 @@ def execute(client, context, bindings, plan):
         raise ValueError("This run is not assigned to the project's Orchestrator")
 
     existing_plan, existing_revision = _read_plan(client, context["taskId"])
-    profile = profile_reason = None
+    profile = profile_reason = profile_audit = None
     if plan["kind"] == "coding":
         if issue.get("workMode") not in {None, "standard"}:
             raise ValueError("Ask and planning issues cannot be handed off for implementation")
@@ -228,13 +273,14 @@ def execute(client, context, bindings, plan):
         if existing_plan is not None:
             profile = existing_plan.get("selectedProfile")
             profile_reason = existing_plan.get("selectionRationale")
+            profile_audit = existing_plan.get("profileSelection")
             if not isinstance(profile, dict) or not profile.get("id"):
                 raise ValueError("Persisted plan has no qualified developer profile")
             current_profile, _ = _select_profile(project, {**plan, "modelProfile": profile["id"]}, eligible_agents)
             if current_profile != profile:
                 raise ValueError("Persisted qualified profile binding has changed")
         else:
-            profile, profile_reason = _select_profile(project, plan, eligible_agents)
+            profile, profile_reason, profile_audit = _profile_selection(project, plan, eligible_agents)
         developer = profile["agentId"] if profile else roles["developerAgentId"]
         qa = roles.get("qaAgentId") if plan["ux"] else None
         if plan["ux"] and qa is None:
@@ -246,11 +292,13 @@ def execute(client, context, bindings, plan):
             agent_ids.add(qa)
         _get_agents(client, context["companyId"], agent_ids)
         patch = {"assigneeAgentId": developer, "status": "todo", "executionPolicy": policy}
-        if profile and profile["adapterType"] in {"codex_local", "opencode_local"}:
+        if profile and profile["adapterType"] in NATIVE_MODEL_ADAPTERS:
             patch["assigneeAdapterOverrides"] = {"adapterConfig": {"model": profile["model"]}}
         document = {"schemaVersion": 1, "runId": context["runId"], **plan,
                     "selectedProfile": profile, "selectionRationale": profile_reason,
                     "executionPolicy": policy}
+        if profile_audit is not None:
+            document["profileSelection"] = profile_audit
     else:
         if issue.get("workMode") not in {None, "standard", "ask"}:
             raise ValueError("Analysis can finish only a standard or Ask issue")

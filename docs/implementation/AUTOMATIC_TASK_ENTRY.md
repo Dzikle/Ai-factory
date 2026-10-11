@@ -31,6 +31,99 @@ fallback attempts must be visible and durable; missing cost is unknown.
   Preserve explicit assignments and fail closed on invalid project bindings.
 - Do not modify dirty source repositories or publish sparse mobile snapshots.
 
+## Configurable routing follow-up (2026-10-11 — source change, not deployed)
+
+Owner approval extends the existing router, not the controller or task workflow.
+`milestone2/config/automatic-entry-projects.json` now owns `modelProfiles`:
+runtime/adapter, exact model, enabled state, tier, deterministic priority,
+allowed task kinds and risks. Provisioning consumes this catalogue rather than
+hardcoding two model names. The admitted OpenCode/Codex bootstrap pair is kept
+for the independently verified intake/fallback path; additional developer
+profiles bind already-provisioned native agents, without rewriting their
+configuration or enabling new credentials.
+
+For coding delegation the selector rejects disabled, unqualified, unsupported,
+unavailable and task/risk-incompatible profiles. It orders remaining profiles
+by free → subscription → paid, then configured priority, then ID. Priority is
+an owner preference, not a measured cost estimate. Paid profiles require explicit
+owner configuration (`allowPaidProfiles: true`); this is not a replacement for
+Paperclip's budget controls. High-risk tasks retain the existing subscription
+requirement, including explicit profile requests. Duplicate IDs fail closed.
+New versioned plans save `profileSelection` with each candidate's selected,
+eligible-not-selected or rejected status and bounded reason. A resumed handoff
+keeps that original audit while revalidating the exact selected binding. Legacy
+persisted plans without the new audit field remain compatible.
+
+Claude Code uses the existing `claude_local` adapter, including the selected
+model's issue-scoped override. It is disabled in the default catalogue until
+native authentication and qualification are established. To bind an additional
+profile, the owner enables its catalogue entry with the exact runtime model and
+adds `profileBindings.PROFILE_ID = {agentId, qualificationRunId}` to **each**
+configured project. The provisioner requires an idle same-company native agent
+with the exact model and project cwd, independent from Orchestrator/Tests/
+Reviewer/QA, and a successful native run for that exact agent/adapter/model.
+Authentication must happen through the runtime's existing supported login or
+secret mechanism; configuration contains references, never credentials.
+
+Cline and Command Code are explicitly requested but **not executable integrations**
+in this checkout. Their disabled entries have `adapter_not_integrated`; enabling
+them fails preflight before deployment or any board mutation. Do not substitute
+a generic process wrapper or pretend `cline_local`/`commandcode_local` are
+registered adapters. Native execution integration must preserve Paperclip's
+session, cancellation, governed MCP, workspace and usage contracts. The official
+[Cline CLI documentation](https://docs.cline.bot/usage/cli-overview),
+[Command Code documentation](https://commandcode.ai/docs), and
+[Claude automation documentation](https://code.claude.com/docs/en/headless)
+are discovery references, not runtime qualification evidence.
+
+Limits: this change selects a **Developer** for coding plans. Intake Orchestrator
+runtime still uses the admitted bootstrap pair; analysis answers and independent
+Reviewer/QA bindings are unchanged. Availability probes are not coding-quality
+benchmarks. Historical native qualification is labeled `NotFreshProbe`, not a
+fresh availability or current-quota guarantee. No all-provider readiness,
+learned routing, general quality improvement, cost savings or deployment is
+claimed by source/unit tests. The original live proofs below remain pinned to
+their original deployed source and registry.
+
+Verification for this source follow-up: the pinned complete Factory Python
+check ran **356 tests, 2 optional skips, no failures** (92.479 s). Targeted
+Orchestrator and provisioner checks passed 34 and 14 tests respectively.
+The read-only owner provisioner preflight returned `ready`, `projectCount: 3`,
+`mutations: false` against the existing controller. CLI help/import checks and
+`git diff --check` passed. The controller still reports source `3f1194c`; no
+new routing configuration was applied and no provider was activated. Executable
+presence checks found Claude, Codex and OpenCode; Cline and Command Code's `cmd`
+were absent. Executable presence does not establish authentication/readiness.
+
+Independent source review reported no Critical, Important or Minor findings
+and independently reran both targeted suites. Its declined-to-judge items are
+explicitly ruled as follows, not dropped or relabeled as passed:
+
+- Current authentication/entitlement/quota/availability: not established by this
+  change; native qualification remains historical and disabled entries stay off.
+- Real Claude execution/session/cancellation/MCP/usage: required before live
+  admission; source reuse and model-override tests are not a live execution proof.
+- Deployment/registry/recovery/restart: not performed for this follow-up; original
+  deployed identities and proofs remain separate.
+- Coding quality beyond configured suitability, costs and savings: unmeasured;
+  allowlists and preference order are explicit policy, not benchmark results.
+- Executable Cline/Command Code: unfinished architectural extension, not included
+  in the bounded source-completion claim. Both document ACP support; reuse of
+  Paperclip's existing ACP engine is the proposed approach, not an adopted adapter.
+- Real paid activation/execution: not performed or enabled; default permission is
+  false and native Paperclip budgets remain authoritative.
+- Analysis and Reviewer/QA model selection: unchanged, outside this coding
+  Developer-selection scope.
+- Bootstrap model migration: intentional fail-closed drift checks; catalogue
+  changes do not silently rewrite already-provisioned bootstrap agent models.
+- Deliberate cross-project sharing of an additional agent and identical workspace:
+  not prohibited by this change; trusted owner bindings and each project's role
+  independence checks remain. No general concurrent-sharing guarantee is claimed.
+- Full Python suite: verified by the parent, 356 tests/2 optional skips/no failures,
+  independently of the reviewer's narrower targeted test evidence.
+- Mobile README integration, scheduling and historical changes: untouched by this
+  source follow-up; AIF-82 remains separately owner-unapproved.
+
 ## Execution / evidence ledger
 
 1. Baseline: 301 Python tests pass (2 skipped). Mobile controller UID1000 cannot

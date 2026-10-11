@@ -82,6 +82,23 @@ Capture:
 
 Only after sufficient history should routing become data-driven.
 
+## Existing automatic-entry selector
+
+The owner-configured catalogue is
+[`milestone2/config/automatic-entry-projects.json`](../../milestone2/config/automatic-entry-projects.json)
+(`modelProfiles`). The coding handoff filters by qualification, native adapter,
+agent availability, task kind and risk, then selects by tier, explicit priority
+and ID. Paid profiles require explicit owner enablement; high-risk plans keep
+the admitted subscription restriction. Selection/rejection evidence is persisted
+in the native Paperclip plan, not a second routing ledger.
+
+Codex, OpenCode and Claude Code have supported model-override paths. Claude's
+catalogue entry is disabled pending runtime authentication and exact native
+qualification. Cline and Command Code are requested but have no registered
+execution adapters in the current checkout; disabled catalogue entries are
+not integrations. Full scope, activation inputs and limits are in
+[`AUTOMATIC_TASK_ENTRY.md`](../../docs/implementation/AUTOMATIC_TASK_ENTRY.md#configurable-routing-follow-up-2026-10-11--source-change-not-deployed).
+
 ## Success criterion
 
 System maturity should improve execution in two ways:

@@ -2,6 +2,27 @@
   "companyId": "f1251cc6-d826-4629-978c-ebcf3e6ba62a",
   "ownerUserId": "LjQ4Q61OIw6pqGxCJKoQEOpcFzO9dOsx",
   "subscriptionQualificationRunId": "7b4d4b48-f054-47a5-afe1-8984432911f8",
+  "modelProfiles": [
+    {
+      "id": "free-opencode", "runtime": "opencode", "enabled": true,
+      "adapterType": "opencode_local", "model": "opencode/nemotron-3.5-lightning-free",
+      "tier": "free", "priority": 10, "taskKinds": ["coding"], "risks": ["low", "normal"],
+      "availabilityProbe": "opencode_no_tools"
+    },
+    {
+      "id": "codex-subscription", "runtime": "codex", "enabled": true,
+      "adapterType": "codex_local", "model": "gpt-5.6-sol",
+      "tier": "subscription", "priority": 10, "taskKinds": ["coding"], "risks": ["low", "normal", "high"]
+    },
+    {
+      "id": "claude", "runtime": "claude", "enabled": false,
+      "adapterType": "claude_local", "model": "sonnet", "tier": "subscription",
+      "priority": 20, "taskKinds": ["coding"], "risks": ["low", "normal", "high"],
+      "unavailableReason": "authentication_and_native_qualification_required"
+    },
+    {"id": "cline", "runtime": "cline", "enabled": false, "unavailableReason": "adapter_not_integrated"},
+    {"id": "command-code", "runtime": "command-code", "enabled": false, "unavailableReason": "adapter_not_integrated"}
+  ],
   "projects": {
     "a5758cd0-d9c4-4f3f-a004-2194691f6ef3": {
       "label": "Licitacija Web", "cwd": "/paperclip/licita-help-source",

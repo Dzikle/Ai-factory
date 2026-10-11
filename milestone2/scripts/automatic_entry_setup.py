@@ -17,25 +17,104 @@ from urllib.request import build_opener, HTTPCookieProcessor, ProxyHandler
 from milestone0.scripts.paperclip_admission import Client
 from milestone2.scripts.assistant_reply import NoRedirect
 from milestone2.scripts import profile_readiness
+from milestone2.scripts.orchestrator import NATIVE_MODEL_ADAPTERS, TIERS, _text, _uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTAINER = "aif-m0-paperclip-fork-paperclip-fork-1"
-MODEL = "opencode/nemotron-3.5-lightning-free"
 SOURCES = ("milestone0/scripts/paperclip_admission.py", "milestone1/paperclip_policy.py",
            "milestone2/scripts/assistant_reply.py", "milestone2/scripts/orchestrator.py",
            "milestone2/scripts/profile_readiness.py")
 
 
-def _free_agent_payload(project_id, project, instruction):
+def _model_catalog(preset):
+    """Validate owner configuration; an entry is not runtime admission evidence."""
+    rows = preset.get("modelProfiles")
+    if not isinstance(rows, list) or not 2 <= len(rows) <= 64:
+        raise ValueError("modelProfiles must contain 2–64 configured profiles")
+    catalog = {}
+    allowed = {"id", "runtime", "enabled", "adapterType", "model", "tier", "priority",
+               "taskKinds", "risks", "availabilityProbe", "unavailableReason"}
+    for row in rows:
+        if not isinstance(row, dict) or set(row) - allowed:
+            raise ValueError("Invalid model profile configuration")
+        pid = _text(row.get("id"), "profile id", 128)
+        if pid in catalog:
+            raise ValueError("Duplicate model profile id")
+        if not isinstance(row.get("enabled"), bool):
+            raise ValueError("Profile enabled must be a boolean")
+        clean = deepcopy(row)
+        if clean["enabled"]:
+            if clean.get("adapterType") not in NATIVE_MODEL_ADAPTERS:
+                raise ValueError("Enabled profile adapter is not integrated")
+            clean["model"] = _text(clean.get("model"), "profile model", 256)
+            priority = clean.get("priority", 1000)
+            if (isinstance(priority, bool) or not isinstance(priority, int) or not 0 <= priority <= 10000
+                    or clean.get("tier") not in TIERS):
+                raise ValueError("Invalid profile tier or priority")
+            clean["priority"] = priority
+            for field, values in (("taskKinds", {"analysis", "coding"}), ("risks", {"low", "normal", "high"})):
+                supplied = clean.get(field)
+                if not isinstance(supplied, list) or not supplied or any(
+                        not isinstance(value, str) or value not in values for value in supplied):
+                    raise ValueError("Invalid profile task/risk suitability")
+            probe = clean.get("availabilityProbe")
+            if probe is not None and (probe != "opencode_no_tools" or clean["adapterType"] != "opencode_local"):
+                raise ValueError("Unsupported profile availability probe")
+            if clean["tier"] == "paid" and preset.get("allowPaidProfiles") is not True:
+                raise ValueError("Paid profiles require explicit owner spending permission")
+        catalog[pid] = clean
+    for pid, adapter, tier in (("free-opencode", "opencode_local", "free"),
+                               ("codex-subscription", "codex_local", "subscription")):
+        base = catalog.get(pid, {})
+        if base.get("enabled") is not True or base.get("adapterType") != adapter or base.get("tier") != tier:
+            raise ValueError("The admitted native bootstrap profiles must remain enabled")
+    if catalog["free-opencode"].get("availabilityProbe") != "opencode_no_tools":
+        raise ValueError("Free bootstrap profile requires a bounded availability probe")
+    return catalog
+
+
+def _additional_profiles(project, catalog, by_id, company, request):
+    """Bind already-provisioned native agents to verified exact-model run evidence."""
+    resolved = []
+    receipts = []
+    for pid, spec in catalog.items():
+        if pid in {"free-opencode", "codex-subscription"}:
+            continue
+        if not spec["enabled"]:
+            resolved.append({**spec, "qualified": False})
+            continue
+        binding = (project.get("profileBindings") or {}).get(pid, {})
+        aid = _uuid(binding.get("agentId"), "profile agentId")
+        proof_id = _uuid(binding.get("qualificationRunId"), "profile qualificationRunId")
+        agent = by_id.get(aid, {})
+        if (agent.get("companyId") != company or agent.get("status") != "idle"
+                or agent.get("adapterType") != spec["adapterType"]
+                or agent.get("adapterConfig", {}).get("model") != spec["model"]
+                or agent.get("adapterConfig", {}).get("cwd") != project["cwd"]
+                or aid in {project[key] for key in ("orchestratorAgentId", "validatorAgentId", "reviewerAgentId", "qaAgentId")}):
+            raise ValueError("Additional native profile binding drifted or is not independent")
+        proof = request("GET", f"/api/heartbeat-runs/{proof_id}")
+        if (proof.get("id") != proof_id or proof.get("agentId") != aid
+                or proof.get("companyId") != company or proof.get("status") != "succeeded"
+                or (proof.get("usageJson") or {}).get("model") != spec["model"]
+                or ((proof.get("runnerProfileJson") or {}).get("adapterDispatch") or {}).get("adapterType") != spec["adapterType"]):
+            raise ValueError("Additional native profile qualification does not match its binding")
+        resolved.append({**spec, "agentId": aid, "qualificationRunId": proof_id, "qualified": True})
+        receipts.append({"profileId": pid, "qualification": "verifiedNativeRunNotFreshProbe",
+                         "runId": proof_id, "adapterType": spec["adapterType"], "model": spec["model"]})
+    return resolved, receipts
+
+
+def _free_agent_payload(project_id, project, instruction, free_spec, subscription_spec):
     return {
         "name": project["label"] + " Developer (Free)", "role": "engineer",
         "title": "Developer — qualified free native runtime",
         "adapterType": "opencode_local", "adapterConfig": {
-            "cwd": project["cwd"], "model": MODEL, "extraArgs": ["--pure"],
+            "cwd": project["cwd"], "model": free_spec["model"], "extraArgs": ["--pure"],
             "timeoutSec": 600, "dangerouslySkipPermissions": False,
         },
         "runtimeConfig": {"heartbeat": {"enabled": False, "maxConcurrentRuns": 1},
-            "providerFallback": {"adapterType":"codex_local", "model":"gpt-5.6-sol",
+            "providerFallback": {"adapterType":"codex_local", "model":subscription_spec["model"],
                 "extraArgs":["--sandbox","workspace-write"],
                 "qualificationRunId":project["subscriptionQualificationRunId"]}},
         "permissions": {"canCreateAgents": False, "canCreateSkills": False},
@@ -84,7 +163,7 @@ def _container_readiness_runner(args, **kwargs):
     )
 
 
-def _orchestrator_runtime(project, code_root, registry_path, available_ids, receipts):
+def _orchestrator_runtime(project, code_root, registry_path, available_ids, receipts, catalog):
     env = {"AIF_ORCHESTRATOR_HELPER": code_root + "/milestone2/scripts/orchestrator.py",
            "AIF_ORCHESTRATOR_BINDINGS": registry_path}
     free_receipt = next((row.get("category") for row in receipts
@@ -92,14 +171,14 @@ def _orchestrator_runtime(project, code_root, registry_path, available_ids, rece
     if "free-opencode" in available_ids:
         env["OPENCODE_CONFIG_CONTENT"] = json.dumps(native_config())
         return "opencode_local", {
-            "cwd": project["cwd"], "model": MODEL,
+            "cwd": project["cwd"], "model": catalog["free-opencode"]["model"],
             "extraArgs": ["--agent", "aif-orchestrator", "--pure"],
             "timeoutSec": 360, "dangerouslySkipPermissions": False, "env": env,
         }, "free-opencode", "free-opencode:available"
     if "codex-subscription" not in available_ids:
         raise ValueError("No qualified Orchestrator runtime is available")
     return "codex_local", {
-        "cwd": project["cwd"], "model": "gpt-5.6-sol",
+        "cwd": project["cwd"], "model": catalog["codex-subscription"]["model"],
         "extraArgs": ["--sandbox", "read-only", "--add-dir", "/tmp", "-c",
                       'model_reasoning_effort="low"'],
         "timeoutSec": 360, "dangerouslyBypassApprovalsAndSandbox": False, "env": env,
@@ -153,6 +232,8 @@ def configure(client, state, preset, *, apply=False):
         return client.request(method, path, body, **kwargs)[1]
     if preset["companyId"] != state["companyId"]:
         raise ValueError("Provisioning company mismatch")
+    catalog = _model_catalog(preset)
+    free_spec, subscription_spec = catalog["free-opencode"], catalog["codex-subscription"]
     company = state["companyId"]
     agents = request("GET", f"/api/companies/{company}/agents")
     by_id = {a["id"]: a for a in agents}
@@ -174,7 +255,7 @@ def configure(client, state, preset, *, apply=False):
                 raise ValueError("Project role is foreign, busy or terminated")
         old_developer = by_id[project["developerAgentId"]]
         if (old_developer.get("adapterType") != "codex_local"
-                or old_developer.get("adapterConfig", {}).get("model") != "gpt-5.6-sol"
+                or old_developer.get("adapterConfig", {}).get("model") != subscription_spec["model"]
                 or old_developer.get("adapterConfig", {}).get("cwd") != project["cwd"]):
             raise ValueError("Subscription runtime binding drifted")
         setup_key = "automatic-entry-v1:" + project_id + ":free-developer"
@@ -182,37 +263,35 @@ def configure(client, state, preset, *, apply=False):
         if len(existing) > 1:
             raise ValueError("Ambiguous free runtime binding")
         instruction = request("GET", f"/api/agents/{old_developer['id']}/instructions-bundle/file?path=AGENTS.md")["content"]
-        expected = _free_agent_payload(project_id, project, instruction)
+        expected = _free_agent_payload(project_id, project, instruction, free_spec, subscription_spec)
         if existing:
             free = existing[0]
             if not _free_agent_matches(free, expected, company):
                 raise ValueError("Free runtime binding drifted")
         else:
             free = None
-        prepared.append((project_id, project, old_developer, free, expected))
+        additional, extra_receipts = _additional_profiles(project, catalog, by_id, company, request)
+        prepared.append((project_id, project, old_developer, free, expected, additional, extra_receipts))
     qualification = request("GET", f"/api/heartbeat-runs/{qualification_id}")
     if (qualification.get("companyId") != company or qualification.get("status") != "succeeded"
-        or (qualification.get("usageJson") or {}).get("model") != "gpt-5.6-sol"
+        or (qualification.get("usageJson") or {}).get("model") != subscription_spec["model"]
         or ((qualification.get("runnerProfileJson") or {}).get("adapterDispatch") or {}).get("adapterType") != "codex_local"):
         raise ValueError("Successful native subscription qualification does not match the admitted runtime")
     if not apply:
         return {"status": "ready", "projectCount": len(registry["projects"]), "mutations": False}
 
     probe_profiles = [
-        {"id": "free-opencode", "agentId": "pending", "adapterType": "opencode_local",
-         "model": MODEL, "tier": "free", "qualified": True,
-         "availabilityProbe": "opencode_no_tools"},
-        {"id": "codex-subscription", "agentId": "existing", "adapterType": "codex_local",
-         "model": "gpt-5.6-sol", "tier": "subscription", "qualified": True,
+        {**free_spec, "agentId": "pending", "qualified": True},
+        {**subscription_spec, "agentId": "existing", "qualified": True,
          "qualificationRunId":qualification_id},
     ]
     available, readiness_receipts = profile_readiness.qualify_available(
         probe_profiles, _container_readiness_runner)
     available_ids = {profile["id"] for profile in available}
     readiness_receipts.append({"profileId":"codex-subscription", "qualification":"verifiedNativeRunNotFreshProbe",
-        "runId":qualification_id, "adapterType":"codex_local", "model":"gpt-5.6-sol"})
+        "runId":qualification_id, "adapterType":"codex_local", "model":subscription_spec["model"]})
 
-    for project_id, project, old_developer, free, expected in prepared:
+    for project_id, project, old_developer, free, expected, additional, extra_receipts in prepared:
         if free is None:
             # Creation has no configuration revision. Install the fallback in
             # a separate board PATCH so native dispatch can verify authority.
@@ -228,24 +307,24 @@ def configure(client, state, preset, *, apply=False):
             free = request("PATCH", f"/api/agents/{free['id']}", {"runtimeConfig":expected["runtimeConfig"]})
             by_id[free["id"]] = free
         project["profiles"] = [
-            {"id": "free-opencode", "agentId": free["id"], "adapterType": "opencode_local", "model": MODEL,
-             "tier": "free", "qualified": "free-opencode" in available_ids,
-             "availabilityProbe": "opencode_no_tools"},
-            {"id": "codex-subscription", "agentId": old_developer["id"], "adapterType": "codex_local", "model": "gpt-5.6-sol",
-             "tier": "subscription", "qualified": "codex-subscription" in available_ids},
+            {**free_spec, "agentId": free["id"], "qualified": "free-opencode" in available_ids},
+            {**subscription_spec, "agentId": old_developer["id"], "qualified": "codex-subscription" in available_ids,
+             "qualificationRunId": qualification_id},
+            *additional,
         ]
-        project["profileReadinessReceipts"] = deepcopy(readiness_receipts)
+        project["allowPaidProfiles"] = preset.get("allowPaidProfiles") is True
+        project["profileReadinessReceipts"] = deepcopy(readiness_receipts + extra_receipts)
     code_root, registry_path, code_sha, registry_sha = deploy_public_runtime(registry)
     instruction = (ROOT / "milestone2/fixtures/orchestrator.md").read_text(encoding="utf-8")
     for project_id, project in registry["projects"].items():
         router = by_id[project["orchestratorAgentId"]]
         adapter, config, selected_profile, rationale = _orchestrator_runtime(
-            project, code_root, registry_path, available_ids, readiness_receipts)
+            project, code_root, registry_path, available_ids, readiness_receipts, catalog)
         config.update({k: v for k, v in router.get("adapterConfig", {}).items() if k.startswith("instructions")})
         runtime = deepcopy(router.get("runtimeConfig") or {})
         runtime.pop("providerFallback",None)
         if adapter == "opencode_local":
-            runtime["providerFallback"] = {"adapterType":"codex_local", "model":"gpt-5.6-sol",
+            runtime["providerFallback"] = {"adapterType":"codex_local", "model":subscription_spec["model"],
                 "extraArgs":["--sandbox","read-only","--add-dir","/tmp"], "qualificationRunId":qualification_id}
         request("PATCH", f"/api/agents/{router['id']}", {"name": project["label"] + " Orchestrator", "title": "Orchestrator / Router",
                 "adapterType": adapter, "adapterConfig": config, "runtimeConfig":runtime,
@@ -261,7 +340,7 @@ def configure(client, state, preset, *, apply=False):
             request("PATCH", f"/api/agents/{a['id']}", {"name": project["label"] + " " + role.title() + (" (Codex fallback)" if role == "developer" else ""),
                 "metadata": {**(a.get("metadata") or {}), "logicalRole": role, "projectId": project_id,
                              "runtimeBindingHidden": role == "developer"}})
-        for aid in [router["id"], *(p["agentId"] for p in project["profiles"]),
+        for aid in [router["id"], *(p["agentId"] for p in project["profiles"][:2]),
                     project["validatorAgentId"], project["reviewerAgentId"], project["qaAgentId"]]:
             actual = request("GET", f"/api/agents/{aid}")
             if actual.get("status") in {"paused", "error"}:
