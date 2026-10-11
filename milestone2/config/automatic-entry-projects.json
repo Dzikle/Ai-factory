@@ -20,8 +20,8 @@
       "priority": 20, "taskKinds": ["coding"], "risks": ["low", "normal", "high"],
       "unavailableReason": "authentication_and_native_qualification_required"
     },
-    {"id": "cline", "runtime": "cline", "enabled": false, "unavailableReason": "adapter_not_integrated"},
-    {"id": "command-code", "runtime": "command-code", "enabled": false, "unavailableReason": "adapter_not_integrated"}
+    {"id": "cline", "runtime": "cline", "adapterType": "cline_local", "enabled": false, "unavailableReason": "installation_authentication_and_controller_admission_required"},
+    {"id": "command-code", "runtime": "command-code", "adapterType": "commandcode_local", "enabled": false, "unavailableReason": "installation_authentication_and_controller_admission_required"}
   ],
   "projects": {
     "a5758cd0-d9c4-4f3f-a004-2194691f6ef3": {

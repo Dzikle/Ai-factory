@@ -38,6 +38,39 @@ def preset(*projects):
 
 
 class AutomaticEntrySetupTests(unittest.TestCase):
+    def add_native(self, adapter="cline_local"):
+        from tests.test_native_profile_contract import fixture as native_fixture
+        from milestone2.scripts.native_profile_contract import binding_fingerprint
+        pid, configured = next(iter(self.preset["projects"].items()))
+        profile, agent = native_fixture(adapter)
+        aid, proof = str(uuid4()), str(uuid4())
+        identity = agent["metadata"]["nativeProviderAdmission"]["binding"]
+        identity.update(companyId=COMPANY, agentId=aid, projectId=pid, cwd=configured["cwd"])
+        admission = agent["metadata"]["nativeProviderAdmission"]
+        admission["bindingFingerprint"] = binding_fingerprint(identity)
+        admission["qualification"]["runId"] = proof
+        agent.update(id=aid, companyId=COMPANY)
+        agent["adapterConfig"]["cwd"] = configured["cwd"]
+        self.client.agents.append(agent)
+        spec = next(row for row in self.preset["modelProfiles"] if row["id"] == ("cline" if adapter == "cline_local" else "command-code"))
+        spec.update(enabled=True, model=identity["model"], tier="subscription", priority=20,
+                    taskKinds=["coding"], risks=["normal", "high"])
+        spec.update({key: identity[key] for key in ("provider", "accountRef", "runtimePin", "credentialVersionRef")})
+        configured["profileBindings"] = {spec["id"]: {"agentId": aid, "qualificationRunId": proof, "bindingFingerprint": admission["bindingFingerprint"]}}
+        return agent
+
+    def test_admitted_profile_preflight_is_read_only_and_revocation_blocks_apply(self):
+        for adapter in ("cline_local", "commandcode_local"):
+            self.setUp()
+            agent = self.add_native(adapter)
+            self.assertEqual("ready", configure(self.client, self.state, self.preset)["status"])
+            self.assertEqual([], self.client.writes)
+            agent["nativeAdmissionState"]["admitted"] = False
+            with patch("milestone2.scripts.automatic_entry_setup.deploy_public_runtime") as deploy:
+                with self.assertRaisesRegex(ValueError, "native_admission_unavailable"):
+                    configure(self.client, self.state, self.preset, apply=True)
+            deploy.assert_not_called()
+            self.assertEqual([], self.client.writes)
     def setUp(self):
         self.preset = preset(project("Alpha"))
         self.client = FixtureClient(self.preset)
@@ -239,7 +272,7 @@ class AutomaticEntrySetupTests(unittest.TestCase):
             configure(self.client, self.state, self.preset, apply=True)
         self.assertEqual([], self.client.writes)
 
-    def test_qualified_claude_profile_is_bound_without_mutating_its_agent(self):
+    def test_legacy_usage_model_does_not_admit_claude(self):
         claude = next(p for p in self.preset["modelProfiles"] if p["id"] == "claude")
         claude.update(enabled=True, model="sonnet")
         configured = next(iter(self.preset["projects"].values()))
@@ -258,20 +291,14 @@ class AutomaticEntrySetupTests(unittest.TestCase):
         def capture(registry):
             deployed.update(deepcopy(registry))
             return "/code", "/registry.json", "sha", "sha"
-        with patch("milestone2.scripts.automatic_entry_setup.deploy_public_runtime", side_effect=capture), \
-                patch("milestone2.scripts.profile_readiness.qualify_available", side_effect=lambda profiles, _: (profiles, [])):
+        with self.assertRaisesRegex(ValueError, "qualification"):
             configure(self.client, self.state, self.preset, apply=True)
-        candidates = [p for p in next(iter(deployed["projects"].values()))["profiles"] if p["id"] == "claude"]
-        self.assertEqual(1, len(candidates))
-        saved = candidates[0]
-        self.assertEqual(aid, saved["agentId"])
-        self.assertTrue(saved["qualified"])
-        self.assertEqual(proof, saved["qualificationRunId"])
-        self.assertFalse(any(method != "GET" and aid in path for method, path, *_ in self.client.writes))
+        self.assertEqual([], self.client.writes)
+        self.assertEqual({}, deployed)
 
     def test_unsupported_enabled_harness_fails_before_any_write(self):
         next(p for p in self.preset["modelProfiles"] if p["id"] == "cline")["enabled"] = True
-        with self.assertRaisesRegex(ValueError, "adapter|integrated"):
+        with self.assertRaisesRegex(ValueError, "model|adapter|integrated"):
             configure(self.client, self.state, self.preset, apply=True)
         self.assertEqual([], self.client.writes)
 
@@ -318,6 +345,9 @@ class FixtureClient:
                 })
 
     def request(self, method, path, body=None, **kwargs):
+        if method == "GET" and "/native-provider-admission?projectId=" in path:
+            agent = next(a for a in self.agents if a["id"] == path.split("/")[3])
+            return 200, deepcopy(agent.get("nativeAdmissionState", {"schemaVersion": 1, "admitted": False}))
         if method == "GET" and path.startswith("/api/heartbeat-runs/"):
             return 200,deepcopy(self.qualification)
         if method == "GET" and path == f"/api/companies/{COMPANY}/agents":

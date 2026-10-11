@@ -49,6 +49,45 @@ def fixture():
 
 
 class OrchestratorTests(unittest.TestCase):
+    def native_fixture(self, adapter):
+        from tests.test_native_profile_contract import fixture as native_fixture
+        from milestone2.scripts.native_profile_contract import binding_fingerprint
+        profile, agent = native_fixture(adapter)
+        identity = agent["metadata"]["nativeProviderAdmission"]["binding"]
+        identity.update(companyId=COMPANY, agentId=DEVELOPER, projectId=PROJECT)
+        fingerprint = binding_fingerprint(identity)
+        admission = agent["metadata"]["nativeProviderAdmission"]
+        admission["bindingFingerprint"] = fingerprint
+        profile.update(agentId=DEVELOPER, bindingFingerprint=fingerprint)
+        agent.update(id=DEVELOPER, companyId=COMPANY)
+        self.client.agents[DEVELOPER] = agent
+        self.bindings["projects"][PROJECT].update(cwd=identity["cwd"], profiles=[profile])
+        return profile, agent
+
+    def test_admitted_native_profiles_handoff_and_revoked_pending_never_reselects(self):
+        for adapter in ("cline_local", "commandcode_local"):
+            self.setUp()
+            profile, agent = self.native_fixture(adapter)
+            original_request = self.client.request
+            def fail_handoff(method, path, body=None):
+                if method == "PATCH":
+                    raise ConnectionError("before handoff")
+                return original_request(method, path, body)
+            self.client.request = fail_handoff
+            with self.assertRaises(ConnectionError):
+                self.run_plan()
+            saved = deepcopy(self.client.documents)
+            agent["nativeAdmissionState"]["admitted"] = False
+            self.client.request = original_request
+            before = len(self.client.writes)
+            with self.assertRaises(ValueError):
+                self.run_plan()
+            self.assertEqual(before, len(self.client.writes))
+            self.assertEqual(saved, self.client.documents)
+            agent["nativeAdmissionState"]["admitted"] = True
+            self.assertEqual("handed_off", self.run_plan()["status"])
+            self.assertEqual(DEVELOPER, self.client.issue["assigneeAgentId"])
+            self.assertEqual({"adapterConfig": {"model": profile["model"]}}, self.client.issue["assigneeAdapterOverrides"])
     def setUp(self):
         self.bindings, self.issue, self.agents, self.plan = fixture()
         self.client = MockClient(self.issue, self.agents)
@@ -306,7 +345,7 @@ class OrchestratorTests(unittest.TestCase):
         self.assertEqual({"adapterConfig": {"model": "sonnet"}}, self.client.issue.get("assigneeAdapterOverrides"))
         self.assertTrue(all(path.startswith(f"/api/issues/{ISSUE}") for _, path, _ in self.client.writes))
 
-    def test_unintegrated_harness_is_rejected_even_if_marked_qualified(self):
+    def test_unadmitted_harness_is_rejected_even_if_marked_qualified(self):
         self.client.agents[DEVELOPER]["adapterType"] = "cline_local"
         self.bindings["projects"][PROJECT]["profiles"] = [{
             "id": "cline", "agentId": DEVELOPER, "adapterType": "cline_local", "model": "some/model",
@@ -388,6 +427,8 @@ class MockClient:
         self.last_result = None
 
     def request(self, method, path, body=None):
+        if method == "GET" and "/native-provider-admission?projectId=" in path:
+            return deepcopy(self.agents[path.split("/")[3]].get("nativeAdmissionState", {"schemaVersion": 1, "admitted": False}))
         if method == "GET" and path == f"/api/issues/{ISSUE}":
             return deepcopy(self.issue)
         if method == "GET" and path == f"/api/companies/{COMPANY}/agents":

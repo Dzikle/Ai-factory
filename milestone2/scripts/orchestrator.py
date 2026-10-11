@@ -15,6 +15,7 @@ if __name__ == "__main__":
 from milestone0.scripts.paperclip_admission import ApiError
 from milestone1.paperclip_policy import engineering_execution_policy
 from milestone2.scripts.assistant_reply import RunClient
+from milestone2.scripts.native_profile_contract import requires_admission, validate_profile_admission
 
 
 MAX_SUMMARY = 5000
@@ -23,7 +24,7 @@ MAX_ACCEPTANCE_TEXT = 2000
 MAX_PLAN_BYTES = 32_000
 MAX_ANSWER = 8000
 TIERS = {"free": 0, "subscription": 1, "paid": 2}
-NATIVE_MODEL_ADAPTERS = {"codex_local", "opencode_local", "claude_local"}
+NATIVE_MODEL_ADAPTERS = {"codex_local", "opencode_local", "claude_local", "cline_local", "commandcode_local"}
 
 
 def _uuid(value, name):
@@ -186,6 +187,14 @@ def _profile_selection(project, plan, agents):
             continue
         profile = {"id": profile_id, "agentId": agent_id, "model": model,
                    "adapterType": adapter, "tier": row["tier"]}
+        if requires_admission(agent):
+            try:
+                evidence = validate_profile_admission(row, agent, project.get("projectId"), project.get("cwd"))
+            except ValueError as exc:
+                entry["reason"] = str(exc)
+                continue
+            profile.update({key: row[key] for key in ("provider", "accountRef", "runtimePin", "credentialVersionRef")})
+            profile.update(evidence)
         entry.update(status="eligible_not_selected", reason="lower_priority")
         valid.append((profile, priority, entry))
     if not valid:
@@ -257,6 +266,7 @@ def execute(client, context, bindings, plan):
     if issue.get("companyId") != context["companyId"]:
         raise ValueError("Issue belongs to another company")
     owner, project, roles = _registry(bindings, context["companyId"], issue.get("projectId"))
+    project = {**project, "projectId": issue.get("projectId")}
     if roles["orchestratorAgentId"] != context["agentId"]:
         raise ValueError("This run is not assigned to the project's Orchestrator")
 
@@ -270,6 +280,11 @@ def execute(client, context, bindings, plan):
             raise ValueError("Paperclip returned a malformed company agent list")
         eligible_agents = {row["id"]: row for row in all_agents if isinstance(row, dict)
                            and row.get("companyId") == context["companyId"] and row.get("id")}
+        # Read-only controller recomputation, not a retained registry or requested model.
+        for row in project.get("profiles", []):
+            agent = eligible_agents.get(row.get("agentId")) if isinstance(row, dict) else None
+            if agent and requires_admission(agent):
+                agent["nativeAdmissionState"] = client.request("GET", f"/api/agents/{agent['id']}/native-provider-admission?projectId={issue['projectId']}")
         if existing_plan is not None:
             profile = existing_plan.get("selectedProfile")
             profile_reason = existing_plan.get("selectionRationale")

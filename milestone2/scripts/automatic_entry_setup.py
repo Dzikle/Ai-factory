@@ -18,12 +18,13 @@ from milestone0.scripts.paperclip_admission import Client
 from milestone2.scripts.assistant_reply import NoRedirect
 from milestone2.scripts import profile_readiness
 from milestone2.scripts.orchestrator import NATIVE_MODEL_ADAPTERS, TIERS, _text, _uuid
+from milestone2.scripts.native_profile_contract import validate_profile_admission
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTAINER = "aif-m0-paperclip-fork-paperclip-fork-1"
 SOURCES = ("milestone0/scripts/paperclip_admission.py", "milestone1/paperclip_policy.py",
            "milestone2/scripts/assistant_reply.py", "milestone2/scripts/orchestrator.py",
-           "milestone2/scripts/profile_readiness.py")
+           "milestone2/scripts/profile_readiness.py", "milestone2/scripts/native_profile_contract.py")
 
 
 def _model_catalog(preset):
@@ -33,7 +34,8 @@ def _model_catalog(preset):
         raise ValueError("modelProfiles must contain 2–64 configured profiles")
     catalog = {}
     allowed = {"id", "runtime", "enabled", "adapterType", "model", "tier", "priority",
-               "taskKinds", "risks", "availabilityProbe", "unavailableReason"}
+               "taskKinds", "risks", "availabilityProbe", "unavailableReason",
+               "provider", "accountRef", "runtimePin", "credentialVersionRef"}
     for row in rows:
         if not isinstance(row, dict) or set(row) - allowed:
             raise ValueError("Invalid model profile configuration")
@@ -47,6 +49,9 @@ def _model_catalog(preset):
             if clean.get("adapterType") not in NATIVE_MODEL_ADAPTERS:
                 raise ValueError("Enabled profile adapter is not integrated")
             clean["model"] = _text(clean.get("model"), "profile model", 256)
+            if clean["adapterType"] in {"cline_local", "commandcode_local", "claude_local"}:
+                for key in ("provider", "accountRef", "runtimePin", "credentialVersionRef"):
+                    clean[key] = _text(clean.get(key), "native qualification " + key, 4096)
             priority = clean.get("priority", 1000)
             if (isinstance(priority, bool) or not isinstance(priority, int) or not 0 <= priority <= 10000
                     or clean.get("tier") not in TIERS):
@@ -73,7 +78,7 @@ def _model_catalog(preset):
     return catalog
 
 
-def _additional_profiles(project, catalog, by_id, company, request):
+def _additional_profiles(project, catalog, by_id, company, request, project_id):
     """Bind already-provisioned native agents to verified exact-model run evidence."""
     resolved = []
     receipts = []
@@ -93,15 +98,11 @@ def _additional_profiles(project, catalog, by_id, company, request):
                 or agent.get("adapterConfig", {}).get("cwd") != project["cwd"]
                 or aid in {project[key] for key in ("orchestratorAgentId", "validatorAgentId", "reviewerAgentId", "qaAgentId")}):
             raise ValueError("Additional native profile binding drifted or is not independent")
-        proof = request("GET", f"/api/heartbeat-runs/{proof_id}")
-        if (proof.get("id") != proof_id or proof.get("agentId") != aid
-                or proof.get("companyId") != company or proof.get("status") != "succeeded"
-                or (proof.get("usageJson") or {}).get("model") != spec["model"]
-                or ((proof.get("runnerProfileJson") or {}).get("adapterDispatch") or {}).get("adapterType") != spec["adapterType"]):
-            raise ValueError("Additional native profile qualification does not match its binding")
-        resolved.append({**spec, "agentId": aid, "qualificationRunId": proof_id, "qualified": True})
-        receipts.append({"profileId": pid, "qualification": "verifiedNativeRunNotFreshProbe",
-                         "runId": proof_id, "adapterType": spec["adapterType"], "model": spec["model"]})
+        candidate = {**spec, "agentId": aid, "qualificationRunId": proof_id, "bindingFingerprint": binding.get("bindingFingerprint"), "qualified": True}
+        agent = {**agent, "nativeAdmissionState": request("GET", f"/api/agents/{aid}/native-provider-admission?projectId={project_id}")}
+        evidence = validate_profile_admission(candidate, agent, project_id, project["cwd"])
+        resolved.append({**candidate, **evidence})
+        receipts.append({"profileId": pid, "qualification": "controllerAdmission", **evidence})
     return resolved, receipts
 
 
@@ -270,7 +271,7 @@ def configure(client, state, preset, *, apply=False):
                 raise ValueError("Free runtime binding drifted")
         else:
             free = None
-        additional, extra_receipts = _additional_profiles(project, catalog, by_id, company, request)
+        additional, extra_receipts = _additional_profiles(project, catalog, by_id, company, request, project_id)
         prepared.append((project_id, project, old_developer, free, expected, additional, extra_receipts))
     qualification = request("GET", f"/api/heartbeat-runs/{qualification_id}")
     if (qualification.get("companyId") != company or qualification.get("status") != "succeeded"
