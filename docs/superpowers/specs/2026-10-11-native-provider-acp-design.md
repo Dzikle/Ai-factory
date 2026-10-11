@@ -1,8 +1,9 @@
 # Native provider integration through Paperclip ACP
 
-Date: 2026-10-11. Architectural approach approved by the owner; written-spec
-review pending. This document specifies a future implementation. It does not
-claim deployment, runtime qualification, or authorize paid usage.
+Date: 2026-10-11. Architectural approach and written specification approved by
+the owner; implementation-plan review pending. This document specifies a future
+implementation. It does not claim deployment, runtime qualification, or authorize
+paid usage.
 
 ## Outcome and scope
 
@@ -252,6 +253,7 @@ a requested feature, not a reopened mandatory milestone.
 
 ## Written-spec review boundary
 
-This spec has not yet been approved as a written artifact. Its next step is owner
-review, then an implementation plan. No adapters, dependencies, credentials,
-live routing, runtime installation or deployment are changed by this document.
+The owner approved this written spec with "Proceed" on 2026-10-11. Its next step
+is written implementation-plan review and execution-method selection. No adapters,
+dependencies, credentials, live routing, runtime installation or deployment are
+changed by this document.
