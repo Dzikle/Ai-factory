@@ -2,8 +2,9 @@
 
 Date: 2026-10-11
 
-Status: Draft for owner review. Direction and drafting approved; written spec,
-implementation plan, execution and live operations are not yet approved.
+Status: Written spec approved by the owner on 2026-10-11. Implementation-plan
+review and execution-method confirmation remain outstanding; live operations
+remain separately unauthorized.
 
 ## Intent and scope
 
