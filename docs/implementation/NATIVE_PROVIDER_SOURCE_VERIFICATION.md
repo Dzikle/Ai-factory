@@ -1,5 +1,11 @@
 # Native provider source verification — 2026-10-11
 
+Follow-up: the [pinned containment audit](NATIVE_PROVIDER_CONTAINMENT_AUDIT_2026-10-11.md)
+found two additional unresolved Important Command Code source-policy gaps after
+the review below. That review is historical evidence, not approval of a currently
+complete source contract. No provider was enabled; design revision is required
+before qualification. The audit ran no CLI or inference.
+
 ## Outcome and exact source
 
 Reviewed disabled-by-default source candidate, not a release or live provider

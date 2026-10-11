@@ -14,6 +14,12 @@ and project authority containment cannot be enabled by a caller configuration fl
 Managed Claude is likewise blocked at controller dispatch. Command Code remains a
 disabled source candidate requiring all remaining release and live gates below.
 
+Follow-up pinned-source inspection found that Command Code's permissions-only
+no-tool overlay leaves native control-flow tools allowed, and its required home
+deny rules use project-relative rather than filesystem-root anchors. Do not
+qualify or enable this candidate until the design is revised and those controls
+are proven. See the [containment audit](NATIVE_PROVIDER_CONTAINMENT_AUDIT_2026-10-11.md).
+
 ## Preparation and binding
 
 An owner separately prepares an isolated native home and disposable trusted source
