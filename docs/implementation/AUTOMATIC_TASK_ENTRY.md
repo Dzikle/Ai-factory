@@ -83,11 +83,11 @@ infer them from these tests.
 The compatibility image was deployed and returned the exact native Codex
 assistant sentinel in AIF-83, but it exposed a second durability gap: the direct
 (`legacy` runtime mode) initializer dropped the sealed fallback receipt. An
-unwanted fresh primary/fallback pair followed. The test principal is paused;
+unwanted fresh primary/fallback pair followed. The test principal was paused;
 these responses are **not a passing bounded fallback proof**. The three-line
 atomic receipt preservation fix `e40e5b9730280b549e8adc1aec9114bd133d85d2`
 reproduced the missing row evidence RED, then passed the real database regression
-and serial 24-test route/fallback suite. The replacement image is now deployed:
+and serial 24-test route/fallback suite. That historical replacement image was:
 `e40e5b9730280b549e8adc1aec9114bd133d85d2` / immutable index
 `sha256:f816b541c61ecf73b48fb2801a26e6114db7212282759cf67153090317f3c2c9`.
 The exact image passed 24 actual database/fallback tests and 64 OpenCode tests,
@@ -102,21 +102,57 @@ and retained the full sealed one-switch receipt. An idle controller restart
 preserved that receipt, the three task states/plans, native independent decisions,
 the clean exact AIF-82 candidate, Tests artifact and qualified registry.
 
-One bound remains unproven: native `finish_successful_run_handoff` created a new
+The next replay exposed another gap: native `finish_successful_run_handoff` created a new
 primary OpenCode run after that success because the no-tool canary intentionally
 did not choose an issue disposition. This path is separate from immediate
 recovery, whose guard already respects the receipt. Only the canary was paused;
 its extra scheduled fallback was cancelled, and there are no active runs.
-The existing positive test completes its issue inside the external adapter
-double, so it does not cover this unfinished-issue followup. Agree the same-agent
-continuation/provider semantics before another routing patch. No passing
-across-followup fallback bound or overall feature completion is claimed.
+The earlier positive fixture completed its issue inside the external adapter
+double and did not cover this unfinished-issue followup. On October 11 the owner
+approved retaining the already qualified selection for same-agent/same-task
+native continuations. Source `3f1194caa926084d1862ac4ce8690841a690c5b0` now
+passes 134 focused tests and direct server type-checking. Actual PostgreSQL
+regressions cover unfinished success, bounded/liveness followups, deferred
+promotion/restart, competing runs, lineage forgery, revocation and lock release.
+A fresh review's two Important queue-path findings were reproduced RED and
+fixed GREEN in one pass; no Critical or Minor findings. The normal multiarch
+build and PID-1 gate passed. This fix is now deployed at immutable index
+`sha256:b1ed65f02e37aaccd9566db0852d0440048aaf28f95fd86f94bd7b8109eb343a`
+(AMD64 `sha256:b3e1edc8179d3aa76809c38e70cc7fb702e316a1e3111306ae2bba0dc36f6044`).
+Exact-image tests, without overlays or production mounts, passed 134 actual
+database/policy tests and 64 OpenCode tests. Node 24.21.0, Codex 0.161.0 and
+OpenCode 1.18.35 were verified by isolated CLI invocations.
+
+The new same-task replay has exactly three native runs: rejected OpenCode
+`e3d52f5e-deb6-41b7-8c70-cc84ab086295`, selected Codex success
+`ee9c6a98-e5f7-4f12-bb37-a85f81a64a6c`, and automatic Codex handoff success
+`1176ebe4-05ce-4da9-9ae9-4216a8d235e0`. Both successful runs returned exactly
+`AIF_NATIVE_FALLBACK_READY`, retained identical sealed one-switch receipts, and
+started with no prior session and `forceFreshSession: true`. The persisted
+system/heartbeat `finish_successful_run_handoff` wake links the latter to the
+selected parent. The logical agent remained configured as OpenCode; no principal
+provider rewrite, second switch or fresh primary bounce occurred. The native
+handoff limit stopped further runs. Only this operator test was marked done;
+its principal is paused/hidden and all prior failed attempts remain in history.
+
+Cutover and a fresh idle-controller restart preserved all seven authority
+tables, schema, configured credentials, storage, networks and ports. Restart
+also preserved all three task states, plans, independent decisions, the exact
+clean AIF-82 candidate, native Tests artifact and installed qualified registry.
+Restart baseline SHA256:
+`169413a8539635a1b2ce26cbef8f1ba78dfed97333227a6f63ce684c607c1f53`.
+This completes the automatic-entry correction's trusted-local evidence gates;
+AIF-82 still requires owner approval and has not been integrated or published.
 See `milestone2/results/automatic-task-entry-20261010.json`.
 
-Owner-approved disk cleanup removed only the unused a15 intermediate image.
-Current e40, former 940 and stable rollback images, all 38 volumes and all backups
-remain intact. The guarded image pull completed with about 6.0GB Windows C free;
-no broad prune, Docker reset or virtual-disk compaction was performed.
+Owner-approved disk cleanup removed only the unused a15 and, under separate
+approval, unused 940 intermediate images. New 3f, prior e40 and stable rollback
+images, all 38 volumes and all backups remain intact. Windows C had 6.6GB free
+immediately after removing 940 and about 4.6GB after the new backup/image proof.
+The fresh paired backup for this cutover is
+`.milestone0/automatic-entry-followup-cutover-20261011/` (archive/hash validated,
+not a fresh restore rehearsal); earlier backups and the e40 image are retained.
+No broad prune, Docker reset or virtual-disk compaction was performed.
 
 ## Using the entry point
 
@@ -155,6 +191,11 @@ Rulings carried from the execution ledger:
    cost if wrong: the owner fork carries a route patch.
 4. Admit one typed zero-work bootstrap fallback only; cost if wrong: post-work
    provider loss remains fail-closed.
+5. Require separate immutable deployment, live provider and restart evidence
+   for the review's declined runtime judgment; cost if wrong: green source tests
+   would not support local runtime acceptance.
+6. Disclose unrelated full-repository failures without expanding remediation or
+   claiming a clean repository; cost if wrong: those defects may affect other paths.
 
 Deferred minor: the automatic-intake UI label can appear for a non-todo task;
 this does not dispatch backlog work. The execution/verification skills kept the
