@@ -2,9 +2,10 @@
 
 Date: 2026-10-11
 
-Status: Written spec approved by the owner on 2026-10-11. Implementation-plan
-review and execution-method confirmation remain outstanding; live operations
-remain separately unauthorized.
+Status: Written spec and first-stage implementation plan approved by the owner
+on 2026-10-11; inline execution selected. Live operations remain separately
+unauthorized. The first-stage outcome is recorded in the
+[feasibility report](../../implementation/COMMANDCODE_GUARD_FEASIBILITY_2026-10-11.md).
 
 ## Intent and scope
 

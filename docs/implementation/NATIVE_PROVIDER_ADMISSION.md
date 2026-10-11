@@ -11,14 +11,19 @@ Cline's managed executor now rejects every launch with
 `native_permission_unsupported`, including qualification. Its package and config
 normalizer are source foundations, not a usable native integration: unproven home
 and project authority containment cannot be enabled by a caller configuration flag.
-Managed Claude is likewise blocked at controller dispatch. Command Code remains a
-disabled source candidate requiring all remaining release and live gates below.
+Managed Claude is likewise blocked at controller dispatch. Command Code now also
+rejects adapter execution and current-binding resolution with
+`native_permission_unsupported`; an installed executable or owner readiness flag
+cannot enable it. The [guard feasibility result](COMMANDCODE_GUARD_FEASIBILITY_2026-10-11.md)
+records the tested source block and failed/unverified native guard requirements.
 
 Follow-up pinned-source inspection found that Command Code's permissions-only
 no-tool overlay leaves native control-flow tools allowed, and its required home
 deny rules use project-relative rather than filesystem-root anchors. Do not
-qualify or enable this candidate until the design is revised and those controls
-are proven. See the [containment audit](NATIVE_PROVIDER_CONTAINMENT_AUDIT_2026-10-11.md).
+qualify or enable this candidate until the approved revised guard contract is
+proven. Secondary path inspection is corrected, but snapshot filtering and
+session-start hooks do not satisfy the required fail-closed guard. See the
+[containment audit](NATIVE_PROVIDER_CONTAINMENT_AUDIT_2026-10-11.md).
 
 ## Preparation and binding
 
@@ -50,9 +55,12 @@ account semantics must be verified against the installed candidate, not guessed.
 Command Code additionally requires exact owner-prewritten `.commandcode/config.json`
 and `.commandcode/settings.json`, `nativePolicy`, and `nativeSettingsDigest`.
 Unexpected project/home MCP, hooks, plugins, feature-model or policy sources are
-refused. Probe deny-all settings are atomically overlaid and restored; crash backups
-remain private for owner recovery. Unknown edits are never overwritten. Neither
-native policy nor this overlay substitutes for host containment.
+refused by the inspection helper. Passing that helper does not authorize launch.
+The former candidate's probe-overlay launch body is removed; blocked runs do not
+write settings or backups. Historical private crash backups are not removed by
+this source change. Neither native policy nor tool filtering substitutes for host
+containment. Preparation/qualification instructions below describe the future
+contract, not permission to operate a currently unsupported runtime.
 If restoration fails after work, the failed result preserves recorded usage and
 cost while withholding public raw provider output; the private backup is retained.
 

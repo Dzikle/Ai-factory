@@ -1,10 +1,23 @@
 # Native provider source verification — 2026-10-11
 
+Current source checkpoint: the approved
+[guard safety/feasibility stage](COMMANDCODE_GUARD_FEASIBILITY_2026-10-11.md)
+hard-blocks Command Code execution and controller bindings, corrects secondary
+path inspection, and reproduces native snapshot-filter/session-hook gaps offline.
+Command Code, Cline and managed Claude remain unsupported. Current focused
+verification is 150 tests plus 14 offline native-characterization cases after
+the independent review-fix pass; broader
+Paperclip checks remain non-green. No provider was enabled or deployed.
+The source/support descriptions and review below are historical, not a usable
+Command Code admission or approval of its unresolved native guard.
+
 Follow-up: the [pinned containment audit](NATIVE_PROVIDER_CONTAINMENT_AUDIT_2026-10-11.md)
 found two additional unresolved Important Command Code source-policy gaps after
 the review below. That review is historical evidence, not approval of a currently
-complete source contract. No provider was enabled; design revision is required
-before qualification. The audit ran no CLI or inference.
+complete source contract. The revised design and its first source stage are now
+approved; guard feasibility is still insufficient for qualification. The original
+static audit ran no CLI or inference; the new offline harness executes only two
+verified vendor functions, never the CLI entry point.
 
 ## Outcome and exact source
 

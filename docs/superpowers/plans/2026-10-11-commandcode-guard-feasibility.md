@@ -62,10 +62,10 @@ Paths below are relative to the named root. Read both `AGENTS.md` files and thei
 required references before edits. Use `apply_patch`. No new worktree is necessary
 unless existing work conflicts; do not reset unrelated files.
 
-Plan review is still pending. The earlier inline execution preference is
-preserved: recommend Native execution in this session, followed by a fresh
-independent source reviewer. Confirm that method with the plan review before
-implementation. No subagent is dispatched to write or self-review this plan.
+The owner approved this plan and selected inline execution on 2026-10-11. Native
+execution implements locally in this session, followed by one fresh independent
+source reviewer. Approval covers these source-stage tasks and local tests/commits,
+not live operations. No subagent was dispatched to write or self-review this plan.
 
 ### Deliberate stage boundary
 
