@@ -5,6 +5,11 @@ qualification. Cline and Command Code catalogue entries remain disabled and have
 no guessed model, provider, account, or spending tier. Claude also remains disabled.
 The existing OpenCode/Codex intake and Tests/Reviewer/QA bindings are unchanged.
 
+Cline and managed Claude launch are explicitly unsupported until enforceable
+native containment contracts exist. Their disabled catalogue entries do not mean
+those integrations are ready. Command Code has reviewed source gates, not live
+qualification. No caller flag or catalogue edit bypasses controller admission.
+
 Enabling an additional coding profile requires an already-provisioned isolated
 Paperclip agent, an owner-authorized admission, and exact nonsecret references:
 `provider`, `accountRef`, `runtimePin`, `credentialVersionRef`, and project
