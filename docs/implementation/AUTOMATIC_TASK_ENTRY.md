@@ -47,7 +47,7 @@ fallback attempts must be visible and durable; missing cost is unknown.
 5. Run full checks and independent review, record exact deployed revisions and
    residual credential limits, commit/push owner repositories.
 
-## Current native proof (2026-10-10)
+## Current native proof (updated 2026-10-11)
 
 The opted-in root-task start path is deployed. AIF-82 started with only its
 registered project selected: Paperclip selected the Mobile Orchestrator,
@@ -77,7 +77,7 @@ gap: bootstrap rejection is `APIError` with numeric status 403, not only
 compatibility fix (`94061426a665f7edabe8add6e69de7bba133f8b5`) passed a failing-
 then-passing regression and 64 Linux OpenCode source tests. It keeps the
 no-text/no-tool/no-completed-step guard and one qualified, board-approved switch.
-Final deployment, real fallback and restart receipts are being completed; do not
+Later live deployment, fallback and restart results are recorded below; do not
 infer them from these tests.
 
 The compatibility image was deployed and returned the exact native Codex
@@ -87,9 +87,36 @@ unwanted fresh primary/fallback pair followed. The test principal is paused;
 these responses are **not a passing bounded fallback proof**. The three-line
 atomic receipt preservation fix `e40e5b9730280b549e8adc1aec9114bd133d85d2`
 reproduced the missing row evidence RED, then passed the real database regression
-and serial 24-test route/fallback suite. Its replacement image is building.
-Final replay and restart acceptance must use that replacement, not the flawed
-intermediate image. See `milestone2/results/automatic-task-entry-20261010.json`.
+and serial 24-test route/fallback suite. The replacement image is now deployed:
+`e40e5b9730280b549e8adc1aec9114bd133d85d2` / immutable index
+`sha256:f816b541c61ecf73b48fb2801a26e6114db7212282759cf67153090317f3c2c9`.
+The exact image passed 24 actual database/fallback tests and 64 OpenCode tests,
+without overlays; the fresh pinned Factory check passed 339 tests (2 skipped).
+Cutover preserved all seven authority tables, schema, configured credentials,
+storage, networks and ports. The existing paired backup was still current by
+exact preflight on October 11; all earlier backups are retained.
+
+The real no-tool replay succeeded on Codex in run
+`3c7b29ee-06f2-407c-9aba-0c251992e65a`, returned the exact assistant sentinel,
+and retained the full sealed one-switch receipt. An idle controller restart
+preserved that receipt, the three task states/plans, native independent decisions,
+the clean exact AIF-82 candidate, Tests artifact and qualified registry.
+
+One bound remains unproven: native `finish_successful_run_handoff` created a new
+primary OpenCode run after that success because the no-tool canary intentionally
+did not choose an issue disposition. This path is separate from immediate
+recovery, whose guard already respects the receipt. Only the canary was paused;
+its extra scheduled fallback was cancelled, and there are no active runs.
+The existing positive test completes its issue inside the external adapter
+double, so it does not cover this unfinished-issue followup. Agree the same-agent
+continuation/provider semantics before another routing patch. No passing
+across-followup fallback bound or overall feature completion is claimed.
+See `milestone2/results/automatic-task-entry-20261010.json`.
+
+Owner-approved disk cleanup removed only the unused a15 intermediate image.
+Current e40, former 940 and stable rollback images, all 38 volumes and all backups
+remain intact. The guarded image pull completed with about 6.0GB Windows C free;
+no broad prune, Docker reset or virtual-disk compaction was performed.
 
 ## Using the entry point
 
