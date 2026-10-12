@@ -22,6 +22,19 @@ contracts rather than the old shell commands. The broad test run was interrupted
 without a final result after recording 192 failing assertions; no full-suite or
 release success is claimed. Provider gates and live state are unchanged.
 
+Bounded repair follow-up, 2026-10-12: Paperclip source
+`9436600ba5218d69dc70cd2d8e9cd548225aa036` enforces LF PRP checkout bytes,
+fixes one host-specific native path assertion, and applies the existing 90-second
+embedded-Postgres budget only to the chat DB startup hook. Its report is
+`doc/verification/2026-10-12-prp-repair-batch.md`. All three unchanged raw PRP
+checks and 34 Windows regressions pass, plus one selected native case and one
+selected real chat case; other cases were deselected, not verified. Independent
+source review found no findings or scope drift. Fresh root typecheck stops at
+missing Cargo; build stops at capability-inventory parsing. Linux could not run
+because Docker was unavailable. The prior 192 assertions remain untriaged, not
+claimed resolved. Command Code stays unsupported; Cline/managed Claude remain
+blocked. No provider, dependency, runtime or live-state changes were made.
+
 Follow-up: the [pinned containment audit](NATIVE_PROVIDER_CONTAINMENT_AUDIT_2026-10-11.md)
 found two additional unresolved Important Command Code source-policy gaps after
 the review below. That review is historical evidence, not approval of a currently
