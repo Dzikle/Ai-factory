@@ -1,5 +1,9 @@
 # Automatic task entry — owner-authorized correction
 
+Later local source follow-up: [plan persistence repair](PLAN_PERSISTENCE_REPAIR_2026-10-12.md)
+fixes multiline JSON document corruption and checks stored plans before transitions.
+It is not deployed and does not supersede the historical native proofs below.
+
 Approved by the owner on 2026-10-06 for continuous execution, without step-by-step
 approval. This completes the original Orchestrator contract; it does not reopen
 dependency adoption or add a control plane.
