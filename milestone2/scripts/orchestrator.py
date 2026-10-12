@@ -253,6 +253,20 @@ def _document(client, issue_id, expected):
         raise ValueError("Plan document create was not confirmed; inspect Paperclip before retrying") from exc
     if not isinstance(created, dict) or not created.get("latestRevisionId"):
         raise ValueError("Plan document create did not return latestRevisionId")
+    # A PUT acknowledgement is not proof that storage preserved the plan. Read
+    # the authoritative document before answering or assigning a Developer.
+    try:
+        stored = client.request("GET", path)
+    except (ApiError, HTTPError, ValueError) as exc:
+        raise ValueError("Plan readback failed; inspect Paperclip before retrying") from exc
+    if (not isinstance(stored, dict) or stored.get("format") != "markdown"
+            or stored.get("latestRevisionId") != created["latestRevisionId"]
+            or stored.get("body") != canonical):
+        raise ValueError("Plan readback differs from the acknowledged revision or exact contents; refusing transition")
+    try:
+        json.loads(stored["body"])
+    except ValueError as exc:
+        raise ValueError("Plan readback is malformed; refusing transition") from exc
     return created["latestRevisionId"], True
 
 

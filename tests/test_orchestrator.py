@@ -127,6 +127,83 @@ class OrchestratorTests(unittest.TestCase):
                       "risk": "low", "ux": False, "answer": "Done."})
         self.assertIsNone(self.client.issue.get("executionPolicy"))
 
+    def test_multiline_analysis_plan_replays_without_rewriting_or_repeating_answer(self):
+        plan = {"kind": "analysis", "summary": "Inspect", "acceptance": [],
+                "risk": "low", "ux": False, "answer": "First fact\n\nSecond fact: C:\\new\\repo"}
+        self.assertEqual("answered", self.run_plan(plan)["status"])
+        body = self.client.documents[ISSUE, "plan"]["body"]
+        self.assertEqual(plan["answer"], json.loads(body)["answer"])
+        writes = len(self.client.writes)
+        self.assertEqual("replayed", self.run_plan(plan)["status"])
+        self.assertEqual(writes, len(self.client.writes))
+        self.assertEqual(body, self.client.documents[ISSUE, "plan"]["body"])
+
+    def test_corrupted_stored_multiline_plan_blocks_answer_despite_successful_put_echo(self):
+        plan = {"kind": "analysis", "summary": "Inspect", "acceptance": [],
+                "risk": "low", "ux": False, "answer": "First fact\nSecond fact"}
+        original_request = self.client.request
+        def request(method, path, body=None):
+            result = original_request(method, path, body)
+            if method == "PUT":
+                document = self.client.documents[ISSUE, "plan"]
+                document["body"] = document["body"].replace("\\n", "\n")
+            return result
+        self.client.request = request
+        with self.assertRaisesRegex(ValueError, "readback"):
+            self.run_plan(plan)
+        self.assertEqual([], self.client.issue_patches)
+        self.assertEqual("in_progress", self.client.issue["status"])
+        corrupted = self.client.documents[ISSUE, "plan"]["body"]
+        with self.assertRaises(json.JSONDecodeError):
+            json.loads(corrupted)
+        self.client.request = original_request
+        writes = len(self.client.writes)
+        with self.assertRaisesRegex(ValueError, "malformed"):
+            self.run_plan(plan)
+        self.assertEqual(writes, len(self.client.writes))
+        self.assertEqual(corrupted, self.client.documents[ISSUE, "plan"]["body"])
+
+    def test_changed_valid_stored_plan_blocks_coding_handoff(self):
+        original_request = self.client.request
+        def request(method, path, body=None):
+            result = original_request(method, path, body)
+            if method == "PUT":
+                document = self.client.documents[ISSUE, "plan"]
+                saved = json.loads(document["body"])
+                saved["summary"] = "Changed by storage"
+                document["body"] = json.dumps(saved)
+            return result
+        self.client.request = request
+        with self.assertRaisesRegex(ValueError, "readback"):
+            self.run_plan()
+        self.assertEqual([], self.client.issue_patches)
+        self.assertEqual(ORCHESTRATOR, self.client.issue["assigneeAgentId"])
+
+    def test_missing_stored_plan_blocks_answer(self):
+        original_request = self.client.request
+        def request(method, path, body=None):
+            result = original_request(method, path, body)
+            if method == "PUT":
+                del self.client.documents[ISSUE, "plan"]
+            return result
+        self.client.request = request
+        with self.assertRaisesRegex(ValueError, "readback"):
+            self.run_plan({"kind": "analysis", "summary": "Inspect", "acceptance": [],
+                           "risk": "low", "ux": False, "answer": "Done."})
+        self.assertEqual([], self.client.issue_patches)
+
+    def test_changed_readback_revision_blocks_coding_handoff(self):
+        original_request = self.client.request
+        def request(method, path, body=None):
+            result = original_request(method, path, body)
+            if method == "PUT":
+                self.client.documents[ISSUE, "plan"]["latestRevisionId"] = "revision-2"
+            return result
+        self.client.request = request
+        with self.assertRaisesRegex(ValueError, "readback"):
+            self.run_plan()
+        self.assertEqual([], self.client.issue_patches)
+
     def test_replay_does_not_repeat_handoff_write(self):
         self.run_plan()
         writes = len(self.client.writes)
