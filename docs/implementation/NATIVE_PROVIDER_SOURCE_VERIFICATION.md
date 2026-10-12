@@ -11,6 +11,17 @@ Paperclip checks remain non-green. No provider was enabled or deployed.
 The source/support descriptions and review below are historical, not a usable
 Command Code admission or approval of its unresolved native guard.
 
+Verification follow-up, 2026-10-12: Paperclip source
+`854ac0e9d674b20ca58fbe17910eddbe43cc56a9` fixes the Windows Vitest launcher and
+shared/DB post-build asset copying. Its report is
+`doc/verification/2026-10-12-portable-entrypoints.md`, committed in Paperclip at
+`4f103334a49efacdd1277cabd320a903fd0f13ba`. Final scoped checks pass 33 Windows
+tests and 9 network-disabled Linux tests; real shared/DB builds and exact asset
+comparisons pass. Broader typecheck/build now stop at stale generated PRP
+contracts rather than the old shell commands. The broad test run was interrupted
+without a final result after recording 192 failing assertions; no full-suite or
+release success is claimed. Provider gates and live state are unchanged.
+
 Follow-up: the [pinned containment audit](NATIVE_PROVIDER_CONTAINMENT_AUDIT_2026-10-11.md)
 found two additional unresolved Important Command Code source-policy gaps after
 the review below. That review is historical evidence, not approval of a currently
